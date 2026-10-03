@@ -40,10 +40,14 @@ struct ValueTile {
   build() {
     Column({ space: 1 }) {
       Text(this.value)
-        .fontSize($r('app.float.tile_value_font_size'))
         .fontWeight(FontWeight.Medium)
         .fontColor(this.valueColor)
         .maxLines(1)
+        // A longer value ("not on wrist") shrinks instead of being cut off.
+        .maxFontSize($r('app.float.tile_value_font_size'))
+        .minFontSize($r('app.float.label_font_size'))
+        .width('100%')
+        .textAlign(TextAlign.Center)
       Text(this.label)
         .fontSize($r('app.float.label_font_size'))
         .fontColor(this.labelColor)
@@ -363,7 +367,7 @@ struct Index {
             valueColor: this.wearColor()
           })
         }
-        .width(176)
+        .width(188)
         .margin({ top: 2 })
 
         Text(this.statusLine)
@@ -396,108 +400,128 @@ struct Index {
     .height('100%')
   }
 
+  // Two short pages instead of one scrolling list: on a watch a swipe to the right leaves the app,
+  // so the pages are stacked vertically and none of them scrolls.
   @Builder
-  ControlsPage() {
-    Scroll() {
-      Column({ space: 7 }) {
-        Text('Watch link')
-          .fontSize($r('app.float.title_font_size'))
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('sys.color.font_primary'))
-        Text(this.statusLine)
-          .fontSize($r('app.float.label_font_size'))
-          .fontColor(this.statusColor())
+  DemoPage() {
+    Column({ space: 7 }) {
+      Text('Watch link')
+        .fontSize($r('app.float.title_font_size'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('sys.color.font_primary'))
+      Text(this.statusLine)
+        .fontSize($r('app.float.label_font_size'))
+        .fontColor(this.statusColor())
 
-        ControlButton({
-          label: 'Close day (demo)',
-          onTap: () => {
-            this.closeDay();
-          }
-        })
-        ControlButton({
-          label: this.demoOn ? 'Demo clock ×300 · on' : 'Demo clock ×300 · off',
-          labelColor: this.demoOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
-          onTap: () => {
-            this.toggleDemo();
-          }
-        })
-        ControlButton({
-          label: 'Pair phone',
-          onTap: () => {
-            this.pairPhone();
-          }
-        })
-        if (this.pairShown) {
-          Text(this.kid)
-            .fontSize($r('app.float.code_font_size'))
-            .fontWeight(FontWeight.Bold)
-            .fontFamily('monospace')
-            .fontColor($r('sys.color.font_primary'))
-            .maxLines(1)
-          Text('Confirm this code on the phone')
-            .fontSize($r('app.float.note_font_size'))
-            .fontColor($r('sys.color.font_secondary'))
-            .textAlign(TextAlign.Center)
+      ControlButton({
+        label: 'Close day (demo)',
+        onTap: () => {
+          this.closeDay();
         }
-        ControlButton({
-          label: this.resetArmed ? 'Tap again to reset' : 'Reset watch data',
-          labelColor: $r('sys.color.warning'),
-          onTap: () => {
-            this.resetData();
-          }
-        })
-
-        if (this.lastAction.length > 0) {
-          Text(this.lastAction)
-            .fontSize($r('app.float.note_font_size'))
-            .fontColor($r('sys.color.font_primary'))
-            .textAlign(TextAlign.Center)
+      })
+      ControlButton({
+        label: 'Demo clock ×300',
+        labelColor: this.demoOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
+        onTap: () => {
+          this.toggleDemo();
         }
-        if (this.lastAck.length > 0) {
-          Text(`Phone: ${this.lastAck}`)
-            .fontSize($r('app.float.note_font_size'))
-            .fontColor($r('sys.color.font_secondary'))
-            .textAlign(TextAlign.Center)
-        }
-        if (this.keyNote.length > 0) {
-          Text(this.keyNote)
-            .fontSize($r('app.float.caption_font_size'))
-            .fontColor($r('sys.color.font_tertiary'))
-            .textAlign(TextAlign.Center)
-        }
-        if (this.wearEngineText.length > 0) {
-          Text(this.wearEngineText)
-            .fontSize($r('app.float.caption_font_size'))
-            .fontColor($r('sys.color.font_tertiary'))
-            .textAlign(TextAlign.Center)
-        }
-        if (this.linkError.length > 0) {
-          Text(this.linkError)
-            .fontSize($r('app.float.caption_font_size'))
-            .fontColor($r('sys.color.warning'))
-            .textAlign(TextAlign.Center)
-        }
-        Text('Records while this app is open.\nTime in the background is not observed.')
-          .fontSize($r('app.float.caption_font_size'))
-          .fontColor($r('sys.color.font_tertiary'))
-          .textAlign(TextAlign.Center)
+      })
+      if (this.demoOn) {
+        Text(`On · recorder time ${this.recorderTime()}`)
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.warning'))
       }
-      .width('100%')
-      .alignItems(HorizontalAlign.Center)
-      // Round screen: nothing in the corners.
-      .padding({ top: 44, bottom: 64, left: 46, right: 46 })
+      if (this.lastAction.length > 0) {
+        Text(this.lastAction)
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.font_primary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      if (this.lastAck.length > 0) {
+        Text(`Phone: ${this.lastAck}`)
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.font_secondary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
     }
     .width('100%')
     .height('100%')
-    .scrollBar(BarState.Off)
-    .edgeEffect(EdgeEffect.Spring)
+    .alignItems(HorizontalAlign.Center)
+    .justifyContent(FlexAlign.Center)
+    // Round screen: nothing in the corners.
+    .padding({ left: 46, right: 46 })
+  }
+
+  @Builder
+  PhonePage() {
+    Column({ space: 6 }) {
+      ControlButton({
+        label: 'Pair phone',
+        onTap: () => {
+          this.pairPhone();
+        }
+      })
+      if (this.pairShown) {
+        Text(this.kid)
+          .fontSize($r('app.float.code_font_size'))
+          .fontWeight(FontWeight.Bold)
+          .fontFamily('monospace')
+          .fontColor($r('sys.color.font_primary'))
+          .maxLines(1)
+        Text('Confirm this code on the phone')
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.font_secondary'))
+          .textAlign(TextAlign.Center)
+      }
+      ControlButton({
+        label: this.resetArmed ? 'Tap again to reset' : 'Reset watch data',
+        labelColor: $r('sys.color.warning'),
+        onTap: () => {
+          this.resetData();
+        }
+      })
+      if (this.keyNote.length > 0 && !this.pairShown) {
+        Text(this.keyNote)
+          .fontSize($r('app.float.caption_font_size'))
+          .fontColor($r('sys.color.font_tertiary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      if (this.wearEngineText.length > 0 && !this.pairShown) {
+        Text(this.wearEngineText)
+          .fontSize($r('app.float.caption_font_size'))
+          .fontColor($r('sys.color.font_tertiary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      if (this.linkError.length > 0) {
+        Text(this.linkError)
+          .fontSize($r('app.float.caption_font_size'))
+          .fontColor($r('sys.color.warning'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      Text('Records while this app is open.\nBackground time is not observed.')
+        .fontSize($r('app.float.caption_font_size'))
+        .fontColor($r('sys.color.font_tertiary'))
+        .textAlign(TextAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Center)
+    .justifyContent(FlexAlign.Center)
+    .padding({ left: 46, right: 46 })
   }
 
   build() {
     Swiper() {
       this.DialPage()
-      this.ControlsPage()
+      this.DemoPage()
+      this.PhonePage()
     }
+    .vertical(true)
     .loop(false)
     .indicator(false)
     .width('100%')
