@@ -218,6 +218,7 @@ struct Index {
   }
 
   // The wear state the recorder uses (60 s without heart rate, 3 s on the demo clock), once it runs.
+  // Until then the same rule (WearStateMachine) answers through the live sensors.
   private wearText(): string {
     if (this.linkReady) {
       if (this.slotState === 'W') {
@@ -234,8 +235,11 @@ struct Index {
     if (this.wear === WearState.WORN) {
       return 'worn';
     }
+    if (this.wear === WearState.CHARGING) {
+      return 'charging';
+    }
     if (this.wear === WearState.REMOVED) {
-      return 'removed';
+      return 'not on wrist';
     }
     return 'no data';
   }

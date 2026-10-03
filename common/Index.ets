@@ -25,7 +25,7 @@ export {
   TIER_CLAIM_VERSION
 } from './src/main/ets/claim/TierClaimCodec';
 export { isSelectiveNonWear } from './src/main/ets/rules/SelectiveNonWear';
-export { LiveWearState, WearState, NO_HEART_RATE, DEFAULT_REMOVED_AFTER_MS } from './src/main/ets/live/LiveWearState';
+export { LiveWearState, WearState, NO_HEART_RATE } from './src/main/ets/live/LiveWearState';
 export {
   DailyActivity,
   HEALTH_MISSING,

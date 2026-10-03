@@ -181,3 +181,30 @@ Not run: a non-zero heart rate on the emulator (worn state, green ring, the 60 s
 Not run: Wear Engine transport (needs paired devices and Wear Engine approval for the app).
 Not run: Reset watch data, Forget watch, app restarts, a real midnight on the emulators (covered by the Node tests only).
 Not present in this checkout: HES engine, HesSession, personas. Watch days are not scored here.
+
+==== Security S0-S2 and one wear rule (branch feature/security-watch), 2026-10-04 ====
+Base: feature/integration 491bcb4, fast-forwarded into main after tools/run-logic-tests.sh common 83/83,
+  watch 6/6 and assembleHap for entry and watch (BUILD SUCCESSFUL) were run on it.
+  A clean directory needs "ohpm install --all" first; without it the build cannot resolve "common".
+After each block (S0, S1, S2, wear rule): both test runs and both builds were repeated.
+tools/run-logic-tests.sh common   85/85 passed (83 + 2 new LiveWear tests: charging, wear-detection sensor)
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry), assembleHap (watch): BUILD SUCCESSFUL.
+tools/check-wording.sh            0 hits (14 wordings, 4 status names)
+S0 history scan over all branches (git log -p --all with the secret patterns; file names with signing
+  extensions or local.json): 0 lines, 0 files. gitleaks is not installed; the grep fallback was used.
+S0 pre-commit hook, 7 cases in a scratch repository: .p12, rawfile/local.json, a password key with a value
+  (double and single quotes) and a private-key block are blocked; a document that only names the keys and a
+  clean file pass.
+LiveWear.test.ets, assertions changed because LiveWearState now answers from WearStateMachine:
+  - zeros only: REMOVED (was NO_DATA); NO_DATA only before any sensor event
+  - the limit is "more than N" (was "N or more"): worn at exactly N, removed at N + 1 ms
+  - default limit 60 000 ms (was 10 000 ms); DEFAULT_REMOVED_AFTER_MS no longer exists
+  - 24 and 231 bpm added to the invalid readings (the rule accepts 25-230 bpm)
+Wearable emulator (127.0.0.1:5555), unsigned debug HAP installed with tools/deploy.sh watch:
+  screen: heart rate "—", 0 steps, wear state "not on wrist" (docs/screenshots/i3-watch-wear-state.jpeg)
+  log:    live hrLink=1 hrEvents=54 hrValid=0 wear=REMOVED stepLink=1 stepEvents=54
+          (no heart-rate or step value in the line; the previous build wrote hrRaw, hrShown, stepsRaw, stepsToday)
+Not run: a non-zero heart rate on the emulator (worn, the 60 s limit), the charging state, a watch with a
+  wear-detection sensor. These are covered by the Node tests only.
+Not run: the entry HAP on the phone emulator (built only; no entry source file changed).

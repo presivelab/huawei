@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks commits that stage signing material, local Wear Engine config or secret-looking lines.
+# Install once per clone: cp tools/hooks/pre-commit .git/hooks/pre-commit
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+if echo "$staged" | grep -i -E '\.(p12|p7b|cer|csr|jks|keystore|pem|pfx)$|rawfile/local\.json$'; then
+  echo "pre-commit: signing material or local config staged - commit blocked"; exit 1
+fi
+# A password key with a value, or a private key block. A bare mention of the key name in docs passes.
+if git diff --cached -U0 | grep -i -E "^\+.*((storePassword|keyPassword)[\"']?[[:space:]]*[:=][[:space:]]*[\"'][^\"']|BEGIN [A-Z ]*PRIVATE KEY)"; then
+  echo "pre-commit: secret-looking line staged - commit blocked"; exit 1
+fi
+exit 0
