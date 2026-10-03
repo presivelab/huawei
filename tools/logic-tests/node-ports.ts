@@ -86,6 +86,13 @@ export class NodeHasher {
   }
 }
 
+// Random bytes from the Node CSPRNG, for the partner verifier (RandomSource in claim/PartnerVerifier.ets).
+export class NodeRandom {
+  randomBytes(count: number): Promise<Uint8Array> {
+    return Promise.resolve(new Uint8Array(nodeCrypto.randomBytes(count)));
+  }
+}
+
 // Text files under one directory. writeAtomic writes a temporary file and renames it.
 export class FsTextStore {
   private root: string;

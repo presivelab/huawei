@@ -174,3 +174,41 @@ export {
   demoFeedSteps,
   feedClockLabel
 } from './src/main/ets/watchlink/DemoFeed';
+
+export {
+  isValidKeySource,
+  isValidKidText,
+  isValidNonceText,
+  isValidSignatureText,
+  validateSignedClaim,
+  validateTierClaimJson,
+  CLAIM_TIERS,
+  KEY_SOURCE_HUKS,
+  KEY_SOURCE_SOFTWARE,
+  MAX_CLAIM_JSON_CHARS,
+  MAX_DER_SIGNATURE_BYTES,
+  MAX_FUTURE_SKEW_MS,
+  MAX_TOKEN_CHARS,
+  TIER_NO_SCORE
+} from './src/main/ets/claim/ClaimValidation';
+export {
+  decodeSignedClaimToken,
+  encodeSignedClaimToken,
+  TOKEN_MARKER
+} from './src/main/ets/claim/SignedClaimToken';
+export {
+  NONCE_BYTES,
+  NONCE_TTL_MS,
+  PartnerKey,
+  PartnerVerifier,
+  RandomSource,
+  STATUS_ALREADY_USED,
+  STATUS_INVALID_FORMAT,
+  STATUS_INVALID_SIGNATURE,
+  STATUS_NONCE_MISMATCH,
+  STATUS_UNKNOWN_KEY,
+  STATUS_VALID,
+  VERIFY_STEPS,
+  VerifyResult
+} from './src/main/ets/claim/PartnerVerifier';
+export { DeviceRandom } from './src/main/ets/platform/DeviceRandom';

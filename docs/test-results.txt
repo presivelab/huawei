@@ -1,7 +1,24 @@
 FairWear test results
 =====================
 
-2026-10-04 01:37 CEST  branch feature/ui-foundation  (project state and skill; watch demo feed)
+2026-10-04 01:45 CEDT  branch feature/claim-verifier  (block K3: hardened claim decode, token format, PartnerVerifier)
+----------------------------------------------------
+Base: feature/ui-foundation 7595dd8.
+Node run (tools/run-logic-tests.sh common): 129/129 (was 98/98). New: 31.
+  ClaimHardening (7, in the hypium list): field rules, canonical form, length limits, envelope (kid match,
+  DER at most 72 bytes), token round trip, strict token decode, worst-case token 461 characters.
+  PartnerVerifier S-1 to S-20 (24, real ECDSA P-256 signatures from Node, not in the list): S-0 happy path,
+  S-1..S-18 and S-20, plus S-8b (DER over 72 bytes), S-14b (nonce at the time limit), and two registry tests.
+  S-16 builds a second valid signature (r, n-s) in the test and checks it verifies on its own first.
+  S-19 is NOT done: it needs the scoring module (HES-Lite), which is not in this repository.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+ArkTS compile: hvigorw assembleHar assembleHap BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; 2 warnings (watch 2, common 0).
+Not done: S-19; the screen that calls the verifier (no UI in this block); the device RandomSource
+  (DeviceRandom, CSPRNG from cryptoFramework) compiles but has not run on a device or emulator; the
+  placeholder no-score tier value 'NONE' has to be aligned with HES-Lite.
+
+2026-10-04 01:37 CEST branch feature/ui-foundation  (project state and skill; watch demo feed)
 ----------------------------------------------------
 Base: main 491bcb4 with feature/security-watch merged in (common 85/85, watch 6/6 after the merge).
 Node run (tools/run-logic-tests.sh): common 98/98, watch 6/6.
