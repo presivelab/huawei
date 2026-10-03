@@ -22,6 +22,7 @@ can be ended in FairWear ("Disconnect HUAWEI Health") or in HUAWEI Health privac
 toolchain (Git Bash on Windows):
 
 ```
+source tools/env.sh && ohpm.bat install --all    # once after cloning: links the local common module
 tools/deploy.sh entry    # builds entry, installs it on the running phone emulator and starts it
 tools/deploy.sh watch    # the same for the wearable emulator
 ```
@@ -59,6 +60,18 @@ tools/check-wording.sh                                                   # text 
 Results are recorded in `docs/test-results.txt`. The Node run compiles the `.ets` files as strict TypeScript
 with the compiler bundled in DevEco Studio; it does not replace the ArkTS compiler or a run on a device.
 
+## Security & privacy
+
+- **Dependencies.** `entry` and `watch` depend only on the local `common` module. The two external packages,
+  `@ohos/hypium` 1.0.24 and `@ohos/hamock` 1.0.0, are OpenHarmony's test libraries, declared as
+  devDependencies for the test sources. The `oh-package-lock.json5` files are committed, so an install
+  resolves the same versions by hash.
+- **Signing.** The committed `build-profile.json5` has an empty `signingConfigs` list. For a signed HAP let
+  DevEco Studio fill it locally (File → Project Structure → Signing Configs → Automatically generate
+  signature) and do not commit the changed file.
+- **Commit hook.** `tools/hooks/pre-commit` blocks a commit that stages signing material, a local Wear Engine
+  config or a password line. Install it once per clone: `cp tools/hooks/pre-commit .git/hooks/pre-commit`.
+
 ## Watch Link: signed day packets from the watch
 
 The watch app records the day in 288 five-minute slots (worn, charging, off-wrist, not observed), signs one
@@ -74,11 +87,11 @@ node tools/watch-phone-relay.mjs once --tamper   # demo: the phone answers "Inva
 node tools/watch-phone-relay.mjs once --drop 3   # demo: the phone shows "1 day missing"
 ```
 
-| Part | Real or simulated |
-| --- | --- |
-| Watch recorder | **Real** sensor code (heart rate, steps, wear sensor when present; heart-rate signal on the emulator). Records **while the app is open**. |
-| Day packets | **Real** ECDSA P-256 signing on the watch (HUKS on the wearable emulator, software fallback otherwise) and a hash chain. |
-| Watch → phone transport | **Real** Wear Engine code path, **not demonstrable** on emulators (needs paired devices and Wear Engine approval) and not run. The demo uses `tools/watch-phone-relay.mjs` over hdc, carrying the identical files. |
-| Demo clock ×300 | **Simulated time**, labelled on the watch and in every packet recorded with it. |
-| 24 h background recording | **Not implemented.** No continuous-task type fits health logging. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs. |
-| Watch days in the score | **Not connected in this branch**: the scoring module is not in this checkout. The phone shows the received days and their source. |
+| Part                      | Real or simulated                                                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Watch recorder            | **Real** sensor code (heart rate, steps, wear sensor when present; heart-rate signal on the emulator). Records **while the app is open**.                                                                          |
+| Day packets               | **Real** ECDSA P-256 signing on the watch (HUKS on the wearable emulator, software fallback otherwise) and a hash chain.                                                                                           |
+| Watch → phone transport   | **Real** Wear Engine code path, **not demonstrable** on emulators (needs paired devices and Wear Engine approval) and not run. The demo uses `tools/watch-phone-relay.mjs` over hdc, carrying the identical files. |
+| Demo clock ×300           | **Simulated time**, labelled on the watch and in every packet recorded with it.                                                                                                                                    |
+| 24 h background recording | **Not implemented.** No continuous-task type fits health logging. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs.                             |
+| Watch days in the score   | **Not connected in this branch**: the scoring module is not in this checkout. The phone shows the received days and their source.                                                                                  |
