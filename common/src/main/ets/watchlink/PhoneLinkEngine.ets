@@ -354,6 +354,11 @@ export class PhoneLinkEngine {
     return this.ledger !== null;
   }
 
+  // True when a transport left something in inbox/.
+  hasInbox(): boolean {
+    return this.store.list(INBOX_DIR).length > 0;
+  }
+
   // Every day the chain knows about, by seq: the facts of the packets received, and a placeholder
   // for each one the chain proves exists but that never arrived.
   timeline(): WatchDayFacts[] {

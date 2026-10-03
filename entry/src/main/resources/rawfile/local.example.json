@@ -1,0 +1,4 @@
+{
+  "watchBundleName": "com.fairwear.app",
+  "watchFingerprint": "PUT-THE-WATCH-APP-SIGNING-CERTIFICATE-FINGERPRINT-HERE"
+}
