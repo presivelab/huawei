@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "FairWear phone module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "FairWear on the phone"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "FairWear"
+    }
+  ]
+}

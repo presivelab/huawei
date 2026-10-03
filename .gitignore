@@ -1,0 +1,15 @@
+build/
+.hvigor/
+oh_modules/
+local.properties
+*.p12
+*.cer
+*.p7b
+*.csr
+_incoming/
+.idea/
+node_modules/
+.cxx/
+.test/
+.appanalyzer/
+oh-package-lock.json5

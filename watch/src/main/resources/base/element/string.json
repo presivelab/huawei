@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "FairWear watch module"
+    },
+    {
+      "name": "WatchAbility_desc",
+      "value": "FairWear on the watch"
+    },
+    {
+      "name": "WatchAbility_label",
+      "value": "FairWear"
+    }
+  ]
+}
