@@ -2,6 +2,7 @@ import { ALL_HEALTH_SCOPES, HealthScope, HealthStatus } from 'common';
 import { AddonSession, KEY_REVISION, KEY_STATUS, NO_VALUE } from '../addon/AddonSession';
 import { HES_NOT_CONNECTED, HES_NOT_CONNECTED_BODY, scopeLabel, signalsHeading } from '../addon/AddonTexts';
 import { DataSourceCard, SourceStatusLine } from './SourceParts';
+import { WatchDaysCard, WatchLinkCard } from './WatchLinkCard';
 import { BODY, BODY_SECONDARY, CAPTION, CARD, LABEL, TITLE } from './Styles';
 
 class SignalRow {
@@ -91,6 +92,10 @@ export struct DashboardView {
         .attributeModifier(CARD)
 
         DataSourceCard()
+
+        WatchLinkCard()
+
+        WatchDaysCard()
       }
       .alignItems(HorizontalAlign.Start)
       .padding({

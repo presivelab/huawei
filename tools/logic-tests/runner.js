@@ -118,9 +118,13 @@ const shimSrc = path.join(__dirname, "hypium-shim.ts");
 const shimWork = path.join(srcOut, "__shim__", "hypium.ts");
 fs.mkdirSync(path.dirname(shimWork), { recursive: true });
 fs.copyFileSync(shimSrc, shimWork);
+// Node-backed ports (crypto, fs) for tests of logic that takes its platform through interfaces.
+const portsWork = path.join(srcOut, "__shim__", "node-ports.ts");
+fs.copyFileSync(path.join(__dirname, "node-ports.ts"), portsWork);
 
 const roots = testFiles.map(toWork);
 roots.push(shimWork);
+roots.push(portsWork);
 for (const dir of extraDirs) {
   const full = path.join(moduleRoot, "src", "main", "ets", dir);
   if (!fs.existsSync(full)) {
@@ -148,7 +152,10 @@ const options = {
   rootDir: srcOut,
   outDir: jsOut,
   baseUrl: srcOut,
-  paths: { "@ohos/hypium": ["__shim__/hypium.ts"] },
+  paths: {
+    "@ohos/hypium": ["__shim__/hypium.ts"],
+    "@fairwear/node-ports": ["__shim__/node-ports.ts"],
+  },
 };
 
 const program = ts.createProgram(roots, options);
@@ -194,6 +201,17 @@ fs.mkdirSync(hypiumPackage, { recursive: true });
 fs.writeFileSync(
   path.join(hypiumPackage, "index.js"),
   "module.exports = require('../../../__shim__/hypium.js');\n",
+);
+const portsPackage = path.join(
+  jsOut,
+  "node_modules",
+  "@fairwear",
+  "node-ports",
+);
+fs.mkdirSync(portsPackage, { recursive: true });
+fs.writeFileSync(
+  path.join(portsPackage, "index.js"),
+  "module.exports = require('../../../__shim__/node-ports.js');\n",
 );
 
 function toJs(file) {

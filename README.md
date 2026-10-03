@@ -58,3 +58,27 @@ tools/check-wording.sh                                                   # text 
 
 Results are recorded in `docs/test-results.txt`. The Node run compiles the `.ets` files as strict TypeScript
 with the compiler bundled in DevEco Studio; it does not replace the ArkTS compiler or a run on a device.
+
+## Watch Link: signed day packets from the watch
+
+The watch app records the day in 288 five-minute slots (worn, charging, off-wrist, not observed), signs one
+summary per day with its own key and chains the summaries by hash. The phone checks the signature and the
+chain before it takes a day in, so a day cannot be removed or edited on the way without it showing. The
+watch measures; every verdict stays in the rule code on the phone. Specification, demo script and what was
+checked: `docs/WATCH_LINK.md`.
+
+```
+tools/deploy.sh watch && tools/deploy.sh entry   # debug builds on both emulators
+node tools/watch-phone-relay.mjs                 # carries pair.json, day packets and ACKs over hdc
+node tools/watch-phone-relay.mjs once --tamper   # demo: the phone answers "Invalid signature"
+node tools/watch-phone-relay.mjs once --drop 3   # demo: the phone shows "1 day missing"
+```
+
+| Part | Real or simulated |
+| --- | --- |
+| Watch recorder | **Real** sensor code (heart rate, steps, wear sensor when present; heart-rate signal on the emulator). Records **while the app is open**. |
+| Day packets | **Real** ECDSA P-256 signing on the watch (HUKS on the wearable emulator, software fallback otherwise) and a hash chain. |
+| Watch → phone transport | **Real** Wear Engine code path, **not demonstrable** on emulators (needs paired devices and Wear Engine approval) and not run. The demo uses `tools/watch-phone-relay.mjs` over hdc, carrying the identical files. |
+| Demo clock ×300 | **Simulated time**, labelled on the watch and in every packet recorded with it. |
+| 24 h background recording | **Not implemented.** No continuous-task type fits health logging. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs. |
+| Watch days in the score | **Not connected in this branch**: the scoring module is not in this checkout. The phone shows the received days and their source. |

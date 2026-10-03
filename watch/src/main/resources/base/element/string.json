@@ -18,7 +18,7 @@
     },
     {
       "name": "reason_steps",
-      "value": "FairWear shows the steps counted today on the watch."
+      "value": "FairWear shows the steps counted today on the watch and adds them to the day summary it records."
     }
   ]
 }

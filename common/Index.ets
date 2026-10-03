@@ -56,3 +56,113 @@ export {
   emptyCardDigest,
   encodeCardDigest
 } from './src/main/ets/card/CardDigest';
+// Watch Link: on-wrist recorder, signed day packets, chain verification. Pure logic; platform through ports.
+export {
+  AckPacket,
+  AckStatus,
+  BreakContext,
+  classifySlot,
+  CLOCK_REAL,
+  dateOfDayNumber,
+  dayNumberOfDate,
+  DayPacket,
+  DayRecord,
+  GENESIS,
+  isValidHeartRate,
+  localDayNumber,
+  localSlotIndex,
+  MAX_PACKET_BYTES,
+  PairPacket,
+  SlotRecord,
+  SlotState,
+  slotStartMs,
+  SLOTS_PER_DAY,
+  WearSource
+} from './src/main/ets/watchlink/WatchLinkTypes';
+export { Clock, Hasher, Signer, SigVerifier, TextStore } from './src/main/ets/watchlink/WatchLinkPorts';
+export { daySigningString, dayPacketHash, pairSigningString } from './src/main/ets/watchlink/WatchLinkSigning';
+export {
+  FRESHNESS_DEMO_CLOCK_MS,
+  FRESHNESS_REAL_CLOCK_MS,
+  WearStateMachine
+} from './src/main/ets/watchlink/WearStateMachine';
+export { GAP_REAL_MS, KEEP_DAYS, SlotRecorder, slotsToString } from './src/main/ets/watchlink/SlotRecorder';
+export { DayBuilder } from './src/main/ets/watchlink/DayBuilder';
+export {
+  AckDecodeResult,
+  AckPacketCodec,
+  DayDecodeResult,
+  DayPacketCodec,
+  DecodeCode,
+  PairDecodeResult,
+  PairPacketCodec
+} from './src/main/ets/watchlink/DayPacketCodec';
+export { ChainCheck, ChainEntry, ChainKind, ChainLedger } from './src/main/ets/watchlink/ChainLedger';
+export {
+  DayPacketVerifier,
+  missingDaysNote,
+  MSG_ACCEPTED,
+  MSG_CHAIN_CONFLICT,
+  MSG_DATE_FUTURE,
+  MSG_DATE_ORDER,
+  MSG_DEMO_CLOCK,
+  MSG_DUPLICATE,
+  MSG_INVALID_FORMAT,
+  MSG_INVALID_SIGNATURE,
+  MSG_KEY_ID_MISMATCH,
+  MSG_PAIR_VALID,
+  MSG_UNKNOWN_KEY,
+  MSG_UNSUPPORTED_VERSION,
+  PairOutcome,
+  PairVerifier,
+  VerifyOutcome
+} from './src/main/ets/watchlink/DayPacketVerifier';
+export {
+  chainStateFromJson,
+  chainStateToJson,
+  newChainState,
+  PacketSealer,
+  SealedDay,
+  WatchChainState
+} from './src/main/ets/watchlink/PacketSealer';
+// Platform helpers shared by the phone and the watch (these import system kits; the logic tests do not load them).
+export { b64urlDecode, b64urlEncode, toHex, utf8Decode, utf8Encode } from './src/main/ets/platform/Bytes';
+export { CryptoUtil } from './src/main/ets/platform/CryptoUtil';
+export { DeviceKey, KeySource, ProofSigner } from './src/main/ets/platform/ProofSigner';
+export { FileTextStore } from './src/main/ets/platform/FileTextStore';
+export {
+  DeviceHasher,
+  DeviceSigVerifier,
+  deviceTzOffsetMin,
+  KeySigner,
+  SystemClock
+} from './src/main/ets/platform/DeviceCrypto';
+// Watch Link engines: the watch side and the phone side, platform passed in.
+export { DayTransport } from './src/main/ets/watchlink/DayTransport';
+export { DEMO_SPEED, RecorderClock } from './src/main/ets/watchlink/RecorderClock';
+export {
+  ACKS_DIR,
+  OUTBOX_DIR,
+  PAIR_FILE,
+  STATUS_NOT_PAIRED,
+  STATUS_SYNCED,
+  syncStatusLine,
+  WatchLinkEngine,
+  WatchLinkView
+} from './src/main/ets/watchlink/WatchLinkEngine';
+export {
+  factsOfMissing,
+  factsOfPacket,
+  INBOX_DIR,
+  missingDayReason,
+  PhoneLinkEngine,
+  PhoneLinkView,
+  PHONE_ACKS_DIR,
+  sourceLine,
+  SyncLogEntry,
+  SyncReport,
+  TRANSPORT_RELAY,
+  TRANSPORT_WEAR_ENGINE,
+  WatchDayFacts
+} from './src/main/ets/watchlink/PhoneLinkEngine';
+export { PAIR_ACK_SEQ } from './src/main/ets/watchlink/DayPacketCodec';

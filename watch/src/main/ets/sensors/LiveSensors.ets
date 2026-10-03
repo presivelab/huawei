@@ -1,7 +1,7 @@
 import { sensor } from '@kit.SensorServiceKit';
 import { preferences } from '@kit.ArkData';
 import { common } from '@kit.AbilityKit';
-import { BusinessError } from '@kit.BasicServicesKit';
+import { batteryInfo, BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { LiveWearState, WearState, NO_HEART_RATE, DEFAULT_REMOVED_AFTER_MS } from 'common';
 import { DaySteps, NO_STEPS } from '../model/DaySteps';
@@ -51,6 +51,12 @@ export class LiveSensors {
   private heartValidEvents: number = 0;
   private stepEvents: number = 0;
   private lastHeartRaw: number = NO_HEART_RATE;
+  // Watch Link: the wear-detection sensor (when the watch has one), raw readings for the recorder.
+  private wearLink: SensorLink = SensorLink.WAITING;
+  private heartTap: ((bpm: number) => void) | null = null;
+  private wearTap: ((value: number) => void) | null = null;
+  private deltaLastRaw: number = NO_STEPS;
+  private pendingStepDelta: number = 0;
 
   init(context: common.Context): void {
     if (this.store !== null) {
@@ -96,6 +102,20 @@ export class LiveSensors {
     } else {
       this.stepLink = SensorLink.ABSENT;
     }
+
+    // No permission is needed for wear detection. Without this sensor the heart-rate signal decides.
+    if (ids.includes(sensor.SensorId.WEAR_DETECTION)) {
+      this.wearLink = this.subscribe('wear detection', () => {
+        sensor.on(sensor.SensorId.WEAR_DETECTION, (data: sensor.WearDetectionResponse) => {
+          const tap = this.wearTap;
+          if (tap !== null) {
+            tap(data.value);
+          }
+        });
+      });
+    } else {
+      this.wearLink = SensorLink.ABSENT;
+    }
   }
 
   stop(): void {
@@ -105,6 +125,8 @@ export class LiveSensors {
     this.running = false;
     this.heartLink = this.unsubscribe(this.heartLink, () => sensor.off(sensor.SensorId.HEART_RATE));
     this.stepLink = this.unsubscribe(this.stepLink, () => sensor.off(sensor.SensorId.PEDOMETER));
+    this.wearLink = this.unsubscribe(this.wearLink, () => sensor.off(sensor.SensorId.WEAR_DETECTION));
+    this.deltaLastRaw = NO_STEPS;
     this.persist();
     hilog.info(DOMAIN, TAG, 'sensors off');
   }
@@ -130,6 +152,32 @@ export class LiveSensors {
     view.wear = this.heartLink === SensorLink.LIVE ? this.wear.state() : WearState.NO_DATA;
     view.steps = this.stepLink === SensorLink.LIVE ? this.steps.today(dayKey(new Date())) : NO_STEPS;
     return view;
+  }
+
+  // Raw readings for the Watch Link recorder: every heart-rate event (0 included) and wear-detection event.
+  setTaps(heartTap: (bpm: number) => void, wearTap: (value: number) => void): void {
+    this.heartTap = heartTap;
+    this.wearTap = wearTap;
+  }
+
+  // Steps counted since the last call.
+  takeStepsDelta(): number {
+    const delta = this.pendingStepDelta;
+    this.pendingStepDelta = 0;
+    return delta;
+  }
+
+  hasWearSensor(): boolean {
+    return this.wearLink === SensorLink.LIVE;
+  }
+
+  // True while the watch sits on its charger.
+  isCharging(): boolean {
+    try {
+      return batteryInfo.pluggedType !== batteryInfo.BatteryPluggedType.NONE;
+    } catch (err) {
+      return false;
+    }
   }
 
   private sensorIds(): number[] {
@@ -177,10 +225,21 @@ export class LiveSensors {
     }
     // LiveWearState treats every reading <= 0 as "no reading".
     this.wear.onReading(Date.now(), value);
+    const tap = this.heartTap;
+    if (tap !== null) {
+      tap(value);
+    }
   }
 
   private onSteps(raw: number): void {
     this.stepEvents++;
+    // The sensor reports a running total; the recorder gets the increase since the last reading.
+    if (raw >= 0) {
+      if (this.deltaLastRaw !== NO_STEPS && raw > this.deltaLastRaw) {
+        this.pendingStepDelta += raw - this.deltaLastRaw;
+      }
+      this.deltaLastRaw = raw;
+    }
     if (this.steps.onRaw(dayKey(new Date()), raw)) {
       this.stepsDirty = true;
     }

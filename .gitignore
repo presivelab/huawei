@@ -19,3 +19,8 @@ node_modules/
 .test/
 .appanalyzer/
 oh-package-lock.json5
+
+# Watch Link: local Wear Engine config and relay working files
+watch/src/main/resources/rawfile/local.json
+entry/src/main/resources/rawfile/local.json
+_relay/

@@ -1,26 +1,33 @@
 import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { WearState, NO_HEART_RATE } from 'common';
+import { NO_HEART_RATE, STATUS_NOT_PAIRED, STATUS_SYNCED, WatchLinkView, WearState } from 'common';
 import { LiveSensors, LiveSnapshot, SensorLink } from '../sensors/LiveSensors';
 import { NO_STEPS } from '../model/DaySteps';
+import { SlotRing } from '../watchlink/SlotRing';
+import { WatchLinkRuntime } from '../watchlink/WatchLinkRuntime';
 
 const DOMAIN = 0x0000;
 const TAG = 'FairWear';
 const TICK_MS = 1000;
 const PERMISSIONS: Permissions[] = ['ohos.permission.READ_HEALTH_DATA', 'ohos.permission.ACTIVITY_MOTION'];
 const MISSING = '—';
+const CLOCK_REAL = 'REAL';
 
 function linkNote(link: SensorLink): string {
   if (link === SensorLink.ABSENT) {
     return 'no sensor';
   }
   if (link === SensorLink.NO_PERMISSION) {
-    return 'no permission';
+    return 'unavailable';
   }
   if (link === SensorLink.ERROR) {
     return 'sensor error';
   }
   return '';
+}
+
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : `${n}`;
 }
 
 @Component
@@ -33,10 +40,14 @@ struct ValueTile {
   build() {
     Column({ space: 1 }) {
       Text(this.value)
-        .fontSize($r('app.float.tile_value_font_size'))
         .fontWeight(FontWeight.Medium)
         .fontColor(this.valueColor)
         .maxLines(1)
+        // A longer value ("not on wrist") shrinks instead of being cut off.
+        .maxFontSize($r('app.float.tile_value_font_size'))
+        .minFontSize($r('app.float.label_font_size'))
+        .width('100%')
+        .textAlign(TextAlign.Center)
       Text(this.label)
         .fontSize($r('app.float.label_font_size'))
         .fontColor(this.labelColor)
@@ -44,6 +55,26 @@ struct ValueTile {
     }
     .layoutWeight(1)
     .alignItems(HorizontalAlign.Center)
+  }
+}
+
+@Component
+struct ControlButton {
+  @Prop label: string = '';
+  @Prop labelColor: ResourceColor = $r('sys.color.font_primary');
+  onTap: () => void = () => {
+  };
+
+  build() {
+    Button(this.label, { type: ButtonType.Capsule })
+      .width('100%')
+      .height(40)
+      .fontSize($r('app.float.button_font_size'))
+      .fontColor(this.labelColor)
+      .backgroundColor($r('sys.color.comp_background_secondary'))
+      .onClick(() => {
+        this.onTap();
+      })
   }
 }
 
@@ -55,7 +86,26 @@ struct Index {
   @State wear: WearState = WearState.NO_DATA;
   @State heartSensor: SensorLink = SensorLink.WAITING;
   @State stepSensor: SensorLink = SensorLink.WAITING;
+  // Watch Link: what the recorder has for today, and the sync state.
+  @State linkReady: boolean = false;
+  @State slots: string = '';
+  @State openSlot: number = -1;
+  @State slotState: string = 'U';
+  @State statusLine: string = STATUS_NOT_PAIRED;
+  @State demoOn: boolean = false;
+  @State clockLabel: string = CLOCK_REAL;
+  @State recorderDate: string = '';
+  @State recorderMinute: number = 0;
+  @State kid: string = '';
+  @State pairShown: boolean = false;
+  @State lastAction: string = '';
+  @State lastAck: string = '';
+  @State keyNote: string = '';
+  @State wearEngineText: string = '';
+  @State linkError: string = '';
+  @State resetArmed: boolean = false;
   private sensors: LiveSensors = new LiveSensors();
+  private link: WatchLinkRuntime = WatchLinkRuntime.shared();
   private timer: number = -1;
   private permissionsAsked: boolean = false;
   private visible: boolean = false;
@@ -81,13 +131,18 @@ struct Index {
   private async askPermissions(): Promise<void> {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     this.sensors.init(context);
+    this.link.attach(this.sensors);
+    this.link.init(context).then(() => {
+      this.showLink();
+    });
     try {
       const result = await abilityAccessCtrl.createAtManager().requestPermissionsFromUser(context, PERMISSIONS);
       hilog.info(DOMAIN, TAG, 'permissions: %{public}s', JSON.stringify(result.authResults));
     } catch (err) {
       hilog.error(DOMAIN, TAG, 'requestPermissions failed: %{public}s', JSON.stringify(err));
     }
-    // A refused permission is not fatal: that sensor fails to subscribe and its value shows a message.
+    // A refused permission is not fatal: that sensor fails to subscribe, its value shows a message,
+    // and the recorder keeps what is available.
     this.permissionsAsked = true;
     this.startIfReady();
   }
@@ -101,6 +156,9 @@ struct Index {
     if (this.timer < 0) {
       this.timer = setInterval(() => {
         this.show(this.sensors.tick(Date.now()));
+        this.link.tick(this.sensors).then(() => {
+          this.showLink();
+        });
       }, TICK_MS);
     }
   }
@@ -111,6 +169,8 @@ struct Index {
       this.timer = -1;
     }
     this.sensors.stop();
+    // The recorder is not fed while the app is hidden: that time stays "not observed".
+    this.link.pause();
   }
 
   private show(view: LiveSnapshot): void {
@@ -119,6 +179,24 @@ struct Index {
     this.wear = view.wear;
     this.heartSensor = view.heartSensor;
     this.stepSensor = view.stepSensor;
+  }
+
+  private showLink(): void {
+    const view: WatchLinkView = this.link.view();
+    this.linkReady = this.link.isReady();
+    this.slots = view.slots;
+    this.openSlot = view.openSlot;
+    this.slotState = view.state;
+    this.statusLine = view.statusLine;
+    this.demoOn = view.demoClock;
+    this.clockLabel = view.clockLabel.length > 0 ? view.clockLabel : CLOCK_REAL;
+    this.recorderDate = view.recorderDate;
+    this.recorderMinute = view.recorderMinute;
+    this.kid = view.kid;
+    this.lastAck = view.lastAck;
+    this.keyNote = this.link.keyNote;
+    this.wearEngineText = this.link.wearEngineStatus();
+    this.linkError = this.link.error;
   }
 
   private heartText(): string {
@@ -136,10 +214,23 @@ struct Index {
 
   private stepsLabel(): string {
     const note = linkNote(this.stepSensor);
-    return note.length > 0 ? `Steps · ${note}` : 'Steps today';
+    return note.length > 0 ? `Steps ${note}` : 'Steps today';
   }
 
+  // The wear state the recorder uses (60 s without heart rate, 3 s on the demo clock), once it runs.
   private wearText(): string {
+    if (this.linkReady) {
+      if (this.slotState === 'W') {
+        return 'worn';
+      }
+      if (this.slotState === 'C') {
+        return 'charging';
+      }
+      if (this.slotState === 'O') {
+        return 'not on wrist';
+      }
+      return 'no data';
+    }
     if (this.wear === WearState.WORN) {
       return 'worn';
     }
@@ -150,6 +241,15 @@ struct Index {
   }
 
   private wearColor(): ResourceColor {
+    if (this.linkReady) {
+      if (this.slotState === 'W') {
+        return $r('sys.color.confirm');
+      }
+      if (this.slotState === 'O') {
+        return $r('sys.color.warning');
+      }
+      return $r('sys.color.font_secondary');
+    }
     if (this.wear === WearState.WORN) {
       return $r('sys.color.confirm');
     }
@@ -163,16 +263,74 @@ struct Index {
     return linkNote(link).length > 0 ? $r('sys.color.warning') : $r('sys.color.font_secondary');
   }
 
-  build() {
+  private statusColor(): ResourceColor {
+    if (this.statusLine === STATUS_SYNCED) {
+      return $r('sys.color.confirm');
+    }
+    if (this.statusLine === STATUS_NOT_PAIRED) {
+      return $r('sys.color.font_secondary');
+    }
+    return $r('sys.color.font_primary');
+  }
+
+  private recorderTime(): string {
+    return `${pad2(Math.floor(this.recorderMinute / 60))}:${pad2(this.recorderMinute % 60)}`;
+  }
+
+  // Shown whenever recorder time is not real time. 'DEMO ×300' while the fast clock runs.
+  private demoText(): string {
+    if (this.demoOn) {
+      return `DEMO ×300 · ${this.recorderTime()}`;
+    }
+    return `DEMO TIME · ${this.recorderDate.substring(5)} ${this.recorderTime()}`;
+  }
+
+  private toggleDemo(): void {
+    const turnOn = !this.demoOn;
+    this.link.setDemoClock(turnOn);
+    this.lastAction = turnOn ? 'Demo clock ×300 on · screen stays on' : 'Demo clock off';
+    this.showLink();
+  }
+
+  private closeDay(): void {
+    this.lastAction = 'Closing day…';
+    this.link.closeDay().then((seq: number) => {
+      if (seq > 0) {
+        this.lastAction = `Day closed · #${seq} in outbox`;
+      } else if (seq === 0) {
+        this.lastAction = 'Nothing recorded yet';
+      } else {
+        this.lastAction = 'Close day failed';
+      }
+      this.showLink();
+    });
+  }
+
+  private pairPhone(): void {
+    this.link.pair().then((code: string) => {
+      this.pairShown = code.length > 0;
+      this.lastAction = code.length > 0 ? 'Pairing request ready' : 'Pairing failed';
+      this.showLink();
+    });
+  }
+
+  private resetData(): void {
+    if (!this.resetArmed) {
+      this.resetArmed = true;
+      return;
+    }
+    this.resetArmed = false;
+    this.pairShown = false;
+    this.link.reset();
+    this.lastAction = 'Watch data reset · pair again on the phone';
+    this.showLink();
+  }
+
+  @Builder
+  DialPage() {
     Stack() {
-      // Thin ring in the colour of the wear state; the state is always written out as text as well.
-      Circle()
-        .width('95%')
-        .height('95%')
-        .fill(Color.Transparent)
-        .stroke(this.wearColor())
-        .strokeWidth(2)
-        .opacity(this.wear === WearState.NO_DATA ? 0.35 : 1)
+      // Today as 288 five-minute slots. The wear state is always written out as text as well.
+      SlotRing({ slots: this.slots, openSlot: this.openSlot })
 
       Column() {
         Text(this.heartLabel())
@@ -209,25 +367,163 @@ struct Index {
             valueColor: this.wearColor()
           })
         }
-        .width(176)
+        .width(188)
         .margin({ top: 2 })
 
-        Text('Live from FairWear on your watch.\nNot part of the score\nuntil the day closes.')
-          .fontSize($r('app.float.note_font_size'))
-          .fontColor($r('sys.color.font_secondary'))
-          .textAlign(TextAlign.Center)
+        Text(this.statusLine)
+          .fontSize($r('app.float.label_font_size'))
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.statusColor())
+          .maxLines(1)
           .margin({ top: 7 })
+
+        if (this.clockLabel !== CLOCK_REAL) {
+          Text(this.demoText())
+            .fontSize($r('app.float.note_font_size'))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('sys.color.warning'))
+            .maxLines(1)
+            .margin({ top: 2 })
+        }
 
         Text('FairWear · add-on for\nHUAWEI Health · DEMO')
           .fontSize($r('app.float.caption_font_size'))
           .fontColor($r('sys.color.font_tertiary'))
           .textAlign(TextAlign.Center)
-          .margin({ top: 6 })
+          .margin({ top: 5 })
       }
       .width('100%')
       .alignItems(HorizontalAlign.Center)
       .justifyContent(FlexAlign.Center)
     }
+    .width('100%')
+    .height('100%')
+  }
+
+  // Two short pages instead of one scrolling list: on a watch a swipe to the right leaves the app,
+  // so the pages are stacked vertically and none of them scrolls.
+  @Builder
+  DemoPage() {
+    Column({ space: 7 }) {
+      Text('Watch link')
+        .fontSize($r('app.float.title_font_size'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('sys.color.font_primary'))
+      Text(this.statusLine)
+        .fontSize($r('app.float.label_font_size'))
+        .fontColor(this.statusColor())
+
+      ControlButton({
+        label: 'Close day (demo)',
+        onTap: () => {
+          this.closeDay();
+        }
+      })
+      ControlButton({
+        label: 'Demo clock ×300',
+        labelColor: this.demoOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
+        onTap: () => {
+          this.toggleDemo();
+        }
+      })
+      if (this.demoOn) {
+        Text(`On · recorder time ${this.recorderTime()}`)
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.warning'))
+      }
+      if (this.lastAction.length > 0) {
+        Text(this.lastAction)
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.font_primary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      if (this.lastAck.length > 0) {
+        Text(`Phone: ${this.lastAck}`)
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.font_secondary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Center)
+    .justifyContent(FlexAlign.Center)
+    // Round screen: nothing in the corners.
+    .padding({ left: 46, right: 46 })
+  }
+
+  @Builder
+  PhonePage() {
+    Column({ space: 6 }) {
+      ControlButton({
+        label: 'Pair phone',
+        onTap: () => {
+          this.pairPhone();
+        }
+      })
+      if (this.pairShown) {
+        Text(this.kid)
+          .fontSize($r('app.float.code_font_size'))
+          .fontWeight(FontWeight.Bold)
+          .fontFamily('monospace')
+          .fontColor($r('sys.color.font_primary'))
+          .maxLines(1)
+        Text('Confirm this code on the phone')
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('sys.color.font_secondary'))
+          .textAlign(TextAlign.Center)
+      }
+      ControlButton({
+        label: this.resetArmed ? 'Tap again to reset' : 'Reset watch data',
+        labelColor: $r('sys.color.warning'),
+        onTap: () => {
+          this.resetData();
+        }
+      })
+      if (this.keyNote.length > 0 && !this.pairShown) {
+        Text(this.keyNote)
+          .fontSize($r('app.float.caption_font_size'))
+          .fontColor($r('sys.color.font_tertiary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      if (this.wearEngineText.length > 0 && !this.pairShown) {
+        Text(this.wearEngineText)
+          .fontSize($r('app.float.caption_font_size'))
+          .fontColor($r('sys.color.font_tertiary'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      if (this.linkError.length > 0) {
+        Text(this.linkError)
+          .fontSize($r('app.float.caption_font_size'))
+          .fontColor($r('sys.color.warning'))
+          .textAlign(TextAlign.Center)
+          .maxLines(2)
+      }
+      Text('Records while this app is open.\nBackground time is not observed.')
+        .fontSize($r('app.float.caption_font_size'))
+        .fontColor($r('sys.color.font_tertiary'))
+        .textAlign(TextAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+    .alignItems(HorizontalAlign.Center)
+    .justifyContent(FlexAlign.Center)
+    .padding({ left: 46, right: 46 })
+  }
+
+  build() {
+    Swiper() {
+      this.DialPage()
+      this.DemoPage()
+      this.PhonePage()
+    }
+    .vertical(true)
+    .loop(false)
+    .indicator(false)
     .width('100%')
     .height('100%')
   }
