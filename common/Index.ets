@@ -90,3 +90,44 @@ export {
   SealedDay,
   WatchChainState
 } from './src/main/ets/watchlink/PacketSealer';
+// Platform helpers shared by the phone and the watch (these import system kits; the logic tests do not load them).
+export { b64urlDecode, b64urlEncode, toHex, utf8Decode, utf8Encode } from './src/main/ets/platform/Bytes';
+export { CryptoUtil } from './src/main/ets/platform/CryptoUtil';
+export { DeviceKey, KeySource, ProofSigner } from './src/main/ets/platform/ProofSigner';
+export { FileTextStore } from './src/main/ets/platform/FileTextStore';
+export {
+  DeviceHasher,
+  DeviceSigVerifier,
+  deviceTzOffsetMin,
+  KeySigner,
+  SystemClock
+} from './src/main/ets/platform/DeviceCrypto';
+// Watch Link engines: the watch side and the phone side, platform passed in.
+export { DayTransport } from './src/main/ets/watchlink/DayTransport';
+export { DEMO_SPEED, RecorderClock } from './src/main/ets/watchlink/RecorderClock';
+export {
+  ACKS_DIR,
+  OUTBOX_DIR,
+  PAIR_FILE,
+  STATUS_NOT_PAIRED,
+  STATUS_SYNCED,
+  syncStatusLine,
+  WatchLinkEngine,
+  WatchLinkView
+} from './src/main/ets/watchlink/WatchLinkEngine';
+export {
+  factsOfMissing,
+  factsOfPacket,
+  INBOX_DIR,
+  missingDayReason,
+  PhoneLinkEngine,
+  PhoneLinkView,
+  PHONE_ACKS_DIR,
+  sourceLine,
+  SyncLogEntry,
+  SyncReport,
+  TRANSPORT_RELAY,
+  TRANSPORT_WEAR_ENGINE,
+  WatchDayFacts
+} from './src/main/ets/watchlink/PhoneLinkEngine';
+export { PAIR_ACK_SEQ } from './src/main/ets/watchlink/DayPacketCodec';

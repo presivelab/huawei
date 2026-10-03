@@ -28,6 +28,9 @@ const MAX_TZ_MIN: number = 14 * 60;
 const KID_LENGTH: number = 8;
 const MAX_TEXT: number = 512;
 
+// An ACK with this seq answers the pairing request, not a day packet.
+export const PAIR_ACK_SEQ: number = 0;
+
 export class DayDecodeResult {
   code: DecodeCode = 'FORMAT';
   reason: string = '';
@@ -325,7 +328,7 @@ export class AckPacketCodec {
     const seq = readInt(o, 'seq');
     const status = readString(o, 'status');
     const reason = readString(o, 'reason');
-    if (seq === null || status === null || reason === null || seq < 1 || reason.length > MAX_TEXT) {
+    if (seq === null || status === null || reason === null || seq < PAIR_ACK_SEQ || reason.length > MAX_TEXT) {
       out.reason = 'a field is missing or has the wrong type';
       return out;
     }

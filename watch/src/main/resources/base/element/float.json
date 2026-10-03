@@ -23,6 +23,18 @@
     {
       "name": "caption_font_size",
       "value": "9fp"
+    },
+    {
+      "name": "code_font_size",
+      "value": "26fp"
+    },
+    {
+      "name": "button_font_size",
+      "value": "13fp"
+    },
+    {
+      "name": "title_font_size",
+      "value": "15fp"
     }
   ]
 }

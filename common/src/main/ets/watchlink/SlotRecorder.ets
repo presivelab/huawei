@@ -28,6 +28,9 @@ export const GAP_REAL_MS: number = 5000;
 // Slot files kept on the watch: the current day and the two before it.
 export const KEEP_DAYS: number = 3;
 
+export const DEMO_SPEED_PREFIX: string = 'DEMO_X';
+export const CLOCK_DEMO_OFFSET: string = 'DEMO_OFFSET';
+
 const DAYS_DIR: string = 'days';
 const JSON_SUFFIX: string = '.json';
 
@@ -54,6 +57,9 @@ export class SlotRecorder {
   setClock(speed: number, label: string): void {
     this.speed = speed > 0 ? speed : 1;
     this.clockLabel = label;
+    if (this.day !== null && !this.day.sealed) {
+      this.labelClock(this.day);
+    }
     this.pause();
   }
 
@@ -272,14 +278,23 @@ export class SlotRecorder {
     }
     if (!day.sealed) {
       day.wearSource = this.wearSource;
-      if (this.clockLabel !== CLOCK_REAL) {
-        day.clock = this.clockLabel;
-      }
+      this.labelClock(day);
     }
     this.day = day;
     this.dayNumber = dayNumber;
     this.prune(dayNumber);
     this.dirty = true;
+  }
+
+  // A day is REAL only if every part of it ran on the real, unshifted clock. A speed label (DEMO_X300)
+  // is never replaced by a weaker one.
+  private labelClock(day: DayRecord): void {
+    if (this.clockLabel === CLOCK_REAL) {
+      return;
+    }
+    if (day.clock === CLOCK_REAL || this.clockLabel.startsWith(DEMO_SPEED_PREFIX)) {
+      day.clock = this.clockLabel;
+    }
   }
 
   // Marks the current day finished and queues it for packing.
@@ -288,9 +303,7 @@ export class SlotRecorder {
     if (day === null || day.sealed) {
       return;
     }
-    if (this.clockLabel !== CLOCK_REAL) {
-      day.clock = this.clockLabel;
-    }
+    this.labelClock(day);
     if (natural) {
       day.closedCount = SLOTS_PER_DAY;
     }
