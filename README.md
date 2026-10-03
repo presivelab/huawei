@@ -62,6 +62,14 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 
 ## Security & privacy
 
+- **Phone.** The phone app declares no permissions and has no network code: health history and the score
+  never leave the phone. The only output meant for a partner is the signed tier claim. The Watch Link code
+  also answers the paired watch with ACK packets (sequence number, status, reason; no health values).
+- **Watch.** Two permissions, `READ_HEALTH_DATA` (heart rate) and `ACTIVITY_MOTION` (steps), each with a
+  stated reason and used only while the app is open. A refused permission shows "—" and "unavailable"
+  (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg`), never a made-up value. The sensors are
+  switched off when the page is hidden.
+- **Entry points.** Only the two start abilities are exported; the home-screen card ability is not.
 - **Dependencies.** `entry` and `watch` depend only on the local `common` module. The two external packages,
   `@ohos/hypium` 1.0.24 and `@ohos/hamock` 1.0.0, are OpenHarmony's test libraries, declared as
   devDependencies for the test sources. The `oh-package-lock.json5` files are committed, so an install
