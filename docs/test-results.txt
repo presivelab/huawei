@@ -1,6 +1,21 @@
 FairWear test results
 =====================
 
+2026-10-04 01:05 CEST  branch feature/health-sim-audit  (Health Sim app in healthsim/, P0 step 1)
+----------------------------------------------------
+Package HealthSim.zip laid into healthsim/ unchanged; added only the project files it did not ship
+(build-profile.json5, oh-package.json5, hvigor/, hvigorfile.ts, code-linter.json5, entry/build-profile.json5,
+entry/hvigorfile.ts, entry/oh-package.json5), with the same SDK settings as FairWear.
+HS-04  SHA-256 of the 8 shared files in entry/src/main/ets/healthsim/: all 8 match the hashes in the brief.
+HS-05  97 strings and 17 colours referenced; every one exists in base and zh_CN with matching placeholders.
+HS-06  Lint (devecocli check lint entry): 0 errors, 6 warnings (one performance rule).
+HS-07  ArkTS build (hvigorw assembleHap): BUILD SUCCESSFUL on the first attempt, no source change.
+HS-08  Installed and started on the Phone emulator (API 24): Today tab with the SIMULATED DATA banner,
+       persona Kasia, Data ID 05e0d523 (docs/screenshots/healthsim-today-phone.jpeg).
+HS-09  Logic tests (run in the unpacked package, npm test): 69 passed, 0 failed.
+Not done: HS-10 (History and Scenario tabs, persona switch, Chinese UI); the consent round trip from FairWear
+(healthsim://authorize); the copy of healthsim/ into common and the adapter to the scoring engine.
+
 2026-10-04 01:02 CEST  branch feature/integration  (I-1 merge of home-card and watch-link; W-0 look fixes)
 ----------------------------------------------------
 After the I-1 merge (f1709ca): common 80/80, watch 6/6, build of entry, watch and common successful.

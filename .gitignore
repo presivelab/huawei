@@ -24,3 +24,5 @@ oh-package-lock.json5
 watch/src/main/resources/rawfile/local.json
 entry/src/main/resources/rawfile/local.json
 _relay/
+healthsim/tools/logic-tests/src/
+healthsim/tools/logic-tests/out/
