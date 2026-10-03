@@ -167,3 +167,10 @@ export {
   WatchDayFacts
 } from './src/main/ets/watchlink/PhoneLinkEngine';
 export { PAIR_ACK_SEQ } from './src/main/ets/watchlink/DayPacketCodec';
+export {
+  CLOCK_FEED_SUFFIX,
+  demoFeedAt,
+  DemoFeedSample,
+  demoFeedSteps,
+  feedClockLabel
+} from './src/main/ets/watchlink/DemoFeed';

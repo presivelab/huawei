@@ -43,6 +43,7 @@ measures, scores it on the phone, and shares only a signed tier.
 | Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not in this branch yet. The demo source is empty, so the screens show "—".                                                              |
 | Scoring (HES-Lite), tier, coverage                                    | Not in this branch yet. The tier is shown as "—" with "HES-Lite not connected".                                                         |
 | VO₂max and HRV from HUAWEI Health                                     | Will not be scored without a cited percentile table.                                                                                    |
+| Watch demo feed | Simulated. A fixed script of heart rate, steps and charging (night on the charger, worn hours, one break, a walk, a workout) replaces the sensor readings. It runs only on the demo clock, the dial reads "DEMO ×300 · FEED", and the signed day packet carries the clock label `DEMO_X300_FEED`. It goes through the same wear rule and recorder as sensor readings (`common/src/main/ets/watchlink/DemoFeed.ets`). |
 
 ## Permissions
 

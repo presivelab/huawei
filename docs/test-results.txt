@@ -1,6 +1,25 @@
 FairWear test results
 =====================
 
+2026-10-04 01:37 CEST  branch feature/ui-foundation  (project state and skill; watch demo feed)
+----------------------------------------------------
+Base: main 491bcb4 with feature/security-watch merged in (common 85/85, watch 6/6 after the merge).
+Node run (tools/run-logic-tests.sh): common 98/98, watch 6/6.
+  New: DemoFeed script 7 (in the hypium list) and WatchLink demo feed 6 (engine run under Node):
+  the feed cannot run without the demo clock; a fed day has charging, worn and off-wrist slots and steps
+  and its signed packet carries the clock label DEMO_X300_FEED; sensor readings are not mixed in;
+  the label stays on a day that received any scripted readings; switching the demo clock off stops the feed.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; 11 warnings of one performance rule (entry 9, watch 2, common 0).
+Wearable emulator (API 24): Watch link page -> Demo clock x300 -> Demo feed: on. The dial then showed
+  a heart rate (74 bpm at recorder time 07:15, 68-70 bpm at 20:41), steps 181 then 12245, state worn,
+  the line DEMO x300 - FEED - hh:mm, and a slot ring with charging, worn and off-wrist segments
+  (docs/screenshots/design/before-watch-dial.jpeg, after-watch-dial-feed-morning.jpeg,
+  after-watch-dial-feed-later.jpeg, after-watch-demo-controls.jpeg).
+Not done: sending a fed day to the phone through the relay; the real sensor path with a non-zero heart
+  rate (Virtual sensor panel, manual); dark and light variants of the watch screenshots.
+
 2026-10-04 01:02 CEST  branch feature/integration  (I-1 merge of home-card and watch-link; W-0 look fixes)
 ----------------------------------------------------
 After the I-1 merge (f1709ca): common 80/80, watch 6/6, build of entry, watch and common successful.

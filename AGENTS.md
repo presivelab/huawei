@@ -104,8 +104,8 @@ two disagree.
 - Do not assume them. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the
   state of this repository.
 
-**Decisions in force** (team briefs 8 "final correction", 9 "security" and 10 "audit"; they replace
-earlier briefs where those differ)
+**Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
+brief; a copy goes to `docs/prompts/` with the other prompts)
 
 - The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
 - One wear rule on the watch: `WearStateMachine`. A reading of 0 bpm or less is no reading.

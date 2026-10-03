@@ -42,6 +42,8 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 
 **Phone: home-screen card and icon shortcut (emulator).** The DevEco phone emulator shows service widgets. Long-press the FairWear icon → Widgets → Add to home screen: the 2x2 card shows the data source, the coverage and whether a score is ready, never the tier. Long-press the icon again: the shortcut "Data source" opens Settings with the data-source card. Both open the app through the same parameter, `fwTarget` (`docs/ARCHITECTURE.md`, "One entry point"). Screenshots: `docs/screenshots/ta1-home-card-phone.jpeg`, `ta1-home-card-after-consent-phone.jpeg`, `ta2-icon-shortcut-phone.jpeg`.
 
+**Watch: demo feed (simulated).** The wearable emulator sends heart rate 0, so a recorded day would be empty. On the watch, page "Watch link": switch on "Demo clock ×300", then "Demo feed". A fixed script of heart rate, steps and charging then replaces the sensor readings: night on the charger, worn hours, one break from 12:30 to 14:00, a walk and a workout. The dial reads "DEMO ×300 · FEED" and every value is labelled "demo feed"; the signed day packet carries the clock label `DEMO_X300_FEED`. The script goes through the same wear rule and recorder as real sensor readings. The real sensors still work when the feed is off: set the heart rate in the emulator's Virtual sensor panel. Screenshots: `docs/screenshots/design/after-watch-dial-feed-later.jpeg`, `before-watch-dial.jpeg`.
+
 ## State of this branch
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).

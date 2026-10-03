@@ -3,6 +3,7 @@
 //
 // The recorder never extrapolates. Time it was not fed is "not observed" (U): the app was suspended,
 // killed, or had no sensor signal. U is never off-wrist.
+import { CLOCK_FEED_SUFFIX } from './DemoFeed';
 import { dayFilePath, dayRecordFromJson, dayRecordToJson } from './DayRecordCodec';
 import { TextStore } from './WatchLinkPorts';
 import {
@@ -290,6 +291,10 @@ export class SlotRecorder {
   // is never replaced by a weaker one.
   private labelClock(day: DayRecord): void {
     if (this.clockLabel === CLOCK_REAL) {
+      return;
+    }
+    // A day that received scripted readings stays labelled as such, whatever the clock does later.
+    if (day.clock.endsWith(CLOCK_FEED_SUFFIX)) {
       return;
     }
     if (day.clock === CLOCK_REAL || this.clockLabel.startsWith(DEMO_SPEED_PREFIX)) {

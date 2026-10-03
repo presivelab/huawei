@@ -10,6 +10,7 @@
 //   state.json          seq, lastHash, kid, paired
 //   clock.json          recorder-clock offset
 import { DayBuilder } from './DayBuilder';
+import { demoFeedAt, demoFeedSteps, feedClockLabel } from './DemoFeed';
 import { AckPacketCodec, DayPacketCodec, PAIR_ACK_SEQ } from './DayPacketCodec';
 import { DayTransport } from './DayTransport';
 import { MSG_UNKNOWN_KEY } from './DayPacketVerifier';
@@ -67,6 +68,9 @@ export class WatchLinkView {
   pending: number = 0;
   statusLine: string = STATUS_NOT_PAIRED;
   lastAck: string = '';
+  demoFeed: boolean = false;          // scripted readings stand in for the sensors
+  feedHr: number = 0;                 // the scripted heart rate now; 0 = no reading
+  stepsToday: number = 0;             // steps recorded in the open recorder day
 }
 
 function seqOfName(name: string): number {
@@ -109,6 +113,9 @@ export class WatchLinkEngine {
   private started: boolean = false;
   private lastAck: string = '';
   private lastState: SlotState = 'U';
+  private feedOn: boolean = false;
+  private feedHr: number = 0;
+  private feedLastRecorderMs: number = -1;
 
   constructor(store: TextStore, signer: Signer, hasher: Hasher, realClock: Clock, tzOffsetMin: number) {
     this.store = store;
@@ -138,7 +145,11 @@ export class WatchLinkEngine {
     this.processAcks();
   }
 
+  // While the demo feed runs, the script stands in for the sensors: sensor events are not mixed in.
   onHr(bpm: number): void {
+    if (this.feedOn) {
+      return;
+    }
     this.machine.onHr(this.realClock.nowMs(), bpm);
     if (isValidHeartRate(bpm)) {
       this.pendingHr = bpm;
@@ -146,20 +157,27 @@ export class WatchLinkEngine {
   }
 
   onWear(value: number): void {
+    if (this.feedOn) {
+      return;
+    }
     this.machine.onWear(this.realClock.nowMs(), value);
   }
 
   onCharging(isCharging: boolean): void {
+    if (this.feedOn) {
+      return;
+    }
     this.machine.onCharging(this.realClock.nowMs(), isCharging);
   }
 
   // About once per real second while the app is observing.
   async tick(stepsDelta: number): Promise<void> {
     const realMs = this.realClock.nowMs();
+    const steps = this.feedOn ? this.applyFeed(realMs) : stepsDelta;
     const state: SlotState = this.machine.hasSignal() ? this.machine.state(realMs) : 'U';
     this.lastState = state;
     this.recorder.setWearSource(this.machine.source());
-    this.recorder.tick(realMs, this.recClock.now(realMs), state, this.pendingHr, stepsDelta);
+    this.recorder.tick(realMs, this.recClock.now(realMs), state, this.pendingHr, steps);
     this.pendingHr = null;
     if (this.recClock.isDemoSpeed()) {
       this.saveClock(realMs);
@@ -179,11 +197,38 @@ export class WatchLinkEngine {
   }
 
   setDemoClock(on: boolean): void {
+    if (!on) {
+      // The feed exists only on the demo clock.
+      this.setDemoFeed(false);
+    }
     const realMs = this.realClock.nowMs();
     this.recClock.setSpeed(realMs, on ? DEMO_SPEED : 1);
     this.machine.setFreshnessMs(on ? FRESHNESS_DEMO_CLOCK_MS : FRESHNESS_REAL_CLOCK_MS);
-    this.recorder.setClock(this.recClock.speedNow(), this.recClock.label(realMs));
+    this.recorder.setClock(this.recClock.speedNow(), this.clockLabelNow(realMs));
     this.saveClock(realMs);
+  }
+
+  isDemoFeed(): boolean {
+    return this.feedOn;
+  }
+
+  // "Demo feed": scripted heart rate, steps and charging instead of the sensors. It can only be on while
+  // the demo clock runs. Returns whether the feed is on after the call.
+  setDemoFeed(on: boolean): boolean {
+    const want = on && this.recClock.isDemoSpeed();
+    if (want === this.feedOn) {
+      return this.feedOn;
+    }
+    const realMs = this.realClock.nowMs();
+    this.feedOn = want;
+    this.feedHr = 0;
+    this.feedLastRecorderMs = -1;
+    this.pendingHr = null;
+    // A fresh wear state on both edges, so scripted and sensor readings are never judged together.
+    this.machine = new WearStateMachine(this.recClock.isDemoSpeed() ? FRESHNESS_DEMO_CLOCK_MS :
+      FRESHNESS_REAL_CLOCK_MS);
+    this.recorder.setClock(this.recClock.speedNow(), this.clockLabelNow(realMs));
+    return this.feedOn;
   }
 
   // "Close day (demo)": finishes the recorder day now (the slots not reached stay U), moves the
@@ -197,7 +242,8 @@ export class WatchLinkEngine {
     }
     const nextMidnight = slotStartMs(dayNumberOfDate(day.date) + 1, 0, this.tzOffsetMin);
     this.recClock.jumpTo(realMs, nextMidnight);
-    this.recorder.setClock(this.recClock.speedNow(), this.recClock.label(realMs));
+    this.feedLastRecorderMs = -1;
+    this.recorder.setClock(this.recClock.speedNow(), this.clockLabelNow(realMs));
     this.saveClock(realMs);
     await this.packFinishedDays();
     return this.chain.seq;
@@ -223,7 +269,10 @@ export class WatchLinkEngine {
     const realMs = this.realClock.nowMs();
     this.chain = newChainState(this.signer.kid());
     this.recClock = new RecorderClock(0);
-    this.machine.setFreshnessMs(FRESHNESS_REAL_CLOCK_MS);
+    this.feedOn = false;
+    this.feedHr = 0;
+    this.feedLastRecorderMs = -1;
+    this.machine = new WearStateMachine(FRESHNESS_REAL_CLOCK_MS);
     this.recorder = new SlotRecorder(this.store, this.tzOffsetMin);
     this.recorder.setClock(1, this.recClock.label(realMs));
     this.lastAck = '';
@@ -286,17 +335,54 @@ export class WatchLinkEngine {
     out.state = this.lastState;
     out.wearSource = this.machine.source();
     out.demoClock = this.recClock.isDemoSpeed();
-    out.clockLabel = this.recClock.label(realMs);
+    out.clockLabel = this.clockLabelNow(realMs);
     const recorderMs = this.recClock.now(realMs);
     out.recorderDate = dateOfDayNumber(localDayNumber(recorderMs, this.tzOffsetMin));
-    out.recorderMinute = localSlotIndex(recorderMs, this.tzOffsetMin) * SLOT_MINUTES +
-      Math.floor((recorderMs % SLOT_MS) / 60000);
+    out.recorderMinute = this.minuteOfDay(recorderMs);
+    out.demoFeed = this.feedOn;
+    out.feedHr = this.feedHr;
+    const today = this.recorder.currentDay();
+    if (today !== null) {
+      let steps = 0;
+      for (let i = 0; i < today.slots.length; i++) {
+        steps += today.slots[i].steps;
+      }
+      out.stepsToday = steps;
+    }
     out.kid = this.signer.kid();
     out.paired = this.chain.paired;
     out.pending = this.pendingCount();
     out.statusLine = syncStatusLine(out.paired, out.pending);
     out.lastAck = this.lastAck;
     return out;
+  }
+
+  // Minute of the recorder's local day, 0..1439.
+  private minuteOfDay(recorderMs: number): number {
+    return localSlotIndex(recorderMs, this.tzOffsetMin) * SLOT_MINUTES + Math.floor((recorderMs % SLOT_MS) / 60000);
+  }
+
+  // The label that goes into the day packet: the clock's own label, marked when scripted readings are fed.
+  private clockLabelNow(realMs: number): string {
+    const label = this.recClock.label(realMs);
+    return this.feedOn ? feedClockLabel(label) : label;
+  }
+
+  // Feeds this second's scripted readings into the same wear state machine the sensors feed.
+  // Returns the scripted steps for the recorder time since the last tick.
+  private applyFeed(realMs: number): number {
+    const recorderMs = this.recClock.now(realMs);
+    const minute = this.minuteOfDay(recorderMs);
+    const sample = demoFeedAt(minute);
+    this.machine.onCharging(realMs, sample.charging);
+    this.machine.onHr(realMs, sample.hr);
+    this.feedHr = sample.hr;
+    if (isValidHeartRate(sample.hr)) {
+      this.pendingHr = sample.hr;
+    }
+    const elapsedMin = this.feedLastRecorderMs < 0 ? 0 : (recorderMs - this.feedLastRecorderMs) / 60000;
+    this.feedLastRecorderMs = recorderMs;
+    return demoFeedSteps(minute, elapsedMin);
   }
 
   // Builds, signs and stores the packet of every finished day. One at a time: signing is asynchronous

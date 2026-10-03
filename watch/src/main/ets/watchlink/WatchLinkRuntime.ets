@@ -137,6 +137,21 @@ export class WatchLinkRuntime {
     this.keepScreenOn(on);
   }
 
+  // Scripted heart rate, steps and charging instead of the sensors; only while the demo clock runs.
+  // Returns whether the feed is on after the call.
+  setDemoFeed(on: boolean): boolean {
+    const engine = this.engine;
+    if (engine === null) {
+      return false;
+    }
+    try {
+      return engine.setDemoFeed(on);
+    } catch (e) {
+      this.fail('demo feed', e as BusinessError);
+      return false;
+    }
+  }
+
   // Returns the seq of the packet now in the outbox, 0 when nothing had been recorded, -1 on failure.
   async closeDay(): Promise<number> {
     const engine = this.engine;
