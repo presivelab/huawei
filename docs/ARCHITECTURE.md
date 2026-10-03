@@ -44,6 +44,14 @@ measures, scores it on the phone, and shares only a signed tier.
 | Scoring (HES-Lite), tier, coverage                                    | Not in this branch yet. The tier is shown as "—" with "HES-Lite not connected".                                                         |
 | VO₂max and HRV from HUAWEI Health                                     | Will not be scored without a cited percentile table.                                                                                    |
 
+## Permissions
+
+| Module  | Permission                         | Reason shown to the user                                                                          |
+| ------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `entry` | none                               | The add-on screens need no permission in this build; the HUAWEI Health adapter is a stub.         |
+| `watch` | `ohos.permission.READ_HEALTH_DATA` | "FairWear shows your live heart rate on the watch and uses it to tell whether the watch is worn." |
+| `watch` | `ohos.permission.ACTIVITY_MOTION`  | "FairWear shows the steps counted today on the watch."                                            |
+
 ## One entry point
 
 FairWear on the phone has one way in: the ability `EntryAbility` of module `entry` (bundle

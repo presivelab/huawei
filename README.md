@@ -33,6 +33,12 @@ The HAPs are written to `entry/build/default/outputs/default/entry-default-unsig
 **How to check it.** Follow `docs/DEMO_SCRIPT.md`: connect, both consent steps, result, disconnect, consent
 again, result. That is the path Huawei asks to see when it verifies an integration, here with DEMO data.
 
+**Watch: live heart rate and wear state (emulator).** The watch module subscribes to the heart-rate and step-counter sensors and shows three live values: heart rate, steps today and wear state. These values stay on the watch and are not part of the score. The wearable emulator has a heart-rate sensor and a step counter but no wear-detection sensor, so the wear state is derived from heart rate: any reading ≤ 0 counts as no reading, and the watch counts as removed after 10 s without a valid reading.
+
+What we observed on the emulator with nothing set in the Virtual sensor panel: heart-rate events arrive about 6 times a second with the value 0 (not silence) and the step counter stays at 1000. The screen shows "—" for heart rate, 0 steps today and the wear state "no data". No real heart rate was read on the emulator.
+
+**Manual check, not yet done:** in the emulator window open the menu → Virtual sensor and set heart rate to 70, then 0, then 70 again. Expected: 70 shows "70 bpm" and "worn"; after 0 the heart rate changes to "—" at once and the wear state changes to "removed" 10 s later; 70 brings back "70 bpm" and "worn". This sequence is covered by the Node test (`tools/run-logic-tests.sh common common/src/test/LiveWear.test.ets live`), but it has not been run in the emulator panel. Write the observed result here after running it.
+
 ## State of this branch
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
