@@ -10,3 +10,14 @@ export {
 } from './src/main/ets/claim/TierClaimCodec';
 export { isSelectiveNonWear } from './src/main/ets/rules/SelectiveNonWear';
 export { LiveWearState, WearState, NO_HEART_RATE, DEFAULT_REMOVED_AFTER_MS } from './src/main/ets/live/LiveWearState';
+export {
+  DailyActivity,
+  HEALTH_MISSING,
+  HealthStatus,
+  HrvNight,
+  SleepSession,
+  Vo2MaxEstimate,
+  Workout
+} from './src/main/ets/health/HealthRecords';
+export { EmptyHealthSource, HealthSource } from './src/main/ets/health/HealthSource';
+export { ALL_HEALTH_SCOPES, HealthConnection, HealthScope } from './src/main/ets/health/HealthConnection';
