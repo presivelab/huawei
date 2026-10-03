@@ -62,3 +62,43 @@ Not run: DevEco Local Test (the test files were compiled by tsc only, not by the
 Phone emulator (HarmonyOS 6.1.1, API 24), app log at start:
   signing key: HUKS kid=762fa82f (Key held in HUKS)
 The HUKS ECDSA P-256 signature over a probe verified with plain ECDSA (cryptoFramework).
+
+2026-10-04 00:10 CEST  branch feature/health-addon (watch, AD-6)
+----------------------------------------------------
+Node run (TypeScript 4.9.5 strict, hypium shim), common/src/test/LiveWear.test.ets:
+
+  ✓ LiveWearState > before the first valid reading the state is no data and there is no heart rate
+  ✓ LiveWearState > 70, 70, 0 for N s, 70 gives worn, removed, worn
+  ✓ LiveWearState > a reading of zero or below never appears as heart rate
+  ✓ LiveWearState > silence from the sensor also turns into removed once the clock is advanced
+  ✓ LiveWearState > N is a parameter; the default is the 10 s demo value
+  ✓ LiveWearState > an older timestamp never moves the clock back
+
+  6/6 passed
+
+Node run (TypeScript 4.9.5 strict, hypium shim), watch/src/test/DaySteps.test.ets:
+
+  ✓ DaySteps > before the first reading of the day there is no step count, not zero
+  ✓ DaySteps > today = raw counter minus the first raw reading of the day
+  ✓ DaySteps > a dropped counter re-bases and keeps what was counted
+  ✓ DaySteps > a new day starts again from its own first reading
+  ✓ DaySteps > a saved state restores; a broken one is ignored
+  ✓ DaySteps > a negative counter value is ignored
+
+  6/6 passed
+
+ArkTS compile: hvigorw assembleHap (watch, with common as a local dependency) BUILD SUCCESSFUL.
+Watch emulator (wearable, 466x466, hdc 127.0.0.1:5555), unsigned debug HAP, app log:
+  permissions: [0,0]                       both dialogs allowed with uitest clicks
+  sensor ids: 1,2,5,6,256,257,259,266,278  HEART_RATE(278) and PEDOMETER(266) present, no WEAR_DETECTION(280)
+  heart rate subscribed / step counter subscribed
+  live hrLink=1 hrEvents=58 hrValid=0 hrRaw=0 hrShown=-1 wear=NO_DATA stepLink=1 stepEvents=58 stepsRaw=1000 stepsToday=0
+  sensors off                              logged when the page is hidden
+  With READ_HEALTH_DATA denied: permissions: [-1,0], heart rate subscribe failed: {"code":201},
+  screen shows "Heart rate · no permission" and the step value keeps working.
+  Screenshots: docs/screenshots/watch-01 ... watch-04.
+Not run: a real heart rate. The emulator sent only heart rate 0 (about 6 events a second) and a constant
+  step counter of 1000, so the screen showed "—", 0 steps and "no data". The worn and removed states were
+  reached only in the Node test above, not on the emulator.
+Not run: the 70 -> 0 -> 70 change in the emulator's virtual sensor panel (left as a manual step for the owner).
+Not run: DevEco Local Test (the test files were compiled by tsc only, not by the ArkTS compiler).
