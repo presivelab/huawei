@@ -3,6 +3,7 @@ import healthTest from './Health.test';
 import liveWearTest from './LiveWear.test';
 import entryTargetTest from './EntryTarget.test';
 import cardDigestTest from './CardDigest.test';
+import healthStatusLabelTest from './HealthStatusLabel.test';
 
 export default function testsuite() {
   claimTest();
@@ -10,4 +11,5 @@ export default function testsuite() {
   liveWearTest();
   entryTargetTest();
   cardDigestTest();
+  healthStatusLabelTest();
 }

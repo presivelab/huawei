@@ -16,19 +16,37 @@ import {
   sourceLine,
   statusExplanation
 } from '../addon/AddonTexts';
-import { BODY, BODY_SECONDARY, CAPTION, CARD, TITLE } from './Styles';
+import { BODY, BODY_SECONDARY, CAPTION, CARD, statusDotColor, TITLE } from './Styles';
 
-// The source status, shown on every screen that shows data: "HUAWEI Health · DEMO · last sync —".
+// A status dot and the source line, for example a blue dot and the brand followed by "Demo data".
+@Component
+struct SourceLineRow {
+  @Prop status: string = HealthStatus.NOT_AUTHORIZED;
+  @Prop lastSync: string = NO_VALUE;
+
+  build() {
+    Row({ space: 8 }) {
+      Circle()
+        .width(8)
+        .height(8)
+        .fill(statusDotColor(this.status))
+      Text(sourceLine(this.status, this.lastSync))
+        .fontSize($r('sys.float.Body_M'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('sys.color.font_primary'))
+    }
+    .alignItems(VerticalAlign.Center)
+  }
+}
+
+// The source status, shown on every screen that shows data.
 @Component
 export struct SourceStatusLine {
   @StorageProp(KEY_STATUS) status: string = HealthStatus.NOT_AUTHORIZED;
   @StorageProp(KEY_LAST_SYNC) lastSync: string = NO_VALUE;
 
   build() {
-    Text(sourceLine(this.status, this.lastSync))
-      .fontSize($r('sys.float.Body_M'))
-      .fontWeight(FontWeight.Medium)
-      .fontColor($r('sys.color.font_primary'))
+    SourceLineRow({ status: this.status, lastSync: this.lastSync })
       .padding({
         left: $r('sys.float.padding_level6'),
         right: $r('sys.float.padding_level6'),
@@ -53,7 +71,7 @@ export struct DataSourceCard {
   build() {
     Column({ space: 8 }) {
       Text('Data source').attributeModifier(TITLE)
-      Text(sourceLine(this.status, this.lastSync)).attributeModifier(BODY)
+      SourceLineRow({ status: this.status, lastSync: this.lastSync })
       Text(statusExplanation(this.status)).attributeModifier(BODY_SECONDARY)
       if (this.status !== HealthStatus.NOT_AUTHORIZED) {
         Text('Data types allowed: ' + this.scopesOn + ' of 7').attributeModifier(BODY_SECONDARY)

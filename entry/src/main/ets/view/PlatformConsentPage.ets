@@ -18,7 +18,7 @@ export struct PlatformConsentPage {
           Text('Step 1 of 2 · HUAWEI Health authorization').attributeModifier(LABEL)
 
           Column({ space: 8 }) {
-            Text('DEMO')
+            Text('Demo')
               .fontSize($r('sys.float.Body_S'))
               .fontWeight(FontWeight.Bold)
               .fontColor($r('sys.color.font_primary'))

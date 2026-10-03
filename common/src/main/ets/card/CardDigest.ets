@@ -1,4 +1,5 @@
 import { HealthStatus } from '../health/HealthRecords';
+import { healthSourceLabel } from '../health/HealthStatusLabel';
 
 /*
  * What the home-screen card may show.
@@ -26,16 +27,7 @@ export class CardDigest {
 
 /** The source line of the card. Text only: the brand name as a partner writes it, no logo. */
 export function cardSourceLabel(status: HealthStatus): string {
-  if (status === HealthStatus.CONNECTED) {
-    return 'HUAWEI Health · connected';
-  }
-  if (status === HealthStatus.DEMO) {
-    return 'HUAWEI Health · DEMO';
-  }
-  if (status === HealthStatus.UNAVAILABLE) {
-    return 'HUAWEI Health · unavailable';
-  }
-  return 'HUAWEI Health · not connected';
+  return healthSourceLabel(status);
 }
 
 /** Before the app has computed anything: not connected, no coverage, no result. */

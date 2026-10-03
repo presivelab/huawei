@@ -16,7 +16,7 @@ export default function cardDigestTest() {
   describe('CardDigest', () => {
     it('demo source with a result shows the label, the coverage and that a score is ready', 0, () => {
       const digest = buildCardDigest(HealthStatus.DEMO, 85, true);
-      expect(digest.sourceLabel).assertEqual('HUAWEI Health · DEMO');
+      expect(digest.sourceLabel).assertEqual('HUAWEI Health · Demo data');
       expect(cardCoverageText(digest)).assertEqual('85%');
       expect(cardResultText(digest)).assertEqual('Score ready');
     });
@@ -26,7 +26,7 @@ export default function cardDigestTest() {
       expect(cardCoverageText(refused)).assertEqual(CARD_NO_VALUE);
       expect(cardResultText(refused)).assertEqual(CARD_NO_VALUE);
       const unavailable = buildCardDigest(HealthStatus.UNAVAILABLE, 85, true);
-      expect(unavailable.sourceLabel).assertEqual('HUAWEI Health · unavailable');
+      expect(unavailable.sourceLabel).assertEqual('HUAWEI Health · Unavailable in this build');
       expect(cardCoverageText(unavailable)).assertEqual(CARD_NO_VALUE);
       expect(cardResultText(unavailable)).assertEqual(CARD_NO_VALUE);
     });

@@ -1,6 +1,20 @@
 FairWear test results
 =====================
 
+2026-10-04 01:02 CEST  branch feature/integration  (I-1 merge of home-card and watch-link; W-0 look fixes)
+----------------------------------------------------
+After the I-1 merge (f1709ca): common 80/80, watch 6/6, build of entry, watch and common successful.
+After W-0:
+Node run (tools/run-logic-tests.sh): common 83/83 (3 new: HealthStatusLabel), watch 6/6.
+Wording check (tools/check-wording.sh): 14 patterns 0 hits; new enum-in-UI check (NOT_AUTHORIZED, DEMO,
+  UNAVAILABLE, CONNECTED inside string literals of UI sources and resource strings) 0 hits.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; 11 warnings, one rule (@performance/avoid-overusing-custom-component-check):
+  entry 9, watch 2, common 0.
+Phone emulator (API 24), light mode, before and after in docs/screenshots/design/:
+  welcome, welcome with Details open, consent step 1, dashboard, settings, home screen with the new icon.
+Not done: dark-mode screenshots; watch screenshots (the watch page changed by one caption word only).
+
 2026-10-04 00:21 CEST  branch feature/home-card  (home-screen card, one entry via fwTarget, icon shortcut)
 ----------------------------------------------------
 Node run (tools/run-logic-tests.sh): common 42/42 (Claim 8, Health 14, LiveWear 6, EntryTarget 7,

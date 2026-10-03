@@ -1,3 +1,5 @@
+import { HealthStatus } from 'common';
+
 // Shared look of the add-on screens. System resources only, so light and dark mode follow the system.
 
 export class CardStyle implements AttributeModifier<ColumnAttribute> {
@@ -38,3 +40,17 @@ export const CAPTION: TextStyle =
   new TextStyle($r('sys.float.Body_S'), $r('sys.color.font_secondary'), FontWeight.Regular);
 export const LABEL: TextStyle =
   new TextStyle($r('sys.float.Body_S'), $r('sys.color.font_secondary'), FontWeight.Medium);
+
+// The dot next to the source status. `status` is the HealthStatus value held in app state.
+export function statusDotColor(status: string): Resource {
+  if (status === HealthStatus.CONNECTED) {
+    return $r('sys.color.confirm');
+  }
+  if (status === HealthStatus.DEMO) {
+    return $r('sys.color.brand');
+  }
+  if (status === HealthStatus.UNAVAILABLE) {
+    return $r('sys.color.warning');
+  }
+  return $r('sys.color.font_tertiary');
+}

@@ -1,6 +1,13 @@
 import { ALL_HEALTH_SCOPES, HealthScope, HealthStatus } from 'common';
 import { AddonSession, KEY_REVISION, KEY_STATUS, NO_VALUE } from '../addon/AddonSession';
-import { HES_NOT_CONNECTED, HES_NOT_CONNECTED_BODY, scopeLabel, signalsHeading } from '../addon/AddonTexts';
+import {
+  HES_NOT_CONNECTED_BODY,
+  NO_RECORDS_VALUE,
+  NO_SCORE_SENTENCE,
+  NO_SCORE_TITLE,
+  scopeLabel,
+  signalsHeading
+} from '../addon/AddonTexts';
 import { DataSourceCard, SourceStatusLine } from './SourceParts';
 import { WatchDaysCard, WatchLinkCard } from './WatchLinkCard';
 import { BODY, BODY_SECONDARY, CAPTION, CARD, LABEL, TITLE } from './Styles';
@@ -43,7 +50,7 @@ export struct DashboardView {
     const rows: SignalRow[] = [];
     for (let i = 0; i < ALL_HEALTH_SCOPES.length; i++) {
       const scope: HealthScope = ALL_HEALTH_SCOPES[i];
-      let value: string = NO_VALUE;
+      let value: string = NO_RECORDS_VALUE;
       if (!session.source().isScopeEnabled(scope)) {
         value = 'Off · missing evidence';
       } else if (session.recordCount(scope) > 0) {
@@ -65,16 +72,24 @@ export struct DashboardView {
 
         Column({ space: 4 }) {
           Text('Your tier').attributeModifier(LABEL)
-          Text(NO_VALUE)
-            .fontSize($r('sys.float.Title_L'))
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('sys.color.font_primary'))
-            .id('fw_tier')
-          Text(HES_NOT_CONNECTED).attributeModifier(TITLE)
-          Text(HES_NOT_CONNECTED_BODY).attributeModifier(BODY_SECONDARY)
-          Divider().color($r('sys.color.comp_divider')).margin({ top: 8, bottom: 4 })
-          ValueRow({ label: 'Health Evidence Score', value: NO_VALUE })
-          ValueRow({ label: 'Coverage', value: NO_VALUE })
+          Row({ space: 12 }) {
+            SymbolGlyph($r('sys.symbol.hourglass'))
+              .fontSize(28)
+              .fontColor([$r('sys.color.icon_secondary')])
+              .width(48)
+              .height(48)
+              .backgroundColor($r('sys.color.comp_background_tertiary'))
+              .borderRadius(24)
+            Column({ space: 2 }) {
+              Text(NO_SCORE_TITLE).attributeModifier(TITLE).id('fw_tier')
+              Text(NO_SCORE_SENTENCE).attributeModifier(BODY_SECONDARY)
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+          }
+          .width('100%')
+          .margin({ top: 4, bottom: 4 })
+          Text(HES_NOT_CONNECTED_BODY).attributeModifier(CAPTION)
         }
         .attributeModifier(CARD)
 

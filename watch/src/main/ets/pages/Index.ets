@@ -386,7 +386,7 @@ struct Index {
             .margin({ top: 2 })
         }
 
-        Text('FairWear · add-on for\nHUAWEI Health · DEMO')
+        Text('FairWear · add-on for\nHUAWEI Health · Demo')
           .fontSize($r('app.float.caption_font_size'))
           .fontColor($r('sys.color.font_tertiary'))
           .textAlign(TextAlign.Center)

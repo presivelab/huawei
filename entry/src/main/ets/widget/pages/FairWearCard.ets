@@ -9,7 +9,7 @@ const storage: LocalStorage = new LocalStorage();
 @Entry(storage)
 @Component
 struct FairWearCard {
-  @LocalStorageProp('source') source: string = 'HUAWEI Health · not connected';
+  @LocalStorageProp('source') source: string = 'HUAWEI Health · Not connected';
   @LocalStorageProp('coverage') coverage: string = '—';
   @LocalStorageProp('result') result: string = '—';
 

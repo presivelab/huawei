@@ -36,6 +36,7 @@ export {
   Workout
 } from './src/main/ets/health/HealthRecords';
 export { EmptyHealthSource, HealthSource } from './src/main/ets/health/HealthSource';
+export { HEALTH_BRAND, healthSourceLabel, healthStatusLabel } from './src/main/ets/health/HealthStatusLabel';
 export { ALL_HEALTH_SCOPES, HealthConnection, HealthScope } from './src/main/ets/health/HealthConnection';
 export {
   CARD_PARAMS_KEY,
