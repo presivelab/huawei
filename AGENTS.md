@@ -79,3 +79,51 @@ Update the work log after a coherent piece of material work and before handover.
 - README/setup/architecture notes reflect any changed command or design.
 - `AI_WORKFLOW.md` records material AI-assisted work and how it was reviewed.
 - No secret, generated build output, or unrelated change was added.
+
+## Project state
+
+Read this before relying on any earlier prompt or report. Check the repository, not a document, when the
+two disagree.
+
+**What is in the repository**
+
+- Modules: `entry` (phone), `watch` (wearable), `common` (HAR, shared logic). Minimum API 20, target API 24.
+- Phone: the add-on flow (connect, two-step consent, disconnect), the home-screen card, one entry through
+  `fwTarget`, device signing with HUKS and a software fallback.
+- Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
+  over `hdc`.
+- Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
+- Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
+  `tools/shot.sh`. Results: `docs/test-results.txt`.
+
+**What is NOT in the repository**
+
+- The scoring module HES-Lite (`common/src/main/ets/hes/`), the personas, the screens "Why this tier",
+  Share and the partner view, and the claim verifier. They exist only after `_incoming/fairwear-ui/` has
+  been unpacked and integrated. Until then the phone shows "No score yet".
+- Do not assume them. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the
+  state of this repository.
+
+**Decisions in force** (team briefs 8 "final correction", 9 "security" and 10 "audit"; they replace
+earlier briefs where those differ)
+
+- The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
+- One wear rule on the watch: `WearStateMachine`. A reading of 0 bpm or less is no reading.
+- Verified watch days are shown, not scored. Never write that the watch feeds the score.
+- Rules and the score are deterministic and are never called AI.
+- Logs carry counters only, never heart-rate or step values in public fields.
+
+**UI work**
+
+- Read the project skill `.claude/skills/fairwear-ui/SKILL.md` first.
+- Use the HarmonyOS skills from the challenge repository: `hmos-arkui-develop-skill`,
+  `hmos-arkui-scenario-development`, `hmos-arkui-mvvm-pattern`, and `hmos-arkts-knowledge-retriever` for
+  any API that is not certain. If they are not installed as agent skills, read them from a checkout of
+  `onirodeveloper/hackyeah2026-challenge` (`skills/`).
+- Do not use skills written for iOS or the web: `apple-design`, `write-swift`, `animate-expo`,
+  `pick-ui-library`, `ask-sonner`, `emil-design-eng`.
+
+**Working with several sessions**
+
+- One session per branch. Check `git branch --show-current` before the first edit.
+- Merging into `main` is done by a person.
