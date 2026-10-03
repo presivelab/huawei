@@ -1,5 +1,21 @@
 // Public surface of the common HAR. Pure logic only: no UI imports.
-export * from './src/main/ets/model/types';
+export {
+  Epoch,
+  SleepRecord,
+  DaySummary,
+  Gap,
+  Thresholds,
+  ComplianceResult,
+  Factor,
+  ScoreResult,
+  MonthlyReport,
+  WhatIfSuggestion,
+  UserSettings,
+  LedgerEntry,
+  TierClaim,
+  SignedClaim,
+  LiveSample
+} from './src/main/ets/model/types';
 export { DEFAULT_THRESHOLDS } from './src/main/ets/model/defaults';
 export {
   buildTierClaim,
@@ -21,3 +37,4 @@ export {
 } from './src/main/ets/health/HealthRecords';
 export { EmptyHealthSource, HealthSource } from './src/main/ets/health/HealthSource';
 export { ALL_HEALTH_SCOPES, HealthConnection, HealthScope } from './src/main/ets/health/HealthConnection';
+export { FwTarget, FW_TARGET_PARAM, resolveFwTarget } from './src/main/ets/nav/EntryTarget';

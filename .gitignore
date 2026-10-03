@@ -6,6 +6,12 @@ local.properties
 *.cer
 *.p7b
 *.csr
+*.jks
+*.pem
+*.pfx
+*.keystore
+*.hap
+*.app
 _incoming/
 .idea/
 node_modules/
