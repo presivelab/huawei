@@ -4,8 +4,12 @@ Working notes behind the README table "Hackathon requirements → where to verif
 Source of the requirements: `hackathon_challenge.md` and `FAQ.md` in `onirodeveloper/hackyeah2026-challenge`.
 Every row names its evidence. A row without evidence is marked open.
 
-Checked on 2026-10-04, branch `feature/entry-routing` (base `main`). The add-on work on `feature/health-addon`
-is not merged yet and is listed separately where it changes the answer.
+Checked on 2026-10-04. The table below was written on `feature/entry-routing` (base `main`). On
+`feature/home-card`, which contains `feature/health-addon`, these rows change: B2 is met for the add-on
+screens, the watch live screen, the home-screen card and the shortcut (`docs/screenshots/`); B13 "unknown
+`fwTarget`" is also checked on the Phone emulator; B14 lint is 0 errors and 5 warnings of one performance
+rule (`docs/test-results.txt`); B4, B5, B8 and B9 have a first version in `README.md`, `docs/ARCHITECTURE.md`
+and `docs/DEMO_SCRIPT.md`. The watch permissions are in `docs/ARCHITECTURE.md`.
 
 ## Status
 

@@ -68,3 +68,38 @@ Huawei; nothing in this repository does it, and FairWear is a separate app.
 Checked: the ability starts from the command line with
 `aa start -b com.fairwear.app -m entry -a EntryAbility` (this is what `tools/deploy.sh entry` runs).
 Not checked: `startAbility` from another app.
+
+### One parameter chooses the screen: `fwTarget`
+
+Everything that opens FairWear uses that same ability and one optional parameter, `fwTarget`:
+
+| Who opens FairWear             | How                                                | Opens                              |
+| ------------------------------ | -------------------------------------------------- | ---------------------------------- |
+| Home-screen card (2x2)         | tap, `postCardAction` with `fwTarget: 'dashboard'` | start page                         |
+| Icon shortcut "Data source"    | `shortcuts_config.json`, `fwTarget: 'source'`      | Settings with the data-source card |
+| A host app or the command line | `Want` parameter `fwTarget`                        | the named screen                   |
+
+`EntryAbility` passes the want to `routeFromWant` (`entry/src/main/ets/nav/EntryRouter.ets`) in `onCreate`
+and `onNewWant`; the start page opens the screen. The value is untrusted input. `resolveFwTargetFromWant`
+(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `share` and `source`; a missing value, an
+unknown value, a non-string, an oversized string or malformed card parameters open the start page and never
+throw (7 tests in `common/src/test/EntryTarget.test.ets`). `share` is reserved for the share screen, which
+is not in this build, so it opens the start page and there is no shortcut for it yet.
+
+Checked on the Phone emulator (API 24): cold start and a second start of the running app with
+`--ps fwTarget source`, with an unknown value and with no parameter; the shortcut; the card tap.
+
+## Home-screen card
+
+`EntryFormAbility` (Form Kit, `exported: false`) provides one 2x2 card. The card shows the data source,
+the coverage and whether a score is ready. It never shows the tier or the score, because other people see
+the home screen, and there is no lock-screen card for the same reason. `common/src/main/ets/card/CardDigest.ets`
+defines what the card may show (7 tests). The app stores that digest in Preferences and pushes it to the
+placed cards with `formProvider.updateForm` (`entry/src/main/ets/platform/CardStore.ets`) whenever the
+session changes.
+
+Checked on the Phone emulator: the card is offered under the icon's "Widgets" menu, can be added to the
+home screen, and changes from "HUAWEI Health · not connected" to "HUAWEI Health · DEMO" after consent
+(`docs/screenshots/ta1-home-card-phone.jpeg`, `ta1-home-card-after-consent-phone.jpeg`).
+Coverage and "Score ready" stay "—" until the scoring module is part of the build.
+The card and Preferences need no permission.

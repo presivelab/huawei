@@ -1,6 +1,28 @@
 FairWear test results
 =====================
 
+2026-10-04 00:21 CEST  branch feature/home-card  (home-screen card, one entry via fwTarget, icon shortcut)
+----------------------------------------------------
+Node run (tools/run-logic-tests.sh): common 42/42 (Claim 8, Health 14, LiveWear 6, EntryTarget 7,
+CardDigest 7), watch 6/6.
+Wording check (tools/check-wording.sh): 0 hits.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh, DevEco CLI 1.3.4): 0 errors. 5 warnings, all the same rule
+  (@performance/avoid-overusing-custom-component-check) in entry/view/DashboardView.ets (2),
+  SettingsPage.ets, SourceParts.ets and watch/pages/Index.ets. common: 0 issues.
+
+Phone emulator (HarmonyOS 6.1.1, API 24), checked through hdc and the UI layout dump:
+  aa start ... --ps fwTarget source   (cold start)        -> Settings, log "entry target: source"
+  aa start ... --ps fwTarget bogus    (app running)       -> start page, log "entry target (new want): dashboard"
+  aa start ... --ps fwTarget source   (app running)       -> Settings
+  aa start ...                        (cold start)        -> start page, log "entry target: dashboard"
+  icon long-press                                         -> menu shows "Data source", "Widgets", "Uninstall"
+  tap "Data source"                                       -> Settings, log "entry target (new want): source"
+  Widgets -> Add to home screen                           -> card on the home screen
+  tap the card (app showing Settings)                     -> start page, log "entry target (new want): dashboard"
+  Connect -> Simulate consent -> tick consent -> Agree    -> card text changes to "HUAWEI Health · DEMO"
+Not checked: startAbility from another app; the software-key fallback (HUKS succeeded); dark mode of the card.
+
 2026-10-04 00:04 CEST  branch feature/entry-routing
 ----------------------------------------------------
 Node run (TypeScript 5 strict, hypium shim), common/src/test/List.test.ets: 13/13 passed
