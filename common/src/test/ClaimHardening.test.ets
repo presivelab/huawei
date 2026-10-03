@@ -140,5 +140,19 @@ export default function claimHardeningTest() {
       expect(worstToken.length <= MAX_TOKEN_CHARS).assertTrue();
       expect(decodeSignedClaimToken(worstToken) !== null).assertTrue();
     });
+
+    it('token: a second UTF-8 spelling of the same claim text is refused', 0, () => {
+      const signed = signedOf(goodJson());
+      const text = signed.claimJson;
+      // '{' is 0x7B; 0xC1 0xBB is an overlong two-byte form that a lenient decoder also reads as '{'.
+      const bytes: number[] = [0xC1, 0xBB];
+      for (let i = 1; i < text.length; i++) {
+        bytes.push(text.charCodeAt(i));
+      }
+      const parts = encodeSignedClaimToken(signed).split('.');
+      const forged = [parts[0], b64urlEncode(new Uint8Array(bytes)), parts[2], parts[3], parts[4]].join('.');
+      expect(decodeSignedClaimToken(encodeSignedClaimToken(signed)) !== null).assertTrue();
+      expect(decodeSignedClaimToken(forged) === null).assertTrue();
+    });
   });
 }

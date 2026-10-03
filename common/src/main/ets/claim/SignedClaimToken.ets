@@ -57,6 +57,11 @@ export function decodeSignedClaimToken(token: string): SignedClaim | null {
       return null;
     }
     claimJson = utf8Decode(bytes);
+    // The text must encode back to the same bytes: an overlong or broken UTF-8 sequence that decodes
+    // to the same characters is a second spelling of one claim and is refused.
+    if (b64urlEncode(utf8Encode(claimJson)) !== claimB64) {
+      return null;
+    }
   } catch (e) {
     return null;
   }

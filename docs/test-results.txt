@@ -4,7 +4,7 @@ FairWear test results
 2026-10-04 01:45 CEDT  branch feature/claim-verifier  (block K3: hardened claim decode, token format, PartnerVerifier)
 ----------------------------------------------------
 Base: feature/ui-foundation 7595dd8.
-Node run (tools/run-logic-tests.sh common): 129/129 (was 98/98). New: 31.
+Node run (tools/run-logic-tests.sh common): 130/130 (was 98/98). New: 32 (31 from the K3 block, 1 added in review: a second UTF-8 spelling of a claim is refused).
   ClaimHardening (7, in the hypium list): field rules, canonical form, length limits, envelope (kid match,
   DER at most 72 bytes), token round trip, strict token decode, worst-case token 461 characters.
   PartnerVerifier S-1 to S-20 (24, real ECDSA P-256 signatures from Node, not in the list): S-0 happy path,
