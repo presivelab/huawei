@@ -1,0 +1,26 @@
+FairWear test results
+=====================
+
+2026-10-03 23:35 CEST  branch feature/claim-rules-types
+----------------------------------------------------
+Node run (TypeScript 5 strict, hypium shim), common/src/test/List.test.ets:
+
+  ✓ TierClaim > encoded claim has exactly the seven agreed keys
+  ✓ TierClaim > encoded claim never names the reason or the score
+  ✓ TierClaim > decode round-trips an encoded claim
+  ✓ TierClaim > decode rejects an extra key, a missing key and malformed JSON
+  ✓ SelectiveNonWear > one suspicious gap never flags, even when it is the only gap
+  ✓ SelectiveNonWear > honest person: 3 gaps in 30 days, 1 after a cold, no flag
+  ✓ SelectiveNonWear > two suspicious gaps flag only above a 30% share
+  ✓ SelectiveNonWear > three or more suspicious gaps always flag
+
+  8/8 passed
+
+ArkTS compile: hvigorw assembleHar (common) BUILD SUCCESSFUL.
+Not run: DevEco Local Test (the test files were compiled by tsc only, not by the ArkTS compiler).
+
+2026-10-03 23:27 CEST  branch feature/signing-platform
+----------------------------------------------------
+Phone emulator (HarmonyOS 6.1.1, API 24), app log at start:
+  signing key: HUKS kid=762fa82f (Key held in HUKS)
+The HUKS ECDSA P-256 signature over a probe verified with plain ECDSA (cryptoFramework).

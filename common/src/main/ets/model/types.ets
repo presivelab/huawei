@@ -12,7 +12,7 @@ export interface DaySummary {
   dayIndex: number;
   wornMin: number;
   chargingMin: number;
-  nightWorn: boolean;               // worn in ≥ 90% of slots between 00:00 and 06:00
+  nightWorn: boolean;               // worn ≥ Thresholds.nightMinWornMin between 00:00 and 06:00, persona time zone
   restingHr: number;                // mean of the lowest 10% of HR values in worn slots
   steps: number;
   sleepMin: number;
@@ -33,9 +33,12 @@ export interface Thresholds {
   gapMinMinutes: number;            // 120
   restDeltaBpm: number;             // 7
   stepsDropRatio: number;           // 0.6  (a 40% drop)
-  minSuspicious: number;            // 3
+  minSuspicious: number;            // 3  (this many suspicious gaps always raise the flag)
+  minSuspiciousForShare: number;    // 2  (from this many, the share rule below applies; one gap never flags)
   maxSuspiciousShare: number;       // 0.3
   maxPauseDaysPer30: number;        // 5  (sick-day pause, K11)
+  nightMinWornMin: number;          // 240  (a night counts when worn ≥ 4 h between 00:00 and 06:00, persona time zone)
+  minHrReadingsBeforeGap: number;   // 12  (fewer HR readings in the 24 h before a gap: the gap is not judged)
 }
 export interface ComplianceResult { compliantDays: number; totalDays: number; pct: number; passes: boolean; }
 export interface Factor { name: string; value: string; points: number; maxPoints: number; }
@@ -65,12 +68,14 @@ export interface LedgerEntry {      // K14 — everything that left the device
   payload: string;                  // exact content sent
   bytes: number;
 }
-export interface TierClaim {        // the ONLY thing the insurer sees
-  v: number; pseudonym: string; period: string;
-  tier: string; compliancePct: number; eligible: boolean;
+export interface TierClaim {        // the ONLY thing the insurer sees; exactly these seven keys
+  v: number; period: string;
+  tier: string; eligible: boolean;
   nonce: string; issuedAt: number;
+  kid: string;                      // 8 hex chars: first 4 bytes of SHA-256 over the public key
 }
-export interface SignedClaim { claimJson: string; sigB64: string; pubKeyB64: string; keySource: string; } // keySource: 'HUKS'|'SOFTWARE'
+// The public key is NOT in the token: the partner looks it up by kid in its own key registry.
+export interface SignedClaim { claimJson: string; sigB64: string; kid: string; keySource: string; } // keySource: 'HUKS'|'SOFTWARE'
 export interface LiveSample {       // watch, about once per second
   t: number;
   hr: number;                       // 0 = no signal

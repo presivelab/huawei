@@ -11,6 +11,9 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   restDeltaBpm: 7,
   stepsDropRatio: 0.6,
   minSuspicious: 3,
+  minSuspiciousForShare: 2,         // initial value, to be calibrated
   maxSuspiciousShare: 0.3,
-  maxPauseDaysPer30: 5
+  maxPauseDaysPer30: 5,
+  nightMinWornMin: 240,             // initial value, to be calibrated
+  minHrReadingsBeforeGap: 12        // initial value, to be calibrated
 };
