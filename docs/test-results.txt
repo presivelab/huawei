@@ -1,7 +1,7 @@
 FairWear test results
 =====================
 
-2026-10-03 23:35 CEST  branch feature/claim-rules-types
+2026-10-03 23:29 CEST  branch feature/claim-rules-types
 ----------------------------------------------------
 Node run (TypeScript 5 strict, hypium shim), common/src/test/List.test.ets:
 
