@@ -15,6 +15,10 @@
     {
       "name": "fairwear_card_desc",
       "value": "Data source, coverage and whether a score is ready. Never shows the tier."
+    },
+    {
+      "name": "shortcut_source_label",
+      "value": "Data source"
     }
   ]
 }

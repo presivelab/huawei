@@ -37,7 +37,13 @@ export {
 } from './src/main/ets/health/HealthRecords';
 export { EmptyHealthSource, HealthSource } from './src/main/ets/health/HealthSource';
 export { ALL_HEALTH_SCOPES, HealthConnection, HealthScope } from './src/main/ets/health/HealthConnection';
-export { FwTarget, FW_TARGET_PARAM, resolveFwTarget } from './src/main/ets/nav/EntryTarget';
+export {
+  CARD_PARAMS_KEY,
+  FwTarget,
+  FW_TARGET_PARAM,
+  resolveFwTarget,
+  resolveFwTargetFromWant
+} from './src/main/ets/nav/EntryTarget';
 export {
   buildCardDigest,
   cardCoverageText,

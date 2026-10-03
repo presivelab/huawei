@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@ohos/hypium';
-import { FwTarget, FW_TARGET_PARAM, resolveFwTarget } from '../main/ets/nav/EntryTarget';
+import { FwTarget, FW_TARGET_PARAM, resolveFwTarget, resolveFwTargetFromWant } from '../main/ets/nav/EntryTarget';
 
 export default function entryTargetTest() {
   describe('EntryTarget', () => {
@@ -33,6 +33,25 @@ export default function entryTargetTest() {
       expect(resolveFwTarget(asBoolean)).assertEqual(FwTarget.DASHBOARD);
       expect(resolveFwTarget(asArray)).assertEqual(FwTarget.DASHBOARD);
       expect(resolveFwTarget(asRecord)).assertEqual(FwTarget.DASHBOARD);
+    });
+
+    it('a card tap delivers the target inside a JSON string', 0, () => {
+      expect(resolveFwTargetFromWant(undefined, '{"fwTarget":"source"}')).assertEqual(FwTarget.SOURCE);
+      expect(resolveFwTargetFromWant(undefined, '{"fwTarget":"dashboard"}')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant('share', '{"fwTarget":"source"}')).assertEqual(FwTarget.SHARE);
+    });
+
+    it('malformed card parameters open the dashboard and never throw', 0, () => {
+      const asNumber: Object = 7;
+      expect(resolveFwTargetFromWant(undefined, undefined)).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, '')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, '{not json')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, 'null')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, '"source"')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, '{"fwTarget":{"x":1}}')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, '{"other":"source"}')).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(undefined, asNumber)).assertEqual(FwTarget.DASHBOARD);
+      expect(resolveFwTargetFromWant(asNumber, '{"fwTarget":"source"}')).assertEqual(FwTarget.SOURCE);
     });
 
     it('an oversized value opens the dashboard', 0, () => {

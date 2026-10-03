@@ -1,0 +1,19 @@
+{
+  "shortcuts": [
+    {
+      "shortcutId": "fw_source",
+      "label": "$string:shortcut_source_label",
+      "icon": "$media:startIcon",
+      "wants": [
+        {
+          "bundleName": "com.fairwear.app",
+          "moduleName": "entry",
+          "abilityName": "EntryAbility",
+          "parameters": {
+            "fwTarget": "source"
+          }
+        }
+      ]
+    }
+  ]
+}

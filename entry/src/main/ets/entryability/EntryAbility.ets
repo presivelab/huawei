@@ -2,6 +2,7 @@ import { AbilityConstant, UIAbility, Want } from "@kit.AbilityKit";
 import { hilog } from "@kit.PerformanceAnalysisKit";
 import { window } from "@kit.ArkUI";
 import { DeviceKey, ProofSigner } from "../platform/ProofSigner";
+import { routeFromWant } from "../nav/EntryRouter";
 
 const DOMAIN = 0x0000;
 const TAG = "FairWear";
@@ -15,6 +16,12 @@ export default class EntryAbility extends UIAbility {
     }).catch((e: Error) => {
       hilog.error(DOMAIN, TAG, "signing key unavailable: %{public}s", e.message);
     });
+    hilog.info(DOMAIN, TAG, "entry target: %{public}s", routeFromWant(want));
+  }
+
+  // The app is already running and a card tap, an icon shortcut or a host app starts it again.
+  onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    hilog.info(DOMAIN, TAG, "entry target (new want): %{public}s", routeFromWant(want));
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
