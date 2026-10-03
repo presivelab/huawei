@@ -50,7 +50,6 @@ export class LiveSensors {
   private heartEvents: number = 0;
   private heartValidEvents: number = 0;
   private stepEvents: number = 0;
-  private lastHeartRaw: number = NO_HEART_RATE;
   // Watch Link: the wear-detection sensor (when the watch has one), raw readings for the recorder.
   private wearLink: SensorLink = SensorLink.WAITING;
   private heartTap: ((bpm: number) => void) | null = null;
@@ -219,7 +218,6 @@ export class LiveSensors {
 
   private onHeartRate(value: number): void {
     this.heartEvents++;
-    this.lastHeartRaw = value;
     if (value > 0) {
       this.heartValidEvents++;
     }
@@ -258,12 +256,11 @@ export class LiveSensors {
     }
   }
 
+  // Counters and link states only: heart-rate and step values never go to the log.
   private logSummary(): void {
     const view = this.snapshot();
     const line = `live hrLink=${this.heartLink} hrEvents=${this.heartEvents} hrValid=${this.heartValidEvents}` +
-      ` hrRaw=${this.lastHeartRaw} hrShown=${view.heartRate} wear=${view.wear}` +
-      ` stepLink=${this.stepLink} stepEvents=${this.stepEvents} stepsRaw=${this.steps.lastRaw()}` +
-      ` stepsToday=${view.steps}`;
+      ` wear=${view.wear} stepLink=${this.stepLink} stepEvents=${this.stepEvents}`;
     hilog.info(DOMAIN, TAG, '%{public}s', line);
   }
 }

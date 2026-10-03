@@ -70,6 +70,8 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
   (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg`), never a made-up value. The sensors are
   switched off when the page is hidden.
 - **Entry points.** Only the two start abilities are exported; the home-screen card ability is not.
+- **Logs.** `%{public}` log fields carry screen names, error texts, counters, key ids and sandbox paths. No
+  heart rate, step count or other health value is logged. Check: `git grep -n "%{public}" -- common entry watch`.
 - **Dependencies.** `entry` and `watch` depend only on the local `common` module. The two external packages,
   `@ohos/hypium` 1.0.24 and `@ohos/hamock` 1.0.0, are OpenHarmony's test libraries, declared as
   devDependencies for the test sources. The `oh-package-lock.json5` files are committed, so an install
