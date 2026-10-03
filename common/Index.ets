@@ -38,3 +38,15 @@ export {
 export { EmptyHealthSource, HealthSource } from './src/main/ets/health/HealthSource';
 export { ALL_HEALTH_SCOPES, HealthConnection, HealthScope } from './src/main/ets/health/HealthConnection';
 export { FwTarget, FW_TARGET_PARAM, resolveFwTarget } from './src/main/ets/nav/EntryTarget';
+export {
+  buildCardDigest,
+  cardCoverageText,
+  CardDigest,
+  cardResultText,
+  cardSourceLabel,
+  CARD_COVERAGE_NONE,
+  CARD_NO_VALUE,
+  decodeCardDigest,
+  emptyCardDigest,
+  encodeCardDigest
+} from './src/main/ets/card/CardDigest';

@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "EntryFormAbility_label",
+      "value": "FairWear card"
+    },
+    {
+      "name": "EntryFormAbility_desc",
+      "value": "Home-screen card with the data source, coverage and whether a score is ready"
+    },
+    {
+      "name": "fairwear_card_display_name",
+      "value": "FairWear"
+    },
+    {
+      "name": "fairwear_card_desc",
+      "value": "Data source, coverage and whether a score is ready. Never shows the tier."
+    }
+  ]
+}
