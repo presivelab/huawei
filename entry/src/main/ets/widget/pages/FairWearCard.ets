@@ -42,7 +42,7 @@ struct FairWearCard {
       Text(this.source)
         .fontSize($r('sys.float.Caption_M'))
         .fontColor($r('sys.color.font_secondary'))
-        .maxLines(1)
+        .maxLines(2)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
     .alignItems(HorizontalAlign.Start)

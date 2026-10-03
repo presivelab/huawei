@@ -10,6 +10,28 @@
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.READ_HEALTH_DATA",
+        "reason": "$string:reason_heart_rate",
+        "usedScene": {
+          "abilities": [
+            "WatchAbility"
+          ],
+          "when": "inuse"
+        }
+      },
+      {
+        "name": "ohos.permission.ACTIVITY_MOTION",
+        "reason": "$string:reason_steps",
+        "usedScene": {
+          "abilities": [
+            "WatchAbility"
+          ],
+          "when": "inuse"
+        }
+      }
+    ],
     "abilities": [
       {
         "name": "WatchAbility",

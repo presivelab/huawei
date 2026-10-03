@@ -20,6 +20,44 @@ Lint, DevEco CLI 1.3.4 (`tools/lint.sh`, DevEco Code Linter):
 
 ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
 
+2026-10-04 00:10 CEST  branch feature/health-addon  (health source layer and phone add-on screens)
+----------------------------------------------------
+Node run (TypeScript 4.9.5 strict, hypium shim), common/src/test/Health.test.ets
+(tools/run-logic-tests.sh common common/src/test/Health.test.ets health):
+
+  ✓ HealthStatus transitions > starts NOT_AUTHORIZED and hands out nothing
+  ✓ HealthStatus transitions > NOT_AUTHORIZED, consent, DEMO, disconnect, NOT_AUTHORIZED
+  ✓ HealthStatus transitions > refusal keeps NOT_AUTHORIZED and the second consent step cannot connect
+  ✓ HealthStatus transitions > after disconnect every method returns an empty list
+  ✓ HealthStatus transitions > reconnecting needs both consent steps again
+  ✓ HealthStatus transitions > consent with every data type switched off does not connect
+  ✓ HealthStatus transitions > a connected source with no records stays empty, with its own status
+  ✓ Health scope switched off > steps off: steps are -1, never zero; the other daily fields stay
+  ✓ Health scope switched off > resting heart rate off: -1, never zero
+  ✓ Health scope switched off > activity minutes off: both minute fields are -1, never zero
+  ✓ Health scope switched off > a real zero from the source is kept as zero when the scope is on
+  ✓ Health scope switched off > all three daily scopes off: daily() is an empty list
+  ✓ Health scope switched off > sleep, VO2max, HRV, workouts off: each returns an empty list and leaves the rest alone
+  ✓ Health scope switched off > no field of any record handed out with a scope off is zero in place of missing
+
+  14/14 passed
+
+Whole module (tools/run-logic-tests.sh common): 28/28 passed
+  (Claim.test.ets 8, Health.test.ets 14, LiveWear.test.ets 6).
+
+Text check (tools/check-wording.sh): 14 patterns over entry, watch, common, docs: 0 hits.
+  There is no README yet, so no README was searched. The list of patterns is in the script.
+  The check was also run against a planted file with three of the wordings and reported 3 hits.
+
+ArkTS compile: hvigorw assembleHar (common) and assembleHap (entry) BUILD SUCCESSFUL.
+Phone emulator (HarmonyOS 6.1.1, API 24), unsigned debug HAP, driven with uitest clicks:
+  welcome -> consent step 1 -> refusal -> consent step 1 -> consent step 2 (HRV off) -> result ->
+  settings -> disconnect -> settings -> reconnect -> consent step 1 -> consent step 2 -> result.
+  Screenshots: docs/screenshots/addon-01 ... addon-11.
+Not run: DevEco Local Test (the test files were compiled by tsc only, not by the ArkTS compiler).
+Not run: dark mode on the emulator; HES-Lite, SyntheticHealthSource and the mapper are not in the repo,
+  so the tier, score, coverage and last sync are shown as "—".
+
 2026-10-03 23:29 CEST  branch feature/claim-rules-types
 ----------------------------------------------------
 Node run (TypeScript 5 strict, hypium shim), common/src/test/List.test.ets:
@@ -43,3 +81,43 @@ Not run: DevEco Local Test (the test files were compiled by tsc only, not by the
 Phone emulator (HarmonyOS 6.1.1, API 24), app log at start:
   signing key: HUKS kid=762fa82f (Key held in HUKS)
 The HUKS ECDSA P-256 signature over a probe verified with plain ECDSA (cryptoFramework).
+
+2026-10-04 00:10 CEST  branch feature/health-addon (watch, AD-6)
+----------------------------------------------------
+Node run (TypeScript 4.9.5 strict, hypium shim), common/src/test/LiveWear.test.ets:
+
+  ✓ LiveWearState > before the first valid reading the state is no data and there is no heart rate
+  ✓ LiveWearState > 70, 70, 0 for N s, 70 gives worn, removed, worn
+  ✓ LiveWearState > a reading of zero or below never appears as heart rate
+  ✓ LiveWearState > silence from the sensor also turns into removed once the clock is advanced
+  ✓ LiveWearState > N is a parameter; the default is the 10 s demo value
+  ✓ LiveWearState > an older timestamp never moves the clock back
+
+  6/6 passed
+
+Node run (TypeScript 4.9.5 strict, hypium shim), watch/src/test/DaySteps.test.ets:
+
+  ✓ DaySteps > before the first reading of the day there is no step count, not zero
+  ✓ DaySteps > today = raw counter minus the first raw reading of the day
+  ✓ DaySteps > a dropped counter re-bases and keeps what was counted
+  ✓ DaySteps > a new day starts again from its own first reading
+  ✓ DaySteps > a saved state restores; a broken one is ignored
+  ✓ DaySteps > a negative counter value is ignored
+
+  6/6 passed
+
+ArkTS compile: hvigorw assembleHap (watch, with common as a local dependency) BUILD SUCCESSFUL.
+Watch emulator (wearable, 466x466, hdc 127.0.0.1:5555), unsigned debug HAP, app log:
+  permissions: [0,0]                       both dialogs allowed with uitest clicks
+  sensor ids: 1,2,5,6,256,257,259,266,278  HEART_RATE(278) and PEDOMETER(266) present, no WEAR_DETECTION(280)
+  heart rate subscribed / step counter subscribed
+  live hrLink=1 hrEvents=58 hrValid=0 hrRaw=0 hrShown=-1 wear=NO_DATA stepLink=1 stepEvents=58 stepsRaw=1000 stepsToday=0
+  sensors off                              logged when the page is hidden
+  With READ_HEALTH_DATA denied: permissions: [-1,0], heart rate subscribe failed: {"code":201},
+  screen shows "Heart rate · no permission" and the step value keeps working.
+  Screenshots: docs/screenshots/watch-01 ... watch-04.
+Not run: a real heart rate. The emulator sent only heart rate 0 (about 6 events a second) and a constant
+  step counter of 1000, so the screen showed "—", 0 steps and "no data". The worn and removed states were
+  reached only in the Node test above, not on the emulator.
+Not run: the 70 -> 0 -> 70 change in the emulator's virtual sensor panel (left as a manual step for the owner).
+Not run: DevEco Local Test (the test files were compiled by tsc only, not by the ArkTS compiler).
