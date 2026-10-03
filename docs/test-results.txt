@@ -1,6 +1,44 @@
 FairWear test results
 =====================
 
+2026-10-04 00:10 CEST  branch feature/health-addon  (health source layer and phone add-on screens)
+----------------------------------------------------
+Node run (TypeScript 4.9.5 strict, hypium shim), common/src/test/Health.test.ets
+(tools/run-logic-tests.sh common common/src/test/Health.test.ets health):
+
+  ✓ HealthStatus transitions > starts NOT_AUTHORIZED and hands out nothing
+  ✓ HealthStatus transitions > NOT_AUTHORIZED, consent, DEMO, disconnect, NOT_AUTHORIZED
+  ✓ HealthStatus transitions > refusal keeps NOT_AUTHORIZED and the second consent step cannot connect
+  ✓ HealthStatus transitions > after disconnect every method returns an empty list
+  ✓ HealthStatus transitions > reconnecting needs both consent steps again
+  ✓ HealthStatus transitions > consent with every data type switched off does not connect
+  ✓ HealthStatus transitions > a connected source with no records stays empty, with its own status
+  ✓ Health scope switched off > steps off: steps are -1, never zero; the other daily fields stay
+  ✓ Health scope switched off > resting heart rate off: -1, never zero
+  ✓ Health scope switched off > activity minutes off: both minute fields are -1, never zero
+  ✓ Health scope switched off > a real zero from the source is kept as zero when the scope is on
+  ✓ Health scope switched off > all three daily scopes off: daily() is an empty list
+  ✓ Health scope switched off > sleep, VO2max, HRV, workouts off: each returns an empty list and leaves the rest alone
+  ✓ Health scope switched off > no field of any record handed out with a scope off is zero in place of missing
+
+  14/14 passed
+
+Whole module (tools/run-logic-tests.sh common): 28/28 passed
+  (Claim.test.ets 8, Health.test.ets 14, LiveWear.test.ets 6).
+
+Text check (tools/check-wording.sh): 14 patterns over entry, watch, common, docs: 0 hits.
+  There is no README yet, so no README was searched. The list of patterns is in the script.
+  The check was also run against a planted file with three of the wordings and reported 3 hits.
+
+ArkTS compile: hvigorw assembleHar (common) and assembleHap (entry) BUILD SUCCESSFUL.
+Phone emulator (HarmonyOS 6.1.1, API 24), unsigned debug HAP, driven with uitest clicks:
+  welcome -> consent step 1 -> refusal -> consent step 1 -> consent step 2 (HRV off) -> result ->
+  settings -> disconnect -> settings -> reconnect -> consent step 1 -> consent step 2 -> result.
+  Screenshots: docs/screenshots/addon-01 ... addon-11.
+Not run: DevEco Local Test (the test files were compiled by tsc only, not by the ArkTS compiler).
+Not run: dark mode on the emulator; HES-Lite, SyntheticHealthSource and the mapper are not in the repo,
+  so the tier, score, coverage and last sync are shown as "—".
+
 2026-10-03 23:29 CEST  branch feature/claim-rules-types
 ----------------------------------------------------
 Node run (TypeScript 5 strict, hypium shim), common/src/test/List.test.ets:
