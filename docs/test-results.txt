@@ -102,3 +102,27 @@ Not run: a real heart rate. The emulator sent only heart rate 0 (about 6 events 
   reached only in the Node test above, not on the emulator.
 Not run: the 70 -> 0 -> 70 change in the emulator's virtual sensor panel (left as a manual step for the owner).
 Not run: DevEco Local Test (the test files were compiled by tsc only, not by the ArkTS compiler).
+
+==== Watch Link (branch feature/watch-link), 2026-10-04 ====
+tools/run-logic-tests.sh common   66/66 passed (Claim, Health, LiveWear: 28 existing; WatchLink 32; WatchLinkFlow 6)
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: hvigorw assembleHar (common), assembleHap (watch), assembleHap (entry): BUILD SUCCESSFUL.
+  Warnings: "Function may throw exceptions" in common/platform (CryptoUtil, ProofSigner: moved from entry with
+  the same warnings; FileTextStore.writeAtomic: the error is passed to the caller on purpose).
+Emulators (wearable 127.0.0.1:5555, phone 127.0.0.1:5557), unsigned debug HAPs, taps with uitest:
+  watch log: watchlink filesDir=/data/storage/el2/base/files ; watchlink key kid=fd7c02b2 source=HUKS
+  watch: Demo clock x300 fills the ring (heart rate 0 on the emulator -> off-wrist, red); Close day (demo) ->
+         outbox/1.json (797 bytes, seq 1, prev GENESIS, clock DEMO_X300, 1 break)
+  relay: node tools/watch-phone-relay.mjs once
+         before pairing:        phone -> watch: #1 REJECTED (Unknown watch key)
+         after Confirm:         phone -> watch: #0 ACCEPTED (Paired); #1 ACCEPTED (Accepted)
+         once --tamper:         phone -> watch: #2 REJECTED (Invalid signature)
+         once:                  phone -> watch: #2 ACCEPTED (Accepted)
+         once --drop 3:         phone -> watch: #4 ACCEPTED (Accepted · Missing 1 day(s))
+         once:                  phone -> watch: #3 ACCEPTED (Accepted)
+  phone: "Pair watch fd7c02b2?" (same code on the watch), "Chain #1 ✓", "1 day missing", "#3 · not received",
+         "Source: FairWear watch · #1 · Signature valid". Screenshots: docs/screenshots/watchlink-01 ... watchlink-14.
+Not run: a non-zero heart rate on the emulator (worn state, green ring, the 60 s limit on the real clock).
+Not run: Wear Engine transport (needs paired devices and Wear Engine approval for the app).
+Not run: Reset watch data, Forget watch, app restarts, a real midnight on the emulators (covered by the Node tests only).
+Not present in this checkout: HES engine, HesSession, personas. Watch days are not scored here.

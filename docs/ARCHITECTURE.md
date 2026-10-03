@@ -68,3 +68,33 @@ Huawei; nothing in this repository does it, and FairWear is a separate app.
 Checked: the ability starts from the command line with
 `aa start -b com.fairwear.app -m entry -a EntryAbility` (this is what `tools/deploy.sh entry` runs).
 Not checked: `startAbility` from another app.
+
+## Watch Link
+
+```
+WATCH (wearable .hap)                                         PHONE (entry .hap)
+LiveSensors (HR, steps, wear, charging)                       Receivers
+  → WearStateMachine (real-time freshness)                      ├─ WearEngineReceiver (paired devices only)
+  → SlotRecorder (288 × 5-min slots/day, files)                 └─ inbox/ scan (emulator relay)
+  → DayBuilder (measurements, no verdicts)                    → DayPacketVerifier (format → key → sig → chain → date)
+  → DayPacket signed with the WATCH key, hash-chained         → ChainLedger (seq/prev, gaps, duplicates)
+  → outbox/ ─┬─ WearEngineTransport (paired devices only)     → WatchDayFacts → rules / HES (not wired in this branch)
+             └─ files for the dev relay (emulator)            → Watch link card, Days from the watch
+                         tools/watch-phone-relay.mjs (hdc) ────┘   ACK → back to the watch → the watch deletes the packet
+```
+
+- `common/src/main/ets/watchlink/`: the data contract and all logic of both sides (`WatchLinkEngine`,
+  `PhoneLinkEngine`), with the platform passed in through `WatchLinkPorts`. No system-kit imports; tested
+  under Node (`WatchLink.test.ets`, `WatchLinkFlow.test.ets`).
+- `common/src/main/ets/platform/`: device implementations of the ports (`FileTextStore`, `KeySigner`,
+  `DeviceSigVerifier`, `DeviceHasher`) and the signing helpers moved from `entry` (`ProofSigner`,
+  `CryptoUtil`, `Bytes`). The claim key of the phone is unchanged; the watch has its own key alias.
+- `watch/src/main/ets/watchlink/`: `WatchLinkRuntime` (key, files, sensor feed), `SlotRing` (the dial ring),
+  `WearEngineTransport`.
+- `entry/src/main/ets/watchlink/`: `WatchLinkService`, `WearEngineReceiver`; `view/WatchLinkCard.ets`.
+- What leaves the watch: one signed summary per day, under 3800 bytes; no per-sample heart rate.
+  What leaves the phone: unchanged, only the signed tier claim.
+- The watch permission text for steps is now "FairWear shows the steps counted today on the watch and adds
+  them to the day summary it records."
+
+Packet format, signing string, verify order, limitations and deviations: `docs/WATCH_LINK.md`.
