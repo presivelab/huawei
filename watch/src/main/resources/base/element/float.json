@@ -1,8 +1,28 @@
 {
   "float": [
     {
-      "name": "page_text_font_size",
+      "name": "heart_font_size",
       "value": "50fp"
+    },
+    {
+      "name": "unit_font_size",
+      "value": "13fp"
+    },
+    {
+      "name": "tile_value_font_size",
+      "value": "18fp"
+    },
+    {
+      "name": "label_font_size",
+      "value": "11fp"
+    },
+    {
+      "name": "note_font_size",
+      "value": "10fp"
+    },
+    {
+      "name": "caption_font_size",
+      "value": "9fp"
     }
   ]
 }

@@ -11,6 +11,14 @@
     {
       "name": "WatchAbility_label",
       "value": "FairWear"
+    },
+    {
+      "name": "reason_heart_rate",
+      "value": "FairWear shows your live heart rate on the watch and uses it to tell whether the watch is worn."
+    },
+    {
+      "name": "reason_steps",
+      "value": "FairWear shows the steps counted today on the watch."
     }
   ]
 }
