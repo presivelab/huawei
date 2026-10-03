@@ -1,0 +1,80 @@
+// common/src/main/ets/model/types.ets
+export interface Epoch {            // 5-minute slot
+  t: number;                        // epoch ms (slot start)
+  worn: boolean;
+  charging: boolean;                // on the charger (then worn = false)
+  hr: number;                       // bpm; 0 when not worn
+  steps: number;
+}
+export interface SleepRecord { dayIndex: number; minutes: number; }
+
+export interface DaySummary {
+  dayIndex: number;
+  wornMin: number;
+  chargingMin: number;
+  nightWorn: boolean;               // worn in ≥ 90% of slots between 00:00 and 06:00
+  restingHr: number;                // mean of the lowest 10% of HR values in worn slots
+  steps: number;
+  sleepMin: number;
+  activeMin: number;                // worn slots with HR ≥ restingHr + 30, ×5 (K16)
+}
+export interface Gap {
+  start: number; end: number;       // epoch ms
+  minutes: number;
+  preRestDelta: number;             // bpm vs baseline
+  stepsRatio: number;               // steps in the 24 h before / baseline median
+  suspicious: boolean;
+}
+export interface Thresholds {
+  minDailyHours: number;            // 20
+  maxChargingCountedMin: number;    // 120
+  nightRequired: boolean;           // true
+  minMonthlyPct: number;            // 85
+  gapMinMinutes: number;            // 120
+  restDeltaBpm: number;             // 7
+  stepsDropRatio: number;           // 0.6  (a 40% drop)
+  minSuspicious: number;            // 3
+  maxSuspiciousShare: number;       // 0.3
+  maxPauseDaysPer30: number;        // 5  (sick-day pause, K11)
+}
+export interface ComplianceResult { compliantDays: number; totalDays: number; pct: number; passes: boolean; }
+export interface Factor { name: string; value: string; points: number; maxPoints: number; }
+export interface ScoreResult { points: number; tier: string; factors: Factor[]; }  // tier: 'A'|'B'|'C'
+export interface MonthlyReport {
+  personaId: string;
+  periodLabel: string;              // e.g. "2026-09-03..2026-10-02"
+  compliance: ComplianceResult;
+  gaps: Gap[];
+  selectiveNonWear: boolean;
+  eligible: boolean;                // compliance.passes && !selectiveNonWear
+  score: ScoreResult;
+  discountPct: number;
+  pausedDays: number;               // K11 — NEVER sent to the insurer
+  whatIf: WhatIfSuggestion[];       // K12
+}
+export interface WhatIfSuggestion { factor: string; change: string; newTier: string; newDiscountPct: number; }
+export interface UserSettings {
+  thresholds: Thresholds;
+  pausedDayIndexes: number[];       // days marked as a sick-day pause (K11)
+  limitedMobility: boolean;         // accessibility profile (K16)
+}
+export interface LedgerEntry {      // K14 — everything that left the device
+  t: number;
+  kind: string;                     // 'CLAIM' | 'LLM'
+  destination: string;
+  payload: string;                  // exact content sent
+  bytes: number;
+}
+export interface TierClaim {        // the ONLY thing the insurer sees
+  v: number; pseudonym: string; period: string;
+  tier: string; compliancePct: number; eligible: boolean;
+  nonce: string; issuedAt: number;
+}
+export interface SignedClaim { claimJson: string; sigB64: string; pubKeyB64: string; keySource: string; } // keySource: 'HUKS'|'SOFTWARE'
+export interface LiveSample {       // watch, about once per second
+  t: number;
+  hr: number;                       // 0 = no signal
+  steps: number;                    // counter since start
+  wornSource: string;               // 'WEAR_SENSOR' | 'HR_SIGNAL' (emulator) — see IMPLEMENTATION.md section 10
+  worn: boolean;
+}

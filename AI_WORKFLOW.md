@@ -1,0 +1,60 @@
+# AI Workflow
+
+This project uses AI-assisted development. Keep this document current and public-safe. Do not include credentials, tokens, personal data, private endpoints, or confidential prompts.
+
+## Tools used
+
+| Model, agent, MCP server, or Agent Skill                                        | Version or source                                                         | Role in the project                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Claude Code (coding agent) with Claude Opus 5.5 (`claude-opus-5-5`, 1M context) | Claude Code VS Code extension 2.1.288, Anthropic                          | Environment checks, project documents, implementation, build and emulator runs, debugging |
+| Claude (claude.ai) with Claude Opus 5.5                                         | claude.ai, Anthropic                                                      | Research, evaluation of the idea, the `IMPLEMENTATION.md` plan                            |
+| Hackathon agent skills from the installer                                       | [versions to be added after the installer runs]                           | [to be added after the installer runs]                                                    |
+| `devecocli` (`@deveco/deveco-cli`)                                              | 1.3.4, pinned by the installer [to be confirmed after the installer runs] | [to be added after the installer runs]                                                    |
+
+## Important prompts and instructions
+
+- `AGENTS.md` — repository-wide hackathon constraints and working agreement.
+- `IMPLEMENTATION.md` — the team's implementation plan, written with Claude (claude.ai) and used as the standing instruction for the coding agent: ArkTS rules, data contract, steps K0–K9, approved UI direction (sections 12–13), tests, and the list of what is real and what is simulated.
+- [Summarize the important project prompt or reusable instruction. Include the full public-safe text when practical.]
+
+## AI-assisted work log
+
+| Date       | Tool/model                    | Request or task                                                                                | Generated or changed                                                                                  | Human review and validation                                                                                                                                                                         |
+| ---------- | ----------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-03 | Claude Code / Claude Opus 5.5 | Fill in `HACKATHON_BRIEF.md` from the plan; write the data contract from section 3 of the plan | `HACKATHON_BRIEF.md`, `common/src/main/ets/model/types.ets`, `common/src/main/ets/model/defaults.ets` | A team member read both, approved `types.ets` with two changes (English comments, defaults in a separate file) and supplied the "User problem" and "First-minute narrative" text. Not compiled yet. |
+
+## Workflow
+
+### Ideation and architecture
+
+[Describe how AI influenced the product idea, scope, architecture, and platform-capability choice.]
+
+### Implementation
+
+[Describe the AI-assisted coding workflow and how generated output was reviewed before acceptance.]
+
+### Testing and debugging
+
+[Record builds, linting, tests, device/emulator runs, UI inspection, logs, screenshots, and manual checks.]
+
+## Unsuccessful approaches
+
+- [What was tried, why it failed, and what changed afterward.]
+
+## Known limitations
+
+- [Product, platform, model, data, testing, or tooling limitation.]
+
+## Lessons learned
+
+- [Concise lesson that would help reproduce or improve the work.]
+
+## AI feature disclosure
+
+Complete this section only if AI is part of the product itself; otherwise write "Not applicable."
+
+- Model or service: [Name/version/provider]
+- Inference flow: [On-device, remote, or hybrid; inputs and outputs]
+- Data handling and privacy: [What leaves the device, retention, consent, and safeguards]
+- Failure and fallback behavior: [How errors, latency, offline use, and unsafe output are handled]
+- Evaluation: [Test cases, quality measures, human review, and known model limitations]
