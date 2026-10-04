@@ -47,8 +47,11 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 ## State of this branch
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
-- The score is calculated on the phone by HES-Lite v1.0 (`common/src/main/ets/hes/`): deterministic rules and
-  curves, no learned model and no network. It runs on the histories of six demo personas, which are synthetic
+- The score is calculated on the phone by HES vNext (`common/src/main/ets/hes/`): deterministic rules and
+  curves, no learned model and no network. Two profiles weigh the same signals differently: monthly health
+  insurance (`HEALTH_WELLNESS`, the default) and life insurance (`LONGEVITY_WELLNESS`); each has its own
+  illustrative discount (health 15% for A, 8% for B; life 10% / 5%; never a surcharge). The profile is chosen in
+  code (`HesSession.setProfile`); no screen switches it yet. It runs on the histories of six demo personas, which are synthetic
   and generated from a seed; the source pill on the Report tab reads "HUAWEI Health · Demo data". All weights,
   curves, thresholds and minimum counts are prototype product assumptions, not clinically tested. Description,
   persona results and decisions: `docs/HES.md`.

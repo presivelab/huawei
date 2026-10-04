@@ -7,7 +7,7 @@
 //   - a night is valid for sleep duration when its total sleep time is above zero, and valid for sleep
 //     timing when both clock times are present;
 //   - percentiles are valid from 0 to 100; a heart-rate recovery is valid when it is above zero;
-//   - HRV counts nights in the same 28-day window as the other nightly values.
+//   - HRV counts nights in its own window, the recent 14 nights (HES vNext).
 import { HesComponentDefinition, HesComponentId, HesDay } from './HesTypes';
 
 const MAX_CLOCK_MIN: number = 1439;

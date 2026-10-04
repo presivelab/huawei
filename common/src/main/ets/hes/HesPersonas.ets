@@ -5,10 +5,11 @@
 // The personas are tuned so that the engine returns the team's fixed results. Only the numbers in this
 // file were tuned; the weights, curves and thresholds in HesCurves.ets were not touched.
 import { dateOfDayNumber, dayNumberOfDate } from '../watchlink/WatchLinkTypes';
+import { HES_DEFAULT_PROFILE } from './HesCurves';
 import { computeHes } from './HesEngine';
 import { HesPrng } from './HesPrng';
 import { HesDaySource, HesSession } from './HesSession';
-import { emptyHesDay, HesDay, HesResult, HES_MISSING } from './HesTypes';
+import { emptyHesDay, HesDay, HesProfile, HesResult, HES_MISSING } from './HesTypes';
 
 /** The last completed day of every persona's starting history. */
 export const HES_PERSONA_END_DATE: string = '2026-10-03';
@@ -365,17 +366,17 @@ export class HesPersonas {
     return spec === null ? [] : generatePersonaHistory(spec);
   }
 
-  /** HES-Lite for the starting history. */
-  static result(id: string): HesResult {
-    return computeHes(HesPersonas.history(id));
+  /** HES for the starting history, with the weights of `profile`. */
+  static result(id: string, profile: HesProfile = HES_DEFAULT_PROFILE): HesResult {
+    return computeHes(HesPersonas.history(id), profile);
   }
 
   /** A demo session that starts from the persona's history (live values, close the day, reset). */
-  static session(id: string): HesSession {
+  static session(id: string, profile: HesProfile = HES_DEFAULT_PROFILE): HesSession {
     const spec = HesPersonas.spec(id);
     if (spec === null) {
-      return new HesSession([], null);
+      return new HesSession([], null, profile);
     }
-    return new HesSession(generatePersonaHistory(spec), new PersonaDaySource(spec));
+    return new HesSession(generatePersonaHistory(spec), new PersonaDaySource(spec), profile);
   }
 }

@@ -19,9 +19,14 @@ import {
   weightedQuality
 } from '../main/ets/hes/HesConfidence';
 import {
+  hesComponentsFor,
   hesDefinition,
+  hesProfileLabel,
+  hesWeightPermille,
   HES_COMPONENTS,
+  HES_DEFAULT_PROFILE,
   HES_HRR_WINDOW_DAYS,
+  HES_HRV_WINDOW_DAYS,
   HES_VO2MAX_WINDOW_DAYS,
   HES_WINDOW_DAYS
 } from '../main/ets/hes/HesCurves';
@@ -46,6 +51,7 @@ import {
   HesConfidence,
   HesDay,
   HesPoint,
+  HesProfile,
   HesResult,
   HesStatus,
   HES_MISSING
@@ -153,8 +159,14 @@ function isFiniteNumber(value: number): boolean {
   return Number.isFinite(value);
 }
 
-// The full history: 0.15 x (70 + 95 + 89 + 100) + 0.125 x (95 + 100) + 0.10 x 75 + 0.05 x 70 = 88.475.
-const FULL_OBSERVED = 88.475;
+// Component scores of the full history: VO2max 70, resting heart rate 95, MVPA 89, sleep regularity 100,
+// steps 95, sleep duration 100, HRV 75, recovery 70.
+// Health insurance (the default profile):
+//   0.125 x 70 + 0.125 x 95 + 0.20 x 89 + 0.15 x 100 + 0.15 x 95 + 0.125 x 100 + 0.075 x 75 + 0.05 x 70 = 89.3
+const FULL_OBSERVED = 89.3;
+// Life insurance:
+//   0.225 x 70 + 0.15 x 95 + 0.15 x 89 + 0.10 x 100 + 0.175 x 95 + 0.075 x 100 + 0.075 x 75 + 0.05 x 70 = 86.6
+const FULL_OBSERVED_LIFE = 86.6;
 
 export default function hesTest() {
   // ---------------------------------------------------------------------------------------------
@@ -220,15 +232,15 @@ export default function hesTest() {
       expect(result.tier).assertEqual(TIER_A);
     });
 
-    it('Coverage is 10 percentage points lower', 0, () => {
+    it('Coverage is lower by exactly the HRV weight (7.5 points, 92.5 rounds to 93)', 0, () => {
       expect(computeHes(fullHistory()).coverage).assertEqual(100);
-      expect(computeHes(withoutHrv()).coverage).assertEqual(90);
+      expect(computeHes(withoutHrv()).coverage).assertEqual(93);
     });
 
     it('HRV is absent from the numerator and the denominator', 0, () => {
       const result = computeHes(withoutHrv());
-      // (88.475 - 0.10 x 75) / 0.90 = 89.97. Counting HRV as zero would give 80.975 instead.
-      expect(observedHes(result.components)).assertClose((FULL_OBSERVED - 7.5) / 0.9, EPS);
+      // (89.3 - 0.075 x 75) / 0.925 = 90.46. Counting HRV as zero would give 83.675 instead.
+      expect(observedHes(result.components)).assertClose((FULL_OBSERVED - 5.625) / 0.925, EPS);
       const hrv = component(result, HesComponentId.HRV);
       expect(hrv.available).assertFalse();
       expect(hrv.score).assertEqual(HES_MISSING);
@@ -272,8 +284,8 @@ export default function hesTest() {
   });
 
   describe('HES-Lite spec 15: coverage', () => {
-    it('Core only -> 70%', 0, () => {
-      expect(computeHes(coreHistory()).coverage).assertEqual(70);
+    it('Core only -> 75% (health insurance)', 0, () => {
+      expect(computeHes(coreHistory()).coverage).assertEqual(75);
     });
 
     it('All metrics -> 100%', 0, () => {
@@ -290,8 +302,8 @@ export default function hesTest() {
 
     it('84.50 -> 85', 0, () => {
       expect(hesRound(84.5)).assertEqual(85);
-      // Two components of equal weight scoring 84 and 85: the observed value is exactly 84.5.
-      const parts = [made(HesComponentId.RHR, 84), made(HesComponentId.MVPA, 85)];
+      // Two components of equal weight (12.5% each) scoring 84 and 85: the observed value is exactly 84.5.
+      const parts = [made(HesComponentId.RHR, 84), made(HesComponentId.SLEEP_DURATION, 85)];
       expect(observedHes(parts)).assertEqual(84.5);
       expect(calculateObservedHes(parts)).assertEqual(85);
     });
@@ -341,7 +353,7 @@ export default function hesTest() {
       session.setLiveHeartRate(145);
       const after = session.result();
       expect(after.score).assertEqual(before.score);
-      expect(after.score).assertEqual(88);
+      expect(after.score).assertEqual(89);
       expect(component(after, HesComponentId.RHR).rawValue).assertEqual(60);
       expect(after).assertDeepEquals(before);
     });
@@ -385,8 +397,8 @@ export default function hesTest() {
   // The rest of the specification, section by section.
   // ---------------------------------------------------------------------------------------------
   describe('HES-Lite weights and Core set (spec 2 and 3)', () => {
-    it('the eight weights are 15, 15, 15, 15, 12.5, 12.5, 10 and 5 percent and add up to 100', 0, () => {
-      const expected = [150, 150, 150, 150, 125, 125, 100, 50];
+    it('the default weights are health insurance: 12.5, 12.5, 20, 15, 15, 12.5, 7.5 and 5 percent', 0, () => {
+      const expected = [125, 125, 200, 150, 150, 125, 75, 50];
       let sum = 0;
       for (let i = 0; i < HES_COMPONENTS.length; i++) {
         expect(HES_COMPONENTS[i].weightPermille).assertEqual(expected[i]);
@@ -396,7 +408,7 @@ export default function hesTest() {
       expect(sum).assertEqual(1000);
     });
 
-    it('Core is resting heart rate, MVPA, sleep regularity, steps and sleep duration: 70 percent', 0, () => {
+    it('Core is resting heart rate, MVPA, sleep regularity, steps and sleep duration: 75 percent', 0, () => {
       const core: string[] = [];
       let weight = 0;
       for (let i = 0; i < HES_COMPONENTS.length; i++) {
@@ -406,7 +418,7 @@ export default function hesTest() {
         }
       }
       expect(core).assertDeepEquals(['rhr', 'mvpa', 'sleepRegularity', 'steps', 'sleepDuration']);
-      expect(weight).assertEqual(700);
+      expect(weight).assertEqual(750);
     });
 
     it('a result always lists all eight components in the order of the weight table', 0, () => {
@@ -428,12 +440,12 @@ export default function hesTest() {
       expect(component(result, HesComponentId.HRV).score).assertClose(75, EPS);
       expect(component(result, HesComponentId.HRR).score).assertClose(70, EPS);
       expect(observedHes(result.components)).assertClose(FULL_OBSERVED, EPS);
-      expect(result.score).assertEqual(88);
+      expect(result.score).assertEqual(89);
       expect(result.tier).assertEqual(TIER_A);
       expect(result.status as string).assertEqual('ok');
     });
 
-    it('Core + VO2max -> 85%, Core + VO2max + HRR -> 90%', 0, () => {
+    it('Core + VO2max -> 87.5 -> 88%, Core + VO2max + HRR -> 92.5 -> 93%', 0, () => {
       const coreAndVo2 = history(HISTORY_DAYS, (index: number): HesDay => {
         const day = fullDay(index);
         day.hrvPercentile = HES_MISSING;
@@ -445,21 +457,23 @@ export default function hesTest() {
         day.hrvPercentile = HES_MISSING;
         return day;
       });
-      expect(computeHes(coreAndVo2).coverage).assertEqual(85);
-      expect(computeHes(coreVo2Hrr).coverage).assertEqual(90);
+      expect(computeHes(coreAndVo2).coverage).assertEqual(88);
+      expect(computeHes(coreVo2Hrr).coverage).assertEqual(93);
     });
 
     it('a coverage of 42.5 rounds up to 43, the same on every run', 0, () => {
-      const parts = [made(HesComponentId.RHR, 80), made(HesComponentId.MVPA, 80), made(HesComponentId.STEPS, 80)];
+      // 12.5 + 15 + 15 = 42.5
+      const parts = [made(HesComponentId.RHR, 80), made(HesComponentId.SLEEP_REGULARITY, 80),
+        made(HesComponentId.STEPS, 80)];
       expect(coverage(parts)).assertEqual(43);
       expect(isCoreComplete(parts)).assertFalse();
     });
 
-    it('a Core-only history is scored over the 70 percent that is there', 0, () => {
+    it('a Core-only history is scored over the 75 percent that is there', 0, () => {
       const result = computeHes(coreHistory());
-      // (0.15 x (95 + 89 + 100) + 0.125 x (95 + 100)) / 0.70 = 95.68
-      expect(observedHes(result.components)).assertClose((42.6 + 24.375) / 0.7, EPS);
-      expect(result.score).assertEqual(96);
+      // (0.125 x 95 + 0.20 x 89 + 0.15 x 100 + 0.15 x 95 + 0.125 x 100) / 0.75 = 95.23
+      expect(observedHes(result.components)).assertClose(71.425 / 0.75, EPS);
+      expect(result.score).assertEqual(95);
     });
 
     it('effective weights add up to 1 over the available components and are 0 for missing ones', 0, () => {
@@ -469,10 +483,10 @@ export default function hesTest() {
         sum += result.components[i].effectiveWeight;
       }
       expect(sum).assertClose(1, EPS);
-      expect(component(result, HesComponentId.RHR).effectiveWeight).assertClose(0.15 / 0.7, EPS);
-      expect(component(result, HesComponentId.STEPS).effectiveWeight).assertClose(0.125 / 0.7, EPS);
+      expect(component(result, HesComponentId.RHR).effectiveWeight).assertClose(0.125 / 0.75, EPS);
+      expect(component(result, HesComponentId.STEPS).effectiveWeight).assertClose(0.15 / 0.75, EPS);
       expect(component(result, HesComponentId.CRF).effectiveWeight).assertEqual(0);
-      expect(component(result, HesComponentId.RHR).baseWeight).assertEqual(0.15);
+      expect(component(result, HesComponentId.RHR).baseWeight).assertEqual(0.125);
     });
 
     it('scoring does not change the history it is given', 0, () => {
@@ -689,11 +703,11 @@ export default function hesTest() {
       expect(component(thirteen, HesComponentId.SLEEP_REGULARITY).available).assertFalse();
       expect(component(thirteen, HesComponentId.RHR).available).assertTrue();
       expect(thirteen.status).assertEqual(HesStatus.INSUFFICIENT_DATA);
-      expect(thirteen.coverage).assertEqual(15);
+      expect(thirteen.coverage).assertEqual(13);
 
       const fourteen = computeHes(lastDays(14, coreDay));
       expect(fourteen.status).assertEqual(HesStatus.OK);
-      expect(fourteen.coverage).assertEqual(70);
+      expect(fourteen.coverage).assertEqual(75);
     });
 
     it('resting heart rate needs 10 valid days', 0, () => {
@@ -710,9 +724,26 @@ export default function hesTest() {
         return day;
       });
       expect(component(computeHes(hrvNights(6)), HesComponentId.HRV).available).assertFalse();
-      expect(computeHes(hrvNights(6)).coverage).assertEqual(70);
+      expect(computeHes(hrvNights(6)).coverage).assertEqual(75);
       expect(component(computeHes(hrvNights(7)), HesComponentId.HRV).available).assertTrue();
-      expect(computeHes(hrvNights(7)).coverage).assertEqual(80);
+      expect(computeHes(hrvNights(7)).coverage).assertEqual(83);
+    });
+
+    it('HRV counts only the recent 14 nights', 0, () => {
+      const hrvOn = (indexes: number[]): HesDay[] => history(HISTORY_DAYS, (index: number): HesDay => {
+        const day = coreDay(index);
+        if (indexes.indexOf(index) >= 0) {
+          day.hrvPercentile = 50;
+        }
+        return day;
+      });
+      // Seven nights, the oldest of them the 14th night back (index 13): available.
+      expect(component(computeHes(hrvOn([0, 1, 2, 3, 4, 5, 13])), HesComponentId.HRV).validCount).assertEqual(7);
+      expect(component(computeHes(hrvOn([0, 1, 2, 3, 4, 5, 13])), HesComponentId.HRV).available).assertTrue();
+      // The same seven nights with the oldest one a night earlier (index 14): only six count.
+      expect(component(computeHes(hrvOn([0, 1, 2, 3, 4, 5, 14])), HesComponentId.HRV).validCount).assertEqual(6);
+      expect(component(computeHes(hrvOn([0, 1, 2, 3, 4, 5, 14])), HesComponentId.HRV).available).assertFalse();
+      expect(HES_HRV_WINDOW_DAYS).assertEqual(14);
     });
 
     it('heart-rate recovery needs 2 valid sessions in 60 days', 0, () => {
@@ -791,12 +822,12 @@ export default function hesTest() {
       expect(HesConfidence.INSUFFICIENT_DATA as string).assertEqual('Insufficient data');
     });
 
-    it('full data is High; Core only with full quality is Medium (0.70)', 0, () => {
+    it('full data is High; Core only with full quality is Medium (0.75)', 0, () => {
       const full = computeHes(fullHistory());
       expect(confidenceIndex(full.components)).assertClose(1, EPS);
       expect(full.confidence).assertEqual(HesConfidence.HIGH);
       const core = computeHes(coreHistory());
-      expect(confidenceIndex(core.components)).assertClose(0.7, EPS);
+      expect(confidenceIndex(core.components)).assertClose(0.75, EPS);
       expect(core.confidence).assertEqual(HesConfidence.MEDIUM);
     });
 
@@ -804,8 +835,8 @@ export default function hesTest() {
       const days = history(HISTORY_DAYS, (index: number): HesDay =>
         index < 14 ? coreDay(index) : emptyHesDay('day-' + index));
       const result = computeHes(days);
-      // Quality 14/21 for four components and 14/14 for resting heart rate: (0.15 + 0.55 x 2/3) / 0.70.
-      const expected = 0.7 * ((0.15 + 0.55 * 2 / 3) / 0.7);
+      // Quality 14/21 for four components and 14/14 for resting heart rate: (0.125 + 0.625 x 2/3) / 0.75.
+      const expected = 0.75 * ((0.125 + 0.625 * 2 / 3) / 0.75);
       expect(confidenceIndex(result.components)).assertClose(expected, EPS);
       expect(result.status).assertEqual(HesStatus.OK);
       expect(result.confidence).assertEqual(HesConfidence.LOW);
@@ -815,6 +846,108 @@ export default function hesTest() {
       const parts = [made(HesComponentId.RHR, 90), made(HesComponentId.CRF, 90)];
       expect(calculateConfidence(parts)).assertEqual(HesConfidence.INSUFFICIENT_DATA);
       expect(composeHes(parts).confidence).assertEqual(HesConfidence.INSUFFICIENT_DATA);
+    });
+  });
+
+  describe('HES vNext profiles: health and life insurance', () => {
+    it('each profile has its own weights and both add up to 100 percent', 0, () => {
+      const health = [125, 125, 200, 150, 150, 125, 75, 50];
+      const life = [225, 150, 150, 100, 175, 75, 75, 50];
+      const healthDefs = hesComponentsFor(HesProfile.HEALTH_WELLNESS);
+      const lifeDefs = hesComponentsFor(HesProfile.LONGEVITY_WELLNESS);
+      let healthSum = 0;
+      let lifeSum = 0;
+      for (let i = 0; i < HES_COMPONENTS.length; i++) {
+        expect(healthDefs[i].weightPermille).assertEqual(health[i]);
+        expect(lifeDefs[i].weightPermille).assertEqual(life[i]);
+        expect(hesWeightPermille(HesProfile.LONGEVITY_WELLNESS, HES_COMPONENTS[i].id)).assertEqual(life[i]);
+        healthSum += healthDefs[i].weightPermille;
+        lifeSum += lifeDefs[i].weightPermille;
+      }
+      expect(healthSum).assertEqual(1000);
+      expect(lifeSum).assertEqual(1000);
+    });
+
+    it('the default profile is health insurance and HES_COMPONENTS carries its weights', 0, () => {
+      expect(HES_DEFAULT_PROFILE).assertEqual(HesProfile.HEALTH_WELLNESS);
+      for (let i = 0; i < HES_COMPONENTS.length; i++) {
+        expect(HES_COMPONENTS[i].weightPermille).assertEqual(
+          hesWeightPermille(HES_DEFAULT_PROFILE, HES_COMPONENTS[i].id));
+      }
+      expect(computeHes(fullHistory()).profile).assertEqual(HesProfile.HEALTH_WELLNESS);
+    });
+
+    it('a profile changes only the weights: curves, counts and windows are shared', 0, () => {
+      const health = hesComponentsFor(HesProfile.HEALTH_WELLNESS);
+      const life = hesComponentsFor(HesProfile.LONGEVITY_WELLNESS);
+      for (let i = 0; i < health.length; i++) {
+        expect(life[i].id).assertEqual(health[i].id);
+        expect(life[i].requiredCore).assertEqual(health[i].requiredCore);
+        expect(life[i].minCount).assertEqual(health[i].minCount);
+        expect(life[i].targetCount).assertEqual(health[i].targetCount);
+        expect(life[i].windowDays).assertEqual(health[i].windowDays);
+        expect(life[i].curve).assertDeepEquals(health[i].curve);
+      }
+      const healthResult = computeHes(fullHistory(), HesProfile.HEALTH_WELLNESS);
+      const lifeResult = computeHes(fullHistory(), HesProfile.LONGEVITY_WELLNESS);
+      for (let i = 0; i < healthResult.components.length; i++) {
+        expect(lifeResult.components[i].score).assertEqual(healthResult.components[i].score);
+      }
+    });
+
+    it('life insurance scores the full history as 86.6 -> 87', 0, () => {
+      const result = computeHes(fullHistory(), HesProfile.LONGEVITY_WELLNESS);
+      expect(result.profile).assertEqual(HesProfile.LONGEVITY_WELLNESS);
+      expect(observedHes(result.components)).assertClose(FULL_OBSERVED_LIFE, EPS);
+      expect(result.score).assertEqual(87);
+      expect(result.tier).assertEqual(TIER_A);
+      expect(component(result, HesComponentId.CRF).baseWeight).assertEqual(0.225);
+    });
+
+    it('life insurance: Core only is 65% coverage and at most Medium confidence', 0, () => {
+      const result = computeHes(coreHistory(), HesProfile.LONGEVITY_WELLNESS);
+      expect(result.coverage).assertEqual(65);
+      expect(confidenceIndex(result.components)).assertClose(0.65, EPS);
+      expect(result.confidence).assertEqual(HesConfidence.MEDIUM);
+      // (0.15 x 95 + 0.15 x 89 + 0.10 x 100 + 0.175 x 95 + 0.075 x 100) / 0.65
+      expect(observedHes(result.components)).assertClose(61.725 / 0.65, EPS);
+    });
+
+    it('a missing Core component gives no score in either profile', 0, () => {
+      const days = history(HISTORY_DAYS, (index: number): HesDay => {
+        const day = fullDay(index);
+        day.sleepMinutes = HES_MISSING;
+        return day;
+      });
+      const life = computeHes(days, HesProfile.LONGEVITY_WELLNESS);
+      expect(life.score).assertEqual(HES_MISSING);
+      expect(life.tier).assertEqual(TIER_NO_SCORE);
+      expect(life.status).assertEqual(HesStatus.INSUFFICIENT_DATA);
+      // Everything except the 7.5% of sleep duration in the life profile.
+      expect(life.coverage).assertEqual(93);
+    });
+
+    it('a session switches profile on the same completed days and keeps the live values', 0, () => {
+      const session = new HesSession(fullHistory(), null);
+      session.setLive(120, 5000);
+      expect(session.profile()).assertEqual(HesProfile.HEALTH_WELLNESS);
+      expect(session.result().score).assertEqual(89);
+      const life = session.setProfile(HesProfile.LONGEVITY_WELLNESS);
+      expect(life.score).assertEqual(87);
+      expect(session.result()).assertDeepEquals(computeHes(fullHistory(), HesProfile.LONGEVITY_WELLNESS));
+      expect(session.liveHeartRate()).assertEqual(120);
+      expect(session.liveSteps()).assertEqual(5000);
+      expect(session.history().length).assertEqual(HISTORY_DAYS);
+      session.closeDay();
+      expect(session.result().profile).assertEqual(HesProfile.LONGEVITY_WELLNESS);
+      session.reset();
+      expect(session.profile()).assertEqual(HesProfile.LONGEVITY_WELLNESS);
+      expect(session.result().score).assertEqual(87);
+    });
+
+    it('labels', 0, () => {
+      expect(hesProfileLabel(HesProfile.HEALTH_WELLNESS)).assertEqual('Health insurance');
+      expect(hesProfileLabel(HesProfile.LONGEVITY_WELLNESS)).assertEqual('Life insurance');
     });
   });
 

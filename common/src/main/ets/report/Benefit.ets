@@ -1,3 +1,4 @@
+import { HesProfile } from '../hes/HesTypes';
 import { BenefitLevel, ReportTier } from './ReportModels';
 
 /*
@@ -29,6 +30,25 @@ export function benefitLevel(eligible: boolean, tier: string, hasScore: boolean)
     return BenefitLevel.PARTIAL;
   }
   return BenefitLevel.NONE;
+}
+
+/*
+ * The premium discount of a benefit level, in percent, per product. Discount only: no benefit is 0%, never a
+ * surcharge. Illustrative product assumptions, not actuarial values.
+ *
+ *                       FULL (A)   PARTIAL (B)   NONE
+ *   health insurance       15           8          0     (monthly premium)
+ *   life insurance         10           5          0     (polisa na życie, yearly premium)
+ */
+export function discountPct(profile: HesProfile, level: string): number {
+  const life: boolean = profile === HesProfile.LONGEVITY_WELLNESS;
+  if (level === BenefitLevel.FULL) {
+    return life ? 10 : 15;
+  }
+  if (level === BenefitLevel.PARTIAL) {
+    return life ? 5 : 8;
+  }
+  return 0;
 }
 
 export function benefitLabel(level: string): string {
