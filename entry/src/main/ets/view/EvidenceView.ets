@@ -45,7 +45,7 @@ import {
   KEY_PERSONA,
   KEY_REPORT_REVISION,
   reportService,
-  selectedReport
+  partnerReport
 } from '../report/ServiceLocator';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
@@ -118,7 +118,7 @@ export struct EvidenceView {
   @StorageProp(KEY_PERSONA) @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @StorageLink(KEY_APPEALS) appeals: string[] = [];
-  @State report: PersonaReport = selectedReport();
+  @State report: PersonaReport = partnerReport();
   // The colours are set from system resources: with the defaults the selected segment stays light in dark
   // mode and its label cannot be read.
   @State segmentOptions: SegmentButtonOptions = SegmentButtonOptions.tab({

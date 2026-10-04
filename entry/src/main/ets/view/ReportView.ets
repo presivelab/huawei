@@ -14,6 +14,7 @@ import {
   HealthStatus,
   metricSpoken,
   periodDayIso,
+  PARTNER_HES_PROFILE,
   PersonaReport,
   ReportTier,
   SCORE_TO,
@@ -28,6 +29,7 @@ import { KEY_TAB } from '../nav/EntryRouter';
 import {
   DEFAULT_PERSONA_ID,
   KEY_PERSONA,
+  KEY_PROFILE,
   KEY_REPORT_REVISION,
   reportService,
   reportsFromHealthSim,
@@ -35,6 +37,8 @@ import {
   selectedReport
 } from '../report/ServiceLocator';
 import {
+  CONFIDENCE_CHIP_PREFIX,
+  COVERAGE_CHIP_PREFIX,
   countUnit,
   DISCLAIMER,
   EVIDENCE_LABEL,
@@ -83,6 +87,7 @@ import { StatusPill } from '../ui/kit/StatusPill';
 import { TextLink } from '../ui/kit/TextLink';
 import { TierBadge } from '../ui/kit/TierBadge';
 import { DayDialCard } from './DayDialCard';
+import { profileSwitch } from './ProfileSwitch';
 import { VisitsCard } from './VisitsCard';
 import { DemoLiveCard } from './DemoLiveCard';
 import { CAPTION, CARD_LARGE, HEADING, statusDotColor } from './Styles';
@@ -217,6 +222,7 @@ export struct ReportView {
   @Consume('fwNav') nav: NavPathStack;
   @StorageProp(KEY_STATUS) status: string = HealthStatus.NOT_AUTHORIZED;
   @StorageProp(KEY_PERSONA) @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
+  @StorageProp(KEY_PROFILE) @Watch('reload') profile: string = PARTNER_HES_PROFILE;
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @StorageLink(KEY_TAB) tab: number = FW_TAB_REPORT;
   @State report: PersonaReport = selectedReport();
@@ -225,7 +231,7 @@ export struct ReportView {
 
   // Another persona (or new live readings): take the report again and show it from the top.
   reload(): void {
-    const next: PersonaReport = reportService().report(this.personaId);
+    const next: PersonaReport = selectedReport();
     if (next.id !== this.report.id) {
       this.scroller.scrollEdge(Edge.Top);
     }
@@ -313,8 +319,8 @@ export struct ReportView {
           .alignItems(VerticalAlign.Center)
 
           Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(6), cross: LengthMetrics.vp(6) } }) {
-            InfoChip({ text: `Coverage ${this.report.coveragePct}%` })
-            InfoChip({ text: `Confidence ${this.report.confidence}` })
+            InfoChip({ text: COVERAGE_CHIP_PREFIX + this.report.coverageText })
+            InfoChip({ text: CONFIDENCE_CHIP_PREFIX + this.report.confidence })
           }
           .width('100%')
         }
@@ -473,7 +479,7 @@ export struct ReportView {
       RingStat({
         value: this.report.coveragePct,
         total: 100,
-        valueText: `${this.report.coveragePct}%`,
+        valueText: this.report.coverageText,
         unit: 'evidence',
         ringColor: $r('sys.color.icon_secondary'),
         spoken: scoreSpoken(this.report),
@@ -559,6 +565,7 @@ export struct ReportView {
     Scroll(this.scroller) {
       Column({ space: CARD_GAP }) {
         this.sourceRows()
+        profileSwitch(this.profile)
         if (hasScore(this.report)) {
           this.scoreCard()
           this.previewLine()

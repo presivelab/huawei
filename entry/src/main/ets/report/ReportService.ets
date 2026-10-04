@@ -1,4 +1,14 @@
-import { DayDetail, LiveNow, PersonaRef, PersonaReport, previewPersonas, previewReport } from 'common';
+import {
+  DayDetail,
+  HesDayRecord,
+  HesProfile,
+  LiveNow,
+  PARTNER_HES_PROFILE,
+  PersonaRef,
+  PersonaReport,
+  previewPersonas,
+  previewReport
+} from 'common';
 
 /*
  * Where the phone screens get the monthly report from. Two implementations: the scoring engine
@@ -9,8 +19,20 @@ export interface ReportService {
   /** The personas the demo switcher lists. */
   personas(): PersonaRef[];
 
-  /** The report of one persona; an unknown id gives the default persona. */
+  /**
+   * The report of one persona in the partner's profile; an unknown id gives the default persona. Share, the
+   * partner view, the home-screen card and every benefit line read this one.
+   */
   report(id: string): PersonaReport;
+
+  /**
+   * The report of one persona in a chosen weight profile, for explanation on the Report tab and the Why page.
+   * Eligibility and benefit in it are still the partner's.
+   */
+  reportIn(id: string, profile: HesProfile): PersonaReport;
+
+  /** The completed days of the persona's history, oldest first. Empty when the source has none. */
+  completedDays(id: string): HesDayRecord[];
 
   /** Sets the live readings of the running day for one persona (demo controls). Shown, never scored. */
   liveSet(id: string, hr: number, steps: number): void;
@@ -40,6 +62,15 @@ export class PreviewReportService implements ReportService {
   }
 
   report(id: string): PersonaReport {
+    return this.reportIn(id, PARTNER_HES_PROFILE);
+  }
+
+  completedDays(id: string): HesDayRecord[] {
+    return [];
+  }
+
+  // The preview is fixed: every profile gets the same report.
+  reportIn(id: string, profile: HesProfile): PersonaReport {
     const base: PersonaReport = previewReport(id);
     const live: LiveNow | undefined = this.live.get(base.id);
     if (live === undefined) {
@@ -50,10 +81,15 @@ export class PreviewReportService implements ReportService {
       name: base.name,
       period: base.period,
       periodIso: base.periodIso,
+      profile: base.profile,
+      profileLabel: base.profileLabel,
+      partnerProfile: base.partnerProfile,
       hes: base.hes,
       tier: base.tier,
       coveragePct: base.coveragePct,
+      coverageText: base.coverageText,
       confidence: base.confidence,
+      showWeights: base.showWeights,
       eligible: base.eligible,
       benefit: base.benefit,
       benefitReason: base.benefitReason,

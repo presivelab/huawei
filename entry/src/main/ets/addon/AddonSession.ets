@@ -76,6 +76,7 @@ export class AddonSession {
    * emulators shows its own consent screen. Returns the kind of its answer (HealthSimAnswerKind):
    *   OK             step 1 is granted and the data waits for step 2;
    *   REFUSED        step 1 is refused;
+   *   OUTDATED       Health Sim sends an older data format: nothing is kept, the message says so;
    *   NOT_INSTALLED, ERROR   nothing is recorded: the caller shows the built-in demo placeholder;
    *   STALE          the request was abandoned meanwhile (abandonHealthSim): nothing is recorded.
    * Never rejects. It may never resolve: when the user cancels the system's own question about opening

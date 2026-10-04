@@ -12,7 +12,7 @@ import {
   verdictLine,
   VerifyResult
 } from 'common';
-import { selectedReport } from '../report/ServiceLocator';
+import { partnerReport } from '../report/ServiceLocator';
 import { ShareCode, ShareService } from '../share/ShareService';
 import {
   ATTEMPT_AGAIN,
@@ -94,7 +94,7 @@ export struct PartnerPage {
     }
     const have: ShareCode | null = ShareService.shared().current();
     this.busy = true;
-    ShareService.shared().codeFor(selectedReport(), have !== null && have.used).then((code: ShareCode | null) => {
+    ShareService.shared().codeFor(partnerReport(), have !== null && have.used).then((code: ShareCode | null) => {
       this.busy = false;
       if (code === null) {
         this.missing = true;

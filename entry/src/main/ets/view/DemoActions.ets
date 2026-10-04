@@ -34,5 +34,5 @@ export function demoResultLine(action: string): string {
   if (hasScore(r)) {
     return `${action} · HES ${r.hes} · Tier ${r.tier}`;
   }
-  return `${action} · no score yet · evidence ${r.coveragePct}%`;
+  return `${action} · no score yet · evidence ${r.coverageText}`;
 }

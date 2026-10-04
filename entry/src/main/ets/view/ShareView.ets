@@ -5,6 +5,7 @@ import {
   FW_TAB_SHARE,
   keySourceLabel,
   logTimeText,
+  PARTNER_PROFILE_LINE,
   PersonaReport,
   ShareOffer,
   shareOffer,
@@ -17,8 +18,8 @@ import {
   DEFAULT_PERSONA_ID,
   KEY_PERSONA,
   KEY_REPORT_REVISION,
-  reportService,
-  selectedReport
+  partnerReport,
+  reportService
 } from '../report/ServiceLocator';
 import { KEY_SHARE_REVISION, ShareCode, ShareService } from '../share/ShareService';
 import {
@@ -74,7 +75,7 @@ export struct ShareView {
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @StorageProp(KEY_TAB) @Watch('reload') tab: number = FW_TAB_REPORT;
   @StorageProp(KEY_SHARE_REVISION) @Watch('syncCode') shareRevision: number = 0;
-  @State report: PersonaReport = selectedReport();
+  @State report: PersonaReport = partnerReport();
   @State code: ShareCode | null = null;
   @State failure: string = '';
   @State pending: number = 0;     // code requests in flight; the buttons wait for them (no double codes)
@@ -159,6 +160,11 @@ export struct ShareView {
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
+
+      // The tier and the code are always those of the partner's profile, whatever the Report tab shows.
+      Text(PARTNER_PROFILE_LINE)
+        .attributeModifier(CAPTION)
+        .id('fw_share_profile')
 
       if (this.offer().note.length > 0) {
         Text(this.offer().note)

@@ -1,20 +1,18 @@
 import {
   ComponentRow,
   hasScore,
+  PARTNER_HES_PROFILE,
   PersonaReport,
-  scoreEvidence,
-  ScoreEvidence,
   whySections,
   WhySections
 } from 'common';
 import {
-  countLine,
-  countUnit,
   DISCLAIMER,
+  measuredLine,
   NO_SCORE_BODY,
   NO_SCORE_HEADLINE,
+  noScoreSubline,
   WHY_ASSUMPTIONS,
-  WHY_ENOUGH,
   WHY_HOW_LINES,
   WHY_HOW_TITLE,
   WHY_IMPROVE,
@@ -23,7 +21,7 @@ import {
   WHY_MISSING,
   WHY_MISSING_NOTE,
   WHY_NEEDED,
-  WHY_NOT_MEASURED,
+  WHY_OPTIONAL_NOT_YET,
   WHY_STRONGEST,
   whyHeadline,
   whyRowDetail,
@@ -32,21 +30,19 @@ import {
 import {
   DEFAULT_PERSONA_ID,
   KEY_PERSONA,
+  KEY_PROFILE,
   KEY_REPORT_REVISION,
-  reportService,
   selectedReport
 } from '../report/ServiceLocator';
-import { CountBar } from '../ui/kit/CountBar';
 import {
-  COLOR_OK_TEXT,
   componentColor,
   componentSymbol,
-  SYMBOL_CHECK,
   SYMBOL_EXPAND,
   SYMBOL_FORWARD,
   SYMBOL_INFO
 } from '../ui/kit/KitTokens';
 import { TierBadge } from '../ui/kit/TierBadge';
+import { profileSwitch } from './ProfileSwitch';
 import { CAPTION, CARD_LARGE, HEADING } from './Styles';
 
 const CARD_GAP: number = 14;
@@ -59,20 +55,30 @@ const SCORE_TOP: number = 100;
 @Component
 export struct WhyPage {
   @StorageProp(KEY_PERSONA) @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
+  @StorageProp(KEY_PROFILE) @Watch('reload') profile: string = PARTNER_HES_PROFILE;
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @State report: PersonaReport = selectedReport();
   @State howOpen: boolean = false;
 
   reload(): void {
-    this.report = reportService().report(this.personaId);
+    this.report = selectedReport();
   }
 
   private sections(): WhySections {
     return whySections(this.report);
   }
 
-  private evidence(): ScoreEvidence {
-    return scoreEvidence(this.report);
+  // Without a score: the rows that have data (raw values only), the Core rows still short of their minimum,
+  // and the optional rows without enough data. Every row is in exactly one list.
+  private rowsWhere(core: boolean, available: boolean): ComponentRow[] {
+    const out: ComponentRow[] = [];
+    for (let i = 0; i < this.report.components.length; i++) {
+      const row = this.report.components[i];
+      if (available ? row.available : (!row.available && row.core === core)) {
+        out.push(row);
+      }
+    }
+    return out;
   }
 
   // The sections read the report on screen themselves, so they follow a closed day or another persona.
@@ -81,7 +87,7 @@ export struct WhyPage {
   }
 
   private missingRows(): ComponentRow[] {
-    return hasScore(this.report) ? this.sections().missing : this.evidence().notMeasured;
+    return this.sections().missingOptional;
   }
 
   @Builder
@@ -122,7 +128,7 @@ export struct WhyPage {
         .fontWeight(FontWeight.Bold)
         .fontColor($r('sys.color.font_primary'))
         .id('fw_why_no_score')
-      Text(`Coverage ${this.report.coveragePct}% · ${this.report.benefitReason}`)
+      Text(noScoreSubline(this.report))
         .fontSize($r('sys.float.Body_M'))
         .fontColor($r('sys.color.font_secondary'))
       Text(NO_SCORE_BODY)
@@ -159,13 +165,13 @@ export struct WhyPage {
         .backgroundColor($r('sys.color.comp_background_tertiary'))
         .width('100%')
 
-      Text(whyRowDetail(row))
+      Text(whyRowDetail(row, this.report.showWeights))
         .attributeModifier(CAPTION)
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)
     .accessibilityGroup(true)
-    .accessibilityText(`${row.label}, score ${row.score} of 100, ${whyRowDetail(row)}`)
+    .accessibilityText(`${row.label}, score ${row.score} of 100, ${whyRowDetail(row, this.report.showWeights)}`)
   }
 
   @Builder
@@ -210,7 +216,8 @@ export struct WhyPage {
     }
   }
 
-  // A component without a value: named, with "Not measured" where a score would be. Never a number.
+  // A component without enough data: named, with how far its data is ("0 of 1") where a score would be.
+  // Never a score and never a zero.
   @Builder
   plainRow(row: ComponentRow, note: string) {
     Row({ space: 8 }) {
@@ -242,8 +249,8 @@ export struct WhyPage {
         Text(WHY_MISSING)
           .attributeModifier(HEADING)
         ForEach(this.missingRows(), (row: ComponentRow) => {
-          this.plainRow(row, WHY_NOT_MEASURED)
-        }, (row: ComponentRow) => `${this.report.id}|missing|${row.id}`)
+          this.plainRow(row, row.countText)
+        }, (row: ComponentRow) => `${this.report.id}|missing|${row.id}|${row.countText}`)
         Text(WHY_MISSING_NOTE)
           .attributeModifier(CAPTION)
       }
@@ -252,75 +259,59 @@ export struct WhyPage {
     }
   }
 
-  // Without a score: a component that already has enough days, with the count behind it.
+  // Without a score: a measure that has data, as its raw value and the count behind it. No component score.
   @Builder
   measuredRow(row: ComponentRow) {
     Row({ space: 8 }) {
       SymbolGlyph(componentSymbol(row.id))
         .fontSize(18)
         .fontColor([componentColor(row.id)])
-      Column({ space: 2 }) {
-        Text(row.label)
-          .fontSize($r('sys.float.Body_M'))
-          .fontColor($r('sys.color.font_primary'))
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-        Text(row.minCount > 0 ? `${countLine(row)} · ${WHY_ENOUGH}` : countLine(row))
-          .attributeModifier(CAPTION)
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-
-      if (row.raw.length > 0) {
-        Text(`${row.raw} ${row.unit}`)
-          .fontSize($r('sys.float.Body_M'))
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('sys.color.font_primary'))
-          .maxLines(1)
-      }
-      if (row.minCount > 0) {
-        SymbolGlyph(SYMBOL_CHECK)
-          .fontSize(16)
-          .fontColor([COLOR_OK_TEXT])
-      }
+      Text(measuredLine(row))
+        .fontSize($r('sys.float.Body_M'))
+        .fontColor($r('sys.color.font_primary'))
+        .layoutWeight(1)
     }
     .width('100%')
     .alignItems(VerticalAlign.Center)
     .accessibilityGroup(true)
-    .accessibilityText(`${row.label}, ${countLine(row)}` + (row.raw.length > 0 ? `, ${row.raw} ${row.unit}` : ''))
+    .accessibilityText(measuredLine(row))
   }
 
   @Builder
   noScoreSections() {
-    if (this.evidence().measured.length > 0) {
+    if (this.rowsWhere(false, true).length > 0) {
       Column({ space: 12 }) {
         Text(WHY_MEASURED)
           .attributeModifier(HEADING)
-        ForEach(this.evidence().measured, (row: ComponentRow) => {
+        ForEach(this.rowsWhere(false, true), (row: ComponentRow) => {
           this.measuredRow(row)
-        }, (row: ComponentRow) => `${this.report.id}|measured|${row.id}|${row.validCount}|${row.raw}`)
+        }, (row: ComponentRow) => `${this.report.id}|measured|${row.id}|${row.validCount}|${row.rawText}`)
       }
       .attributeModifier(CARD_LARGE)
       .id('fw_why_measured')
     }
-    if (this.evidence().needed.length > 0) {
-      Column({ space: 12 }) {
+    if (this.rowsWhere(true, false).length > 0) {
+      Column({ space: 10 }) {
         Text(WHY_NEEDED)
           .attributeModifier(HEADING)
-        ForEach(this.evidence().needed, (row: ComponentRow) => {
-          CountBar({
-            name: row.label,
-            have: row.validCount,
-            need: row.minCount,
-            unit: countUnit(row.id),
-            tint: componentColor(row.id)
-          })
-        }, (row: ComponentRow) => `${this.report.id}|needed|${row.id}|${row.validCount}`)
+        ForEach(this.rowsWhere(true, false), (row: ComponentRow) => {
+          this.plainRow(row, row.countText)
+        }, (row: ComponentRow) => `${this.report.id}|needed|${row.id}|${row.countText}`)
       }
       .attributeModifier(CARD_LARGE)
       .id('fw_why_needed')
     }
-    this.missingSection()
+    if (this.rowsWhere(false, false).length > 0) {
+      Column({ space: 10 }) {
+        Text(WHY_OPTIONAL_NOT_YET)
+          .attributeModifier(HEADING)
+        ForEach(this.rowsWhere(false, false), (row: ComponentRow) => {
+          this.plainRow(row, row.countText)
+        }, (row: ComponentRow) => `${this.report.id}|optional|${row.id}|${row.countText}`)
+      }
+      .attributeModifier(CARD_LARGE)
+      .id('fw_why_optional')
+    }
   }
 
   @Builder
@@ -380,6 +371,7 @@ export struct WhyPage {
     NavDestination() {
       Scroll() {
         Column({ space: CARD_GAP }) {
+          profileSwitch(this.profile)
           if (hasScore(this.report)) {
             this.headerCard()
             this.scoredSection(WHY_STRONGEST, false, 'fw_why_strongest')

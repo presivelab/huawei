@@ -47,8 +47,8 @@ export const PRIVACY_SETTINGS_SENTENCE: string =
 
 export const REFUSED_TITLE: string = 'HUAWEI Health was not connected';
 export const REFUSED_BODY: string =
-  'No health data was read. Without your permission FairWear cannot calculate your Health Evidence Score, ' +
-    'coverage or tier, and there is nothing to share.';
+  'No health data was read. Without your permission FairWear cannot calculate your Health Engagement Score, ' +
+    'Evidence coverage or tier, and there is nothing to share.';
 
 // Health Sim: the separate app that plays HUAWEI Health's part on the emulators.
 export const HEALTH_SIM_SENTENCE: string = 'Health Sim stands in for HUAWEI Health on this emulator.';

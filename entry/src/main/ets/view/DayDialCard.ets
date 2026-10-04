@@ -15,10 +15,10 @@ import {
   DialSegment,
   dialSegmentsOfRuns,
   engineSession,
-  HesDay,
+  HesDayRecord,
   slotRuns
 } from 'common';
-import { DEFAULT_PERSONA_ID } from '../report/ServiceLocator';
+import { DEFAULT_PERSONA_ID, KEY_REPORT_REVISION, reportService } from '../report/ServiceLocator';
 import { InfoChip } from '../ui/kit/InfoChip';
 import { COLOR_CHARGING, COLOR_NOTE_TEXT, COLOR_NOTE_TINT, COLOR_OFF, COLOR_SLEEP, COLOR_WORN } from '../ui/kit/KitTokens';
 import { KEY_LINK_REVISION, WatchLinkService } from '../watchlink/WatchLinkService';
@@ -50,8 +50,13 @@ function localMinuteNow(): number {
   return d.getHours() * 60 + d.getMinutes();
 }
 
-function newestDay(personaId: string): HesDay | null {
-  const days: HesDay[] = engineSession(personaId).history();
+// The newest completed day: from the service's session of the persona (so a closed day shows at once), or from
+// the built-in history when the service has no session.
+function newestDay(personaId: string): HesDayRecord | null {
+  let days: HesDayRecord[] = reportService().completedDays(personaId);
+  if (days.length === 0) {
+    days = engineSession(personaId).history().days;
+  }
   return days.length === 0 ? null : days[days.length - 1];
 }
 
@@ -62,6 +67,7 @@ function newestDay(personaId: string): HesDay | null {
 export struct DayDialCard {
   @Prop @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
   @StorageProp(KEY_LINK_REVISION) @Watch('reload') linkRevision: number = 0;
+  @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @State dial: DayDial = new DayDial();
   @State dayDate: string = '';
   @State watchDate: string = '';

@@ -72,7 +72,7 @@ export struct DataConsentPage {
           }
           .attributeModifier(CARD)
 
-          Text('A data type you switch off is treated as missing evidence: it lowers coverage and is never ' +
+          Text('A data type you switch off is treated as missing evidence: it lowers Evidence coverage and is never ' +
             'counted as zero.')
             .attributeModifier(CAPTION)
 
@@ -91,7 +91,7 @@ export struct DataConsentPage {
                 this.agreed = on;
               })
             Text('I consent to FairWear processing the selected health data on this phone to calculate my ' +
-              'Health Evidence Score and tier.')
+              'Health Engagement Score and tier.')
               .attributeModifier(BODY)
               .layoutWeight(1)
           }

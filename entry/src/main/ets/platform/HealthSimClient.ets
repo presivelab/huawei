@@ -1,7 +1,15 @@
 import { common, OpenLinkOptions, Want } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { decodeHealthSimPayload, HEALTH_SIM_PARAM, HealthScope, HealthSimPayload } from 'common';
+import {
+  HEALTH_SIM_OUTDATED_TEXT,
+  HEALTH_SIM_PARAM,
+  HealthScope,
+  HealthSimPayload,
+  HealthSimRead,
+  HealthSimReadStatus,
+  readHealthSimPayload
+} from 'common';
 
 /*
  * Asks Health Sim for health data. Health Sim (com.fairwear.healthsim) is a separate app that stands in
@@ -35,6 +43,8 @@ export class HealthSimAnswerKind {
   static readonly REFUSED: string = 'REFUSED';
   static readonly NOT_INSTALLED: string = 'NOT_INSTALLED';
   static readonly ERROR: string = 'ERROR';
+  // Health Sim answered in a data format this FairWear does not read (an older version). Nothing is kept.
+  static readonly OUTDATED: string = 'OUTDATED';
   // Not an answer of Health Sim: the request was given up before this answer came (see AddonSession).
   static readonly STALE: string = 'STALE';
 }
@@ -73,7 +83,13 @@ function answerFrom(path: string, result: common.AbilityResult): HealthSimAnswer
     return logAnswer(path, answer(HealthSimAnswerKind.ERROR, HEALTH_SIM_ERROR_TEXT), result.resultCode);
   }
   // Strict decode: anything FairWear cannot read in full is refused as a whole and the demo data is used.
-  const decoded: HealthSimPayload | null = decodeHealthSimPayload(payload as string);
+  // An older data format is told apart, so the screen can say that Health Sim needs an update.
+  const read: HealthSimRead = readHealthSimPayload(payload as string);
+  if (read.status === HealthSimReadStatus.OUTDATED) {
+    hilog.warn(DOMAIN, TAG, 'healthsim answer: outdated format, chars=%{public}d', (payload as string).length);
+    return logAnswer(path, answer(HealthSimAnswerKind.OUTDATED, HEALTH_SIM_OUTDATED_TEXT), result.resultCode);
+  }
+  const decoded: HealthSimPayload | null = read.status === HealthSimReadStatus.OK ? read.payload : null;
   if (decoded === null) {
     hilog.warn(DOMAIN, TAG, 'healthsim answer: unreadable, chars=%{public}d', (payload as string).length);
     return logAnswer(path, answer(HealthSimAnswerKind.ERROR, HEALTH_SIM_UNREADABLE_TEXT), result.resultCode);

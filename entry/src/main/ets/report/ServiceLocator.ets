@@ -9,6 +9,8 @@ import {
   HealthScope,
   healthSourceLabel,
   HealthStatus,
+  HesProfile,
+  PARTNER_HES_PROFILE,
   PersonaReport,
   PREVIEW_DEFAULT_ID
 } from 'common';
@@ -22,15 +24,22 @@ import { ReportService } from './ReportService';
  * "preview". The fixed preview (`PreviewReportService`) stays in ReportService.ets as the other
  * implementation of the same interface.
  *
- * The selected persona id lives in AppStorage under KEY_PERSONA. A screen reads the report like this:
+ * The selected persona id lives in AppStorage under KEY_PERSONA, the selected weight profile under
+ * KEY_PROFILE (the Report tab's profile switch; it explains, it never changes what is shared). A screen that
+ * shows the selected profile reads the report like this:
  *
  *   @StorageProp(KEY_PERSONA) @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
+ *   @StorageProp(KEY_PROFILE) @Watch('reload') profile: string = PARTNER_HES_PROFILE;
  *   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
  *   @State report: PersonaReport = selectedReport();
- *   reload(): void { this.report = reportService().report(this.personaId); }
+ *   reload(): void { this.report = selectedReport(); }
+ *
+ * Share, the partner view, the home-screen card, the benefit and the visits read the partner's profile:
+ * `partnerReport()` or `reportService().report(id)`.
  */
 
 export const KEY_PERSONA: string = 'fwPersonaId';               // id of the persona on screen
+export const KEY_PROFILE: string = 'fwHesProfile';               // the weight profile on screen, HesProfile
 export const KEY_REPORT_REVISION: string = 'fwReportRevision';  // bumped when a report's content changes
 export const DEFAULT_PERSONA_ID: string = PREVIEW_DEFAULT_ID;
 
@@ -124,7 +133,25 @@ export function selectPersona(id: string): void {
   AppStorage.setOrCreate<string>(KEY_PERSONA, service.report(id).id);
 }
 
+/** The weight profile the Report tab and the Why page show; the partner's until the person switches. */
+export function selectedProfile(): HesProfile {
+  const stored: string = AppStorage.get<string>(KEY_PROFILE) ?? PARTNER_HES_PROFILE;
+  return stored === HesProfile.LONGEVITY_WELLNESS ? HesProfile.LONGEVITY_WELLNESS : HesProfile.HEALTH_WELLNESS;
+}
+
+/** Shows another weight profile on the Report tab and the Why page. Nothing that is shared changes. */
+export function selectProfile(profile: HesProfile): void {
+  AppStorage.setOrCreate<string>(KEY_PROFILE, profile);
+  bumpRevision();
+}
+
+/** The selected persona in the selected profile: what the Report tab and the Why page show. */
 export function selectedReport(): PersonaReport {
+  return service.reportIn(selectedPersonaId(), selectedProfile());
+}
+
+/** The selected persona in the partner's profile: what is shared and what decides the benefit. */
+export function partnerReport(): PersonaReport {
   return service.report(selectedPersonaId());
 }
 
@@ -171,10 +198,19 @@ export function attachReportStore(filesDir: string): void {
   }
   const text = s.read(HEALTH_SIM_FILE);
   if (text !== null) {
-    const payload = decodeHealthSimPayload(text);
+    // A text written in an older data format does not decode: it counts as no Health Sim data (the built-in
+    // histories) and is removed.
+    let payload: HealthSimPayload | null = null;
+    try {
+      payload = decodeHealthSimPayload(text);
+    } catch (e) {
+      payload = null;
+    }
     if (payload !== null) {
       engine.useHealthSim(payload);
       changed = true;
+    } else {
+      removeStored(HEALTH_SIM_FILE);
     }
   }
   if (changed) {

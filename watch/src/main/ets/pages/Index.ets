@@ -225,10 +225,10 @@ struct Index {
 
   private heartLabel(): string {
     if (this.feedOn) {
-      return 'Heart rate · demo feed';
+      return 'Demo feed · not scored';
     }
     const note = linkNote(this.heartSensor);
-    return note.length > 0 ? `Heart rate · ${note}` : 'Heart rate · live';
+    return note.length > 0 ? `Live · ${note}` : 'Live · not scored';
   }
 
   private stepsText(): string {

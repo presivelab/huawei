@@ -7,7 +7,10 @@ import {
   healthSourceLabel,
   HES_TIER_A_MIN,
   HES_TIER_B_MIN,
+  HesProfile,
+  hesProfileLabel,
   nextTierOf,
+  PARTNER_HES_PROFILE,
   PersonaReport,
   ReportTier,
   weightText
@@ -26,8 +29,24 @@ export const WEAR_TITLE: string = 'Wear this month';
 export const EVIDENCE_TITLE: string = 'Your evidence';
 export const EVIDENCE_NOTE: string = 'completed days · last 28';
 export const DISCLAIMER: string =
-  'HES is deterministic rules, not a medical device. Weights and curves are prototype assumptions, ' +
-    'not clinically tested.';
+  'HES is deterministic rules, not a medical device and not AI / ML. Weights and curves are ' +
+    'research-informed product assumptions, not clinically or actuarially validated.';
+
+// The profile switch of the Report tab and the Why page: the two weight profiles, named by the engine.
+export const PROFILE_SWITCH_SPOKEN: string = 'Weight profile';
+export const PROFILE_OPTIONS: HesProfile[] = [HesProfile.HEALTH_WELLNESS, HesProfile.LONGEVITY_WELLNESS];
+export const COVERAGE_CHIP_PREFIX: string = 'Evidence coverage ';
+export const CONFIDENCE_CHIP_PREFIX: string = 'Data confidence: ';
+
+// "Health & wellness" or "Longevity".
+export function profileOptionLabel(profile: HesProfile): string {
+  return hesProfileLabel(profile);
+}
+
+// Under the switch while the profile on screen is not the partner's: it explains, it changes nothing.
+export function profileExplainLine(): string {
+  return `Shown for explanation. Sharing and benefits use ${hesProfileLabel(PARTNER_HES_PROFILE)} (set by partner).`;
+}
 
 export const NO_SCORE_HEADLINE: string = 'No score yet';
 export const NO_SCORE_BODY: string =
@@ -90,7 +109,7 @@ export function countUnit(id: string): string {
     return 'nights';
   }
   if (id === ComponentId.HR_RECOVERY) {
-    return 'workouts';
+    return 'sessions';
   }
   return id === ComponentId.VO2MAX ? 'estimates' : 'days';
 }
@@ -110,7 +129,7 @@ export function tierHeadline(report: PersonaReport): string {
 // One line per persona in the demo switcher.
 export function personaSummary(report: PersonaReport): string {
   if (!hasScore(report)) {
-    return `No score yet · coverage ${report.coveragePct}%`;
+    return `No score yet · evidence coverage ${report.coverageText}`;
   }
   return `Tier ${report.tier} · HES ${report.hes} · ${benefitLabel(report.benefit)}`;
 }
@@ -170,23 +189,30 @@ export function dayStateNote(state: string): string {
 export const WHY_NO_SCORE_LABEL: string = 'Why no score yet';
 export const WHY_STRONGEST: string = 'Strongest';
 export const WHY_IMPROVE: string = 'To improve';
-export const WHY_MISSING: string = 'Missing data';
-export const WHY_MISSING_NOTE: string = 'Missing data never lowers your score. It only lowers coverage.';
+export const WHY_MISSING: string = 'Missing data (optional)';
+export const WHY_MISSING_NOTE: string =
+  'Missing optional data lowers Evidence coverage. It is never scored as zero.';
+export const WHY_OPTIONAL_NOT_YET: string = 'Optional, not yet';
 export const WHY_MEASURED: string = 'Measured so far';
 export const WHY_NEEDED: string = 'Needed for a score';
 export const WHY_NOT_MEASURED: string = 'Not measured';
 export const WHY_ENOUGH: string = 'Enough for a score';
 export const WHY_HOW_TITLE: string = 'How it\'s calculated';
 export const WHY_HOW_LINES: string[] = [
-  'Each measure is scored from 0 to 100 on a fixed curve, from completed days only.',
-  'Your score is the weighted average of the measures that have enough data. A missing measure is left ' +
-    'out; it is never counted as zero.',
-  `Tier A starts at ${HES_TIER_A_MIN}, tier B at ${HES_TIER_B_MIN}.`,
-  'Coverage is the share of the full set of measures that has enough data.',
-  'Without one of the core measures there is no score at all, never a low one.'
+  'There are two weight profiles, Health & wellness and Longevity. Each measure is scored from 0 to 100 on a ' +
+    'fixed curve.',
+  'Five measures are Core: resting HR, MVPA, steps, sleep timing regularity and sleep duration. Three are ' +
+    'optional: VO₂max, HRV and HRR.',
+  'Your score is the weighted average of the measures that have enough data. Missing optional data lowers ' +
+    'Evidence coverage and is never scored as zero.',
+  'Without all Core measures there is no score at all, never a low one.',
+  'Windows: 28 days; HRV 14 nights, HRR 60 days, VO₂max 90 days. The current day is not scored until it ' +
+    'is closed.',
+  `Tier A starts at ${HES_TIER_A_MIN}, tier B at ${HES_TIER_B_MIN}.`
 ];
 export const WHY_ASSUMPTIONS: string =
-  'Weights, curves and minimum counts are prototype product assumptions, not clinically tested.';
+  'Weights, curves, thresholds, windows and minimum counts are research-informed product assumptions, ' +
+    'not clinically or actuarially validated.';
 
 // "HES 79 · 1 point to A"; at the top tier only the score.
 export function whyHeadline(report: PersonaReport): string {
@@ -202,14 +228,26 @@ export function pointsLine(points: number, tier: string): string {
   return points === 1 ? `1 point to ${tier}` : `${points} points to ${tier}`;
 }
 
-// "Coverage 90% · Confidence High · Partial benefit".
+// "Evidence coverage 90% · Data confidence High · Partial benefit".
 export function whySubline(report: PersonaReport): string {
-  return `Coverage ${report.coveragePct}% · Confidence ${report.confidence} · ${benefitLabel(report.benefit)}`;
+  return `Evidence coverage ${report.coverageText} · Data confidence ${report.confidence} · ` +
+    benefitLabel(report.benefit);
 }
 
-// "±24 min · weight 17%".
-export function whyRowDetail(row: ComponentRow): string {
-  return `${row.raw} ${row.unit} · weight ${weightText(row)}`;
+// "No score yet" header line: the coverage and why there is no benefit.
+export function noScoreSubline(report: PersonaReport): string {
+  return `Evidence coverage ${report.coverageText} · ${report.benefitReason}`;
+}
+
+// "±24 min" or "±24 min · weight 17.0%"; the weight only when the coverage is below 100%.
+export function whyRowDetail(row: ComponentRow, showWeights: boolean): string {
+  return showWeights && row.weightText.length > 0 ? `${row.rawText} · weight ${weightText(row)}` : row.rawText;
+}
+
+// "Daily steps — 6,800/day (16 days)": a measure that has data, with its value and count.
+export function measuredLine(row: ComponentRow): string {
+  return row.rawText.length > 0 ? `${row.label} — ${row.rawText} (${countLine(row)})` :
+    `${row.label} — ${countLine(row)}`;
 }
 
 // "14 days" or "1 night" under a measure that already has data.
@@ -220,10 +258,11 @@ export function countLine(row: ComponentRow): string {
 
 // --- Report tab: the live card and the demo controls ---
 
-export const LIVE_TITLE: string = 'Live';
+export const LIVE_TITLE: string = 'Live · not scored';
 export const LIVE_CHIP: string = 'Demo values';
 export const LIVE_NOTE: string =
-  'Shown, not scored. Close the day turns today\'s steps into a completed day; the heart rate is never stored.';
+  'Not scored: changing these never changes the score. Close the day turns today\'s steps into a completed ' +
+    'day; the heart rate is never stored.';
 export const NO_READING: string = '—';
 export const DEMO_TITLE: string = 'Demo controls';
 export const DEMO_HR_LABEL: string = 'Heart rate';
