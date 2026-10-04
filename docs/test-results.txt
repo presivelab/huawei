@@ -1,6 +1,52 @@
 FairWear test results
 =====================
 
+2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
+----------------------------------------------------
+H0: feature/watch-link-tour (eb6daf8, a relayed file still being written is left for the next look) merged
+  as 2985efc: common 368/368, watch 6/6.
+Base: feature/healthsim-base (bec6913) merged as 8284546 after the watch button (b491bf5). It compiled as
+  merged: assembleHap entry and watch BUILD SUCCESSFUL, no ArkTS fix needed in ServiceLocator.ets or in the
+  watch button. Then 85f3931 (Report source pill), 6971e00 (documents), 0f17cae (watch button label).
+G2 merges into feature/engine-reports, each with --no-ff:
+  feature/healthsim-phone   0e3ccfa -> 02a0de2   no conflict
+  feature/healthsim-connect 10ae04d -> e2ef860   no conflict
+  feature/healthsim-watch   53231f4 -> da5ef1a   docs/test-results.txt, both sides kept
+After each merge: tools/run-logic-tests.sh common 380/380, watch 6/6, HealthSimCopies.test.ets 2/2 (Node
+  only: the copies under healthsim/*/src/main/ets/fw are identical to common).
+Builds at da5ef1a: FairWear assembleHap entry and watch BUILD SUCCESSFUL; Health Sim (cd healthsim, ohpm
+  install --all) assembleHap entry and watch BUILD SUCCESSFUL.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Emulators (phone 127.0.0.1:5557, wearable 127.0.0.1:5555, API 24), HAPs of both projects installed from this
+tree with install -r, taps with uitest, texts from the layout dump, light mode.
+Phone, Health Sim path (FairWear entry from e2ef860; da5ef1a adds no phone code): PASS.
+  Connect HUAWEI Health -> the system asks "Allow FairWear to open Health Sim?" -> Allow -> Health Sim:
+  banner "SIMULATED DATA · stands in for HUAWEI Health", "FairWear asks for access", seven data types,
+  "Don't allow" / "Allow" -> Allow -> FairWear "Health data consent" (step 2 of 2) -> tick, Agree and continue
+  -> Report: Ania 92, A, Coverage 100%, Confidence High, Full benefit, source pill "Health Sim · Simulated
+  data". Sandbox: haps/entry/files/healthsim/fwhs1.json, 29,643 bytes.
+  Share: "Tier A · Eligible: yes", 305 of 512 characters, HUKS key. Partner view: Use the code from this phone
+  -> "Signature valid", "Tier A · Eligible: yes · 4 Sep – 3 Oct", "Full benefit".
+  Health Sim: Apps -> card "FairWear · Signed tier for your partner" -> Open FairWear -> FairWear opens on the
+  Report tab with the Health Sim source pill.
+  Shots: a1-report-ania-healthsim-light, a1-healthsim-fairwear-card-light.
+Watch (FairWear watch and Health Sim watch from da5ef1a): PASS.
+  Without Health Sim on the watch (06:12, before its module existed): Get today from Health Sim -> "Health Sim
+  not on this watch · built-in script" (shot a1-watch-health-sim-missing-light).
+  With Health Sim installed: after a restart of the FairWear watch app, with no tap on the button, Demo clock
+  and Demo feed on -> the dial reads "FEED · Health Sim · 00:51": the script stored in the sandbox is used
+  again (shot a1-watch-feed-health-sim-light). Get today from Health Sim -> "Today from Health Sim · used by
+  the demo feed".
+  A whole day on the Health Sim script, sealed, relayed and verified on the phone: run by the watch session
+  on this code before the merge (its entry below: day #6, one break 725-900, DEMO_X300_FEED, "All 6 days
+  verified"); not repeated on the merged build.
+Not run on the merged build: refusal in Health Sim and the fallback without Health Sim on the phone (run by
+  the connect session, its entry below), a data type switched off, Disconnect and connect again, dark mode,
+  uninstalling Health Sim, --tamper and --drop.
+State left: phone connected through Health Sim, persona Ania, Report tab; watch paired, Synced, demo clock
+  off, the Health Sim script stored; Health Sim installed on both emulators.
+
 2026-10-04 06:22 CEDT  branch feature/healthsim-connect  (round 3, agent 4: FairWear asks Health Sim for the data on the phone, C1 and C2)
 ----------------------------------------------------
 Base: feature/engine-reports 2985efc, then feature/healthsim-base bec6913 and feature/engine-reports 0f17cae merged in.
