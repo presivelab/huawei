@@ -159,6 +159,8 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 | Claim signature                   | **Real** ECDSA P-256; the key is in HUKS. A software-key fallback, labelled in the UI, exists for devices without HUKS; HUKS worked on both emulators, so it was not exercised.                    |
 | Partner                           | A screen in the same app, not a separate system.                                                                                                                                                             |
 
+UI texts of the phone, the watch and the card are string resources (`resources/base/element/string.json`, `base` = English); the sentences built in `common` wait for phase 2 (`docs/ARCHITECTURE.md`, "UI texts and string resources").
+
 More detail per part: `docs/ARCHITECTURE.md`, `docs/HES.md`, `docs/WATCH_LINK.md`.
 
 ## Tests
@@ -168,6 +170,7 @@ tools/run-logic-tests.sh common                                          # all p
 tools/run-logic-tests.sh watch                                           # the watch module
 tools/run-logic-tests.sh common common/src/test/Health.test.ets health   # one test file
 tools/check-wording.sh                                                   # text check over sources and docs
+tools/check-ui-literals.sh                                               # no screen text as a literal in the UI sources
 tools/lint.sh                                                            # DevEco CLI lint
 # any OS with Node 18+ (paths must be absolute):
 npm install --prefix "$HOME/fw-ts" typescript@5

@@ -182,3 +182,54 @@ LiveSensors (HR, steps, wear, charging)                       Receivers
   What leaves the phone: unchanged, only the signed tier claim.
 
 Packet format, signing string, verify order, limitations and deviations: `docs/WATCH_LINK.md`.
+
+## UI texts and string resources
+
+Every text the user sees or hears in the UI layer of the phone, the watch and the home-screen card is a
+string resource. `base` is English; no other language folder exists yet (a `zh_CN` folder waits for the team's
+decision and for a reviewer who knows the language).
+
+- Phone: `entry/src/main/resources/base/element/string.json` (keys `screen_element`, for example
+  `report_view_coverage_chip`, `partner_tamper_label`), the card's texts in `card_string.json`.
+  Watch: `watch/src/main/resources/base/element/string.json` (`watch_*`).
+- A text without a value goes to the component as the resource: `Text($r('app.string.settings_title'))`.
+- A text with a value is one pattern in the resource (`Coverage %d%%`, `%s · last sync %s`) and is read with
+  `str($r('app.string.…'), value)` from `entry/src/main/ets/ui/Strings.ets` (the watch has the same file).
+  `str` uses the ability's resource manager, `getStringSync(resId, ...args)`. Three facts measured on the
+  emulator decide the rule: `Text($r('…', value))` leaves `%%` as two signs, `%s` fails on a number, and `%d`
+  cuts a fraction. So a value never goes into `$r`, `%d` is for whole numbers only, and anything else is
+  passed as text to `%s`.
+- `AddonTexts.ets`, `ReportTexts.ets` and `ShareTexts.ets` keep their names: a constant is the resource, a
+  function returns the text. `str` must not run at module load, so no constant holds a resolved text.
+- `tools/check-ui-literals.sh` fails when a literal is handed to `Text`, `Button`, `accessibilityText`,
+  `accessibilityDescription` or a toast message in the UI folders.
+
+### Phase 2: texts built in `common`
+
+`common` is pure logic that also runs under Node in the tests, where `$r` does not exist. Its sentences are
+still English literals and reach the screen as arguments of the patterns above. They were not changed in
+this step. Phase 2 turns each of them into a message identifier plus arguments, resolved in the UI layer:
+the function returns `{ id, args }`, the screen maps the id to a resource and formats it with `str`; the
+tests then compare ids and arguments instead of English sentences.
+
+| File in `common/src/main/ets/` | What it writes |
+| --- | --- |
+| `report/EngineReports.ets` | Day reasons of the wear month ("Off the wrist 13:05 for 5 h 35 min after …"), the what-if sentence of "Why this tier", `HEALTH_SIM_LABEL`, period lines |
+| `report/WhySections.ets` | `weightText` ("17%") |
+| `report/EvidenceCalendar.ets` | `minutesText`, `clockText`, `flagRuleText` |
+| `report/Benefit.ets` | Benefit labels and reasons ("Full benefit · Eligible", …) |
+| `report/ReportSpeech.ets`, `report/ReportDates.ets` | Day state labels, units in words for screen readers ("beats per minute"), "Day 17, …", period texts |
+| `health/HealthStatusLabel.ets` | "Not connected", "Demo data", "Unavailable in this build", "Connected", the source line |
+| `hes/HesTier.ets`, `hes/HesCurves.ets`, `hes/HesTypes.ets` | Tier headlines ("Strong overall profile"), component names ("Resting heart rate"), "Insufficient data" |
+| `claim/ShareFlow.ets`, `claim/PartnerVerifier.ets` | Claim lines ("Tier B", "Eligible: no · …"), check names, verdicts ("Signature valid", "Invalid signature", "Already used"), key source labels |
+| `watchlink/LinkProbe.ets`, `DayPacketVerifier.ets`, `DayPacketCodec.ets`, `PhoneLinkEngine.ets`, `WatchLinkEngine.ets`, `DemoFeed.ets` | Verifier and codec messages ("Invalid signature", "Accepted", "Duplicate day", "Missing 1 day(s)", the format reasons of a refused packet), sync status lines of the watch and the phone, probe titles, feed clock labels |
+| `present/WatchDayPresent.ets` | Wear labels, `durationText`, `dayTitle`, `breakText`, sync and log lines, `transportLabel` |
+| `present/TourContent.ets` | The six steps of "How Watch Link works" (titles, sentences, test names), probe lines; the code panels stay code |
+| `card/CardDigest.ets` | The three lines of the home-screen card |
+| `platform/ProofSigner.ets` | Key notes ("Key held in HUKS", the software-key note) |
+
+Outside `common`, and outside the folders this step covered, a few texts written in `entry` and `watch`
+services also reach the screen and belong to the same phase: the four Health Sim notes in
+`entry/src/main/ets/platform/HealthSimClient.ets`, and the Wear Engine status texts in
+`entry/src/main/ets/watchlink/WearEngineReceiver.ets` and `watch/src/main/ets/watchlink/WearEngineTransport.ets`.
+Number formatting (`grouped`, thousands with a comma) and the list separators are not locale-aware yet.
