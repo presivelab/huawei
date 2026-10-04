@@ -17,6 +17,7 @@ import {
   statusExplanation
 } from '../addon/AddonTexts';
 import { StatusPill } from '../ui/kit/StatusPill';
+import { str } from '../ui/Strings';
 import { BODY, BODY_SECONDARY, CAPTION, CARD, statusDotColor, TITLE } from './Styles';
 
 // A status dot and the source line, for example a blue dot and the brand followed by "Demo data".
@@ -65,11 +66,11 @@ export struct DataSourceCard {
 
   build() {
     Column({ space: 8 }) {
-      Text('Data source').attributeModifier(TITLE)
+      Text($r('app.string.source_card_title')).attributeModifier(TITLE)
       SourceLineRow({ status: this.status, lastSync: this.lastSync })
       Text(statusExplanation(this.status)).attributeModifier(BODY_SECONDARY)
       if (this.status !== HealthStatus.NOT_AUTHORIZED) {
-        Text('Data types allowed: ' + this.scopesOn + ' of 7').attributeModifier(BODY_SECONDARY)
+        Text(str($r('app.string.source_types_allowed'), this.scopesOn)).attributeModifier(BODY_SECONDARY)
         Button(DISCONNECT_LABEL)
           .buttonStyle(ButtonStyleMode.NORMAL)
           .width('100%')

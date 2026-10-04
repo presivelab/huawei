@@ -1,3 +1,4 @@
+import { str } from '../Strings';
 import { COLOR_OK_TEXT, SYMBOL_CHECK } from './KitTokens';
 
 export interface CountBarParams {
@@ -24,7 +25,7 @@ export function CountBar(p: CountBarParams) {
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
         .layoutWeight(1)
-      Text(`${Math.min(p.have, p.need)} of ${p.need} ${p.unit}`)
+      Text(str($r('app.string.kit_count_of'), Math.min(p.have, p.need), p.need, p.unit))
         .fontSize($r('sys.float.Body_M'))
         .fontColor($r('sys.color.font_secondary'))
         .maxLines(1)
@@ -45,6 +46,7 @@ export function CountBar(p: CountBarParams) {
   }
   .width('100%')
   .accessibilityGroup(true)
-  .accessibilityText(`${p.name}, ${Math.min(p.have, p.need)} of ${p.need} ${p.unit}` +
-    (reached(p) ? ', enough' : ''))
+  .accessibilityText(reached(p) ?
+  str($r('app.string.kit_count_spoken_enough'), p.name, Math.min(p.have, p.need), p.need, p.unit) :
+  str($r('app.string.kit_count_spoken'), p.name, Math.min(p.have, p.need), p.need, p.unit))
 }

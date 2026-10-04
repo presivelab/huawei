@@ -1,8 +1,9 @@
+import { str, textOf } from '../Strings';
 import { VALUE_TILE, ValueWithUnit } from './ValueWithUnit';
 
 export const BAR_MISSING: number = -1;
-export const METRIC_OFF_TEXT: string = 'Off · missing evidence';
-export const METRIC_EMPTY_TEXT: string = 'No records yet';
+export const METRIC_OFF_TEXT: Resource = $r('app.string.kit_metric_off');
+export const METRIC_EMPTY_TEXT: Resource = $r('app.string.kit_metric_empty');
 
 const BAR_AREA: number = 26;
 const BAR_WIDTH: number = 8;
@@ -17,14 +18,14 @@ export interface MetricTileParams {
   name: string;
   tint: ResourceColor;
   value: string;      // empty: no reading yet
-  unit: string;
+  unit: ResourceStr;
   extraValue?: string;    // second pair of a duration: "7 h 24 min"
-  extraUnit?: string;
+  extraUnit?: ResourceStr;
   bars: number[];     // seven days, oldest first; BAR_MISSING is a day without data
   barsTop?: number;   // the value a full-height bar stands for; default: the largest of the seven
   off?: boolean;      // the data type is switched off
-  emptyText?: string; // what stands in place of a missing value; default "No records yet"
-  source?: string;    // where the value comes from, or why there is none; one small line
+  emptyText?: ResourceStr; // what stands in place of a missing value; default "No records yet"
+  source?: ResourceStr;    // where the value comes from, or why there is none; one small line
   spoken?: string;    // the whole tile in words, for screen readers
 }
 
@@ -55,9 +56,11 @@ function spokenTile(p: MetricTileParams): string {
     return p.spoken;
   }
   if (p.off) {
-    return `${p.name}, ${METRIC_OFF_TEXT}`;
+    return str($r('app.string.kit_metric_spoken_off'), p.name);
   }
-  return p.value.length === 0 ? `${p.name}, ${p.emptyText ?? METRIC_EMPTY_TEXT}` : `${p.name}, ${p.value} ${p.unit}`;
+  return p.value.length === 0 ?
+  str($r('app.string.kit_metric_spoken_empty'), p.name, textOf(p.emptyText ?? METRIC_EMPTY_TEXT)) :
+  str($r('app.string.kit_metric_spoken_value'), p.name, p.value, textOf(p.unit));
 }
 
 // One metric: its symbol and name, the value with its unit, seven small bars for the last seven days and

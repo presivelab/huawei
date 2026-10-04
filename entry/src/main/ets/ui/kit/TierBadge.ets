@@ -1,3 +1,4 @@
+import { str } from '../Strings';
 import { tierTextColor, tierTint } from './KitTokens';
 
 export interface TierBadgeParams {
@@ -22,5 +23,5 @@ export function TierBadge(p: TierBadgeParams) {
     .height(side(p))
     .backgroundColor(tierTint(p.tier))
     .borderRadius(side(p) * 0.32)
-    .accessibilityText(`Tier ${p.tier}`)
+    .accessibilityText(str($r('app.string.kit_tier_spoken'), p.tier))
 }

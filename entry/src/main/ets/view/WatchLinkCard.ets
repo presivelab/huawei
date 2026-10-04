@@ -30,31 +30,34 @@ import { StatusPill } from '../ui/kit/StatusPill';
 import { ValueUnit, ValueWithUnit } from '../ui/kit/ValueWithUnit';
 import { WearBar, WearLegend } from '../ui/kit/WearBar';
 import { ROUTE_TOUR, TOUR_LABEL } from '../addon/AddonTexts';
+import { str } from '../ui/Strings';
 import { KEY_LINK_REVISION, WatchLinkService } from '../watchlink/WatchLinkService';
 import { CAPTION } from './Styles';
 
-const LINKED: string = 'Linked';
-const NOT_LINKED: string = 'Not linked';
-const PAIR_WAITING: string = 'Waiting for you';
-const VERIFIED: string = 'Verified';
-const MISSING: string = 'Missing';
-const NOT_LINKED_SENTENCE: string = 'No watch linked. On the watch, open FairWear and choose Pair phone.';
-const LINKED_NO_DAYS_SENTENCE: string = 'Watch linked. Its first day appears after the watch closes it and syncs.';
-const NO_DAYS_SENTENCE: string = 'No day received yet.';
-const LINK_EXPLAINED: string =
-  'The watch signs one summary per day. This phone checks every signature, so a day cannot be edited or ' +
-    'removed without it showing.';
-const NOTHING_OBSERVED: string = 'The watch recorded nothing on this day.';
-const MISSING_EXPLAINED: string =
-  'The watch closed this day, but it never reached this phone. It is shown as missing, not as zero.';
+const LINKED: Resource = $r('app.string.watchlink_linked');
+const NOT_LINKED: Resource = $r('app.string.watchlink_not_linked');
+const PAIR_WAITING: Resource = $r('app.string.watchlink_pair_waiting');
+const VERIFIED: Resource = $r('app.string.watchlink_verified');
+const MISSING: Resource = $r('app.string.watchlink_missing');
+const NOT_LINKED_SENTENCE: Resource = $r('app.string.watchlink_not_linked_sentence');
+const LINKED_NO_DAYS_SENTENCE: Resource = $r('app.string.watchlink_linked_no_days_sentence');
+const NO_DAYS_SENTENCE: Resource = $r('app.string.watchlink_no_days_sentence');
+const LINK_EXPLAINED: Resource = $r('app.string.watchlink_explained');
+const NOTHING_OBSERVED: Resource = $r('app.string.watchlink_nothing_observed');
+const MISSING_EXPLAINED: Resource = $r('app.string.watchlink_missing_explained');
 
 // A duration as the value-and-unit pairs the kit draws: "19 h 20 min", "24 h", "35 min".
 function durationValue(minutes: number): ValueUnit {
   const d = durationParts(minutes);
   if (d.hours.length > 0) {
-    return { value: d.hours, unit: 'h', extraValue: d.minutes, extraUnit: d.minutes.length > 0 ? 'min' : '' };
+    return {
+      value: d.hours,
+      unit: $r('app.string.watchlink_unit_h'),
+      extraValue: d.minutes,
+      extraUnit: d.minutes.length > 0 ? $r('app.string.watchlink_unit_min') : ''
+    };
   }
-  return { value: d.minutes, unit: 'min' };
+  return { value: d.minutes, unit: $r('app.string.watchlink_unit_min') };
 }
 
 // 12480 -> "12,480".
@@ -72,9 +75,10 @@ function spokenDay(day: WatchDayFacts): string {
   const parts = listedWearParts(day);
   const words: string[] = [];
   for (let i = 0; i < parts.length; i++) {
-    words.push(`${parts[i].label} ${durationText(parts[i].minutes)}`);
+    words.push(str($r('app.string.watchlink_spoken_part'), parts[i].label, durationText(parts[i].minutes)));
   }
-  return `${dayTitle(day.date)}: ${words.join(', ')}`;
+  return str($r('app.string.watchlink_spoken_day'), dayTitle(day.date),
+    words.join(str($r('app.string.watchlink_spoken_separator'))));
 }
 
 function stripItems(daysNewestFirst: WatchDayFacts[]): DayStripItem[] {
@@ -94,7 +98,7 @@ function stripItems(daysNewestFirst: WatchDayFacts[]): DayStripItem[] {
       item.unobserved = day.notObservedMin;
     } else {
       item.missing = true;
-      item.top = MISSING;
+      item.top = str(MISSING);
       item.spoken = DAY_NOT_RECEIVED;
     }
     out.push(item);
@@ -133,9 +137,9 @@ export struct WatchLinkCard {
 
   private pillText(view: PhoneLinkView): string {
     if (view.paired) {
-      return LINKED;
+      return str(LINKED);
     }
-    return view.pendingPairKid.length > 0 ? PAIR_WAITING : NOT_LINKED;
+    return view.pendingPairKid.length > 0 ? str(PAIR_WAITING) : str(NOT_LINKED);
   }
 
   private pillColor(view: PhoneLinkView): Resource {
@@ -147,32 +151,32 @@ export struct WatchLinkCard {
 
   private syncLine(view: PhoneLinkView): string {
     const text = lastSyncText(view.log, Date.now());
-    return text === NOT_SYNCED ? text : `Last synced: ${text}`;
+    return text === NOT_SYNCED ? text : str($r('app.string.watchlink_last_synced'), text);
   }
 
   build() {
     SectionCard({
-      title: 'Watch link',
+      title: $r('app.string.watchlink_card_title'),
       status: this.pillText(this.state(this.revision)),
       statusColor: this.pillColor(this.state(this.revision)),
       statusId: 'fw_link_pair'
     }) {
       if (this.state(this.revision).pendingPairKid.length > 0) {
         Column({ space: 8 }) {
-          Text(`Pair watch ${this.state(this.revision).pendingPairKid}?`)
+          Text(str($r('app.string.watchlink_pair_prompt'), this.state(this.revision).pendingPairKid))
             .fontSize($r('sys.float.Subtitle_M'))
             .fontWeight(FontWeight.Medium)
             .fontColor($r('sys.color.font_primary'))
             .id('fw_link_pair_prompt')
-          Text('Confirm only if the watch shows the same code.').attributeModifier(CAPTION)
+          Text($r('app.string.watchlink_pair_confirm_hint')).attributeModifier(CAPTION)
           Row({ space: 12 }) {
-            Button('Confirm')
+            Button($r('app.string.watchlink_confirm'))
               .layoutWeight(1)
               .id('fw_link_confirm')
               .onClick(() => {
                 WatchLinkService.shared().confirmPair();
               })
-            Button('Not now')
+            Button($r('app.string.watchlink_not_now'))
               .buttonStyle(ButtonStyleMode.NORMAL)
               .layoutWeight(1)
               .onClick(() => {
@@ -200,8 +204,8 @@ export struct WatchLinkCard {
           RingStat({
             value: this.verified(this.revision),
             total: this.days(this.revision).length,
-            valueText: `${this.verified(this.revision)}`,
-            unit: this.verified(this.revision) === 1 ? 'day' : 'days'
+            valueText: this.verified(this.revision).toString(),
+            unit: this.verified(this.revision) === 1 ? $r('app.string.watchlink_unit_day') : $r('app.string.watchlink_unit_days')
           })
           Column({ space: 4 }) {
             Text(verifiedSummary(this.verified(this.revision), this.days(this.revision).length))
@@ -225,14 +229,14 @@ export struct WatchLinkCard {
       }
 
       Row({ space: 12 }) {
-        Button('Sync now')
+        Button($r('app.string.watchlink_sync_now'))
           .layoutWeight(1)
           .id('fw_link_sync')
           .onClick(() => {
             WatchLinkService.shared().syncNow();
           })
         if (this.state(this.revision).paired) {
-          Button(this.forgetArmed ? 'Tap again to forget' : 'Forget watch')
+          Button(this.forgetArmed ? $r('app.string.watchlink_forget_armed') : $r('app.string.watchlink_forget'))
             .buttonStyle(ButtonStyleMode.NORMAL)
             .layoutWeight(1)
             .id('fw_link_forget')
@@ -248,7 +252,7 @@ export struct WatchLinkCard {
       }
       .width('100%')
       if (this.forgetArmed) {
-        Text('Then reset the watch data on the watch and pair again.').attributeModifier(CAPTION)
+        Text($r('app.string.watchlink_forget_hint')).attributeModifier(CAPTION)
       }
 
       Text(LINK_EXPLAINED).attributeModifier(CAPTION)
@@ -329,7 +333,7 @@ export struct WatchDaysCard {
               SymbolGlyph(SYMBOL_STEPS)
                 .fontSize(14)
                 .fontColor([$r('sys.color.icon_secondary')])
-              ValueWithUnit({ value: grouped(day.steps), unit: 'steps' })
+              ValueWithUnit({ value: grouped(day.steps), unit: $r('app.string.watchlink_unit_steps') })
             }
             .alignItems(VerticalAlign.Center)
             .margin({ right: 16, bottom: 4 })
@@ -362,7 +366,7 @@ export struct WatchDaysCard {
   }
 
   build() {
-    SectionCard({ title: 'Days from the watch' }) {
+    SectionCard({ title: $r('app.string.watchlink_days_title') }) {
       if (this.days(this.revision).length === 0) {
         EmptyState({ symbol: $r('sys.symbol.calendar'), sentence: NO_DAYS_SENTENCE })
       } else {

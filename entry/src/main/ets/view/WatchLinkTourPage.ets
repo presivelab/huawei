@@ -34,18 +34,16 @@ import { SectionCard } from '../ui/kit/SectionCard';
 import { SlotTimeline } from '../ui/kit/SlotTimeline';
 import { WearLegend } from '../ui/kit/WearBar';
 import { KEY_LINK_REVISION, WatchLinkService } from '../watchlink/WatchLinkService';
+import { str } from '../ui/Strings';
 import { BODY, BODY_SECONDARY, CAPTION, LABEL } from './Styles';
 
-const NO_DAY_SENTENCE: string =
-  'No day from the watch yet. Pair the watch, close a day on it and sync; this page then shows that day.';
-const SHOW_CODE: string = 'Show the code';
-const HIDE_CODE: string = 'Hide the code';
-const PROVED_BY: string = 'Proved by these logic tests:';
-const CHECKS_TITLE: string = 'Test the checks on this phone';
-const CHECKS_SENTENCE: string =
-  'Each button sends a changed or repeated day through the same checks this phone uses for real days. ' +
-    'It works on a copy, so nothing you received is changed.';
-const REAL_TITLE: string = 'Real and simulated in this build';
+const NO_DAY_SENTENCE: Resource = $r('app.string.tour_no_day_sentence');
+const SHOW_CODE: Resource = $r('app.string.tour_show_code');
+const HIDE_CODE: Resource = $r('app.string.tour_hide_code');
+const PROVED_BY: Resource = $r('app.string.tour_proved_by');
+const CHECKS_TITLE: Resource = $r('app.string.tour_checks_title');
+const CHECKS_SENTENCE: Resource = $r('app.string.tour_checks_sentence');
+const REAL_TITLE: Resource = $r('app.string.tour_real_title');
 const PROBE_KINDS: ProbeKind[] = ['TAMPER', 'REPLAY', 'LATE'];
 
 // "How Watch Link works": the watch-to-phone flow explained on the phone itself, with live values from the
@@ -142,7 +140,7 @@ export struct WatchLinkTourPage {
       if (step.provedBy.length > 0) {
         Text(PROVED_BY).attributeModifier(CAPTION)
         ForEach(step.provedBy, (name: string) => {
-          Text(`· ${name}`).attributeModifier(CAPTION)
+          Text(str($r('app.string.tour_proved_by_item'), name)).attributeModifier(CAPTION)
         }, (name: string) => name)
       }
       if (step.limit.length > 0) {
@@ -161,24 +159,25 @@ export struct WatchLinkTourPage {
     if (step.num === 1 && this.hasDay(this.revision)) {
       SlotTimeline({ runs: this.runs(this.revision) })
       WearLegend()
-      Text(`${this.dayText(this.revision)} · wear source: ${wearSourceText(this.info(this.revision)?.wearSource ?? '')}`)
+      Text(str($r('app.string.tour_day_wear_source'), this.dayText(this.revision),
+        wearSourceText(this.info(this.revision)?.wearSource ?? '')))
         .attributeModifier(BODY_SECONDARY)
       if (demoClockText(this.info(this.revision)?.clock ?? '').length > 0) {
         Text(demoClockText(this.info(this.revision)?.clock ?? '')).attributeModifier(CAPTION)
       }
     } else if (step.num === 2 && this.hasDay(this.revision)) {
-      Text(`Not observed on ${this.dayText(this.revision)}: ` +
-        `${durationText(notObservedMinutes(this.info(this.revision)?.slots ?? ''))}. ` +
-        'Shown as not observed, never as off wrist.')
+      Text(str($r('app.string.tour_not_observed_summary'), this.dayText(this.revision),
+        durationText(notObservedMinutes(this.info(this.revision)?.slots ?? ''))))
         .attributeModifier(BODY_SECONDARY)
     } else if (step.num === 3 && this.hasDay(this.revision)) {
       Text(packetLine(this.info(this.revision) as ReceivedPacketInfo)).attributeModifier(BODY_SECONDARY)
     } else if (step.num === 4) {
-      Text(`Transport now: ${transportLabel(this.view(this.revision).transport)}`).attributeModifier(BODY_SECONDARY)
+      Text(str($r('app.string.tour_transport_now'), transportLabel(this.view(this.revision).transport)))
+        .attributeModifier(BODY_SECONDARY)
     } else if (step.num === 5) {
       ForEach(VERIFY_ORDER, (label: string, index: number) => {
         Row({ space: 8 }) {
-          Text(`${index + 1}`).attributeModifier(LABEL).width(20)
+          Text((index + 1).toString()).attributeModifier(LABEL).width(20)
           Text(label).attributeModifier(BODY_SECONDARY).layoutWeight(1)
           if (this.hasDay(this.revision)) {
             SymbolGlyph(SYMBOL_VERIFIED)
@@ -190,22 +189,22 @@ export struct WatchLinkTourPage {
         .alignItems(VerticalAlign.Center)
       }, (label: string) => label)
       if (this.hasDay(this.revision)) {
-        Text(`${this.dayText(this.revision)} passed every check.`).attributeModifier(CAPTION)
+        Text(str($r('app.string.tour_day_passed_checks'), this.dayText(this.revision))).attributeModifier(CAPTION)
       }
     } else if (step.num === 6) {
       if (this.view(this.revision).missingCount > 0) {
-        Text(this.view(this.revision).missingCount === 1 ? '1 day is missing and shown as missing.' :
-          `${this.view(this.revision).missingCount} days are missing and shown as missing.`)
+        Text(this.view(this.revision).missingCount === 1 ? str($r('app.string.tour_missing_one')) :
+          str($r('app.string.tour_missing_many'), this.view(this.revision).missingCount))
           .attributeModifier(BODY_SECONDARY)
       } else if (this.hasDay(this.revision)) {
-        Text('No day is missing.').attributeModifier(BODY_SECONDARY)
+        Text($r('app.string.tour_no_missing')).attributeModifier(BODY_SECONDARY)
       }
     }
   }
 
   @Builder
   stepCard(step: TourStep) {
-    SectionCard({ title: `${step.num} · ${step.title}` }) {
+    SectionCard({ title: str($r('app.string.tour_step_title'), step.num, step.title) }) {
       Text(step.sentence).attributeModifier(BODY)
       this.liveFacts(step)
       Button(this.openStep === step.num ? HIDE_CODE : SHOW_CODE)
@@ -223,7 +222,7 @@ export struct WatchLinkTourPage {
   @Builder
   probeBlock(kind: ProbeKind) {
     Column({ space: 8 }) {
-      Button(this.running === kind ? 'Checking…' : probeTitle(kind))
+      Button(this.running === kind ? str($r('app.string.tour_checking')) : probeTitle(kind))
         .buttonStyle(ButtonStyleMode.NORMAL)
         .width('100%')
         .enabled(this.running.length === 0 && this.hasDay(this.revision))
@@ -279,7 +278,7 @@ export struct WatchLinkTourPage {
           Text(TOUR_INTRO).attributeModifier(BODY_SECONDARY)
 
           if (!this.hasDay(this.revision)) {
-            SectionCard({ title: 'Watch link' }) {
+            SectionCard({ title: $r('app.string.tour_watch_link_title') }) {
               EmptyState({ symbol: SYMBOL_WATCH, sentence: NO_DAY_SENTENCE })
             }
           }
@@ -295,7 +294,7 @@ export struct WatchLinkTourPage {
             }, (kind: ProbeKind) => kind)
           }
 
-          SectionCard({ title: 'What leaves this phone' }) {
+          SectionCard({ title: $r('app.string.tour_leaves_phone_title') }) {
             Text(LEAVES_PHONE).attributeModifier(BODY)
           }
 

@@ -56,9 +56,8 @@ export struct DataConsentPage {
     NavDestination() {
       Scroll() {
         Column({ space: 16 }) {
-          Text('Step 2 of 2 · FairWear consent (GDPR Article 9)').attributeModifier(LABEL)
-          Text('Health data is a special category of personal data. FairWear needs your explicit consent to ' +
-            'process it. Choose what FairWear may use:')
+          Text($r('app.string.consent_data_step_label')).attributeModifier(LABEL)
+          Text($r('app.string.consent_data_intro'))
             .attributeModifier(BODY)
 
           Column() {
@@ -72,8 +71,7 @@ export struct DataConsentPage {
           }
           .attributeModifier(CARD)
 
-          Text('A data type you switch off is treated as missing evidence: it lowers coverage and is never ' +
-            'counted as zero.')
+          Text($r('app.string.consent_data_switch_off_note'))
             .attributeModifier(CAPTION)
 
           Row({ space: 8 }) {
@@ -84,15 +82,14 @@ export struct DataConsentPage {
               .onChange((on: boolean) => {
                 this.agreed = on;
               })
-            Text('I consent to FairWear processing the selected health data on this phone to calculate my ' +
-              'Health Evidence Score and tier.')
+            Text($r('app.string.consent_data_agree_statement'))
               .attributeModifier(BODY)
               .layoutWeight(1)
           }
           .width('100%')
           .alignItems(VerticalAlign.Top)
 
-          Button('Agree and continue')
+          Button($r('app.string.consent_data_agree'))
             .buttonStyle(ButtonStyleMode.EMPHASIZED)
             .width('100%')
             .enabled(this.agreed && this.chosen().length > 0)
@@ -102,14 +99,14 @@ export struct DataConsentPage {
                 this.nav.clear();
               }
             })
-          Button('Cancel')
+          Button($r('app.string.consent_data_cancel'))
             .buttonStyle(ButtonStyleMode.NORMAL)
             .width('100%')
             .id('fw_cancel_consent')
             .onClick(() => {
               this.cancel();
             })
-          Text('You can withdraw this consent at any time by disconnecting HUAWEI Health in FairWear.')
+          Text($r('app.string.consent_data_withdraw'))
             .attributeModifier(BODY_SECONDARY)
         }
         .alignItems(HorizontalAlign.Start)
@@ -124,7 +121,7 @@ export struct DataConsentPage {
       .align(Alignment.Top)
       .scrollBar(BarState.Off)
     }
-    .title('Health data consent')
+    .title($r('app.string.consent_data_title'))
     .backgroundColor($r('sys.color.background_secondary'))
     .onBackPressed(() => {
       // Leaving without agreeing withdraws the first step too, so nothing stays half-connected.

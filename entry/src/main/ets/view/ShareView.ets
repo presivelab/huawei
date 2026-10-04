@@ -29,11 +29,9 @@ import {
   NOT_IN_CODE,
   OPEN_PARTNER_LABEL,
   PARTNER_SEES_TITLE,
-  PERIOD_PREFIX,
   QR_SPOKEN,
   SHARE_INTRO,
   SHARE_INTRO_NO_SCORE,
-  SIGN_FAILED,
   SIGNING,
   TECH_ISSUED,
   TECH_KEY_ID,
@@ -43,6 +41,7 @@ import {
   TRY_AGAIN_LABEL
 } from '../share/ShareTexts';
 import { EmptyState } from '../ui/kit/EmptyState';
+import { str } from '../ui/Strings';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
   COLOR_NOTE_TEXT,
@@ -60,7 +59,7 @@ import { BODY_SECONDARY, CAPTION, CARD_LARGE, HEADING } from './Styles';
 const QR_SIDE: number = 232;
 
 interface TechParams {
-  label: string;
+  label: ResourceStr;
   value: string;
 }
 
@@ -121,7 +120,7 @@ export struct ShareView {
       this.syncCode();
     }).catch((e: Error) => {
       this.pending -= 1;
-      this.failure = SIGN_FAILED + e.message;
+      this.failure = str($r('app.string.share_page_sign_failed'), e.message);
     });
   }
 
@@ -152,7 +151,8 @@ export struct ShareView {
             .fontWeight(600)
             .fontColor($r('sys.color.font_primary'))
             .id('fw_share_tier_line')
-          Text(PERIOD_PREFIX + claimPeriodText(this.offer().periodIso)).attributeModifier(CAPTION)
+          Text(str($r('app.string.share_page_period'), claimPeriodText(this.offer().periodIso)))
+            .attributeModifier(CAPTION)
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
@@ -238,7 +238,7 @@ export struct ShareView {
           }
           Row({ space: 8 }) {
             Text(tokenLengthLine(this.code.token)).attributeModifier(CAPTION)
-            Text('·').attributeModifier(CAPTION)
+            Text($r('app.string.share_page_separator')).attributeModifier(CAPTION)
             SymbolGlyph(SYMBOL_KEY_HELD)
               .fontSize(14)
               .fontColor([COLOR_OK_TEXT])

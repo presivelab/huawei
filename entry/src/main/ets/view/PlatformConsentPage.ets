@@ -11,6 +11,7 @@ import {
   scopeLabel
 } from '../addon/AddonTexts';
 import { HealthSimAnswerKind } from '../platform/HealthSimClient';
+import { str } from '../ui/Strings';
 import { BODY, BODY_SECONDARY, CAPTION, LABEL, TITLE } from './Styles';
 
 // Health Sim is being asked: its own consent screen is on top of this page.
@@ -99,7 +100,7 @@ export struct PlatformConsentPage {
   @Builder
   placeholder() {
     Column({ space: 8 }) {
-      Text('Demo')
+      Text($r('app.string.consent_platform_demo_badge'))
         .fontSize($r('sys.float.Body_S'))
         .fontWeight(FontWeight.Bold)
         .fontColor($r('sys.color.font_primary'))
@@ -111,9 +112,8 @@ export struct PlatformConsentPage {
         })
         .backgroundColor($r('sys.color.comp_background_tertiary'))
         .borderRadius($r('sys.float.corner_radius_level4'))
-      Text('Here HUAWEI Health shows its own authorization screen.').attributeModifier(TITLE)
-      Text('FairWear does not reproduce that screen. The two buttons below stand in for the answer the ' +
-        'user gives there.')
+      Text($r('app.string.consent_platform_placeholder_title')).attributeModifier(TITLE)
+      Text($r('app.string.consent_platform_placeholder_body'))
         .attributeModifier(BODY_SECONDARY)
       if (this.note.length > 0) {
         Text(this.note)
@@ -122,8 +122,7 @@ export struct PlatformConsentPage {
           .id('fw_healthsim_note')
       }
       if (this.unavailable) {
-        Text('HUAWEI Health is unavailable in this build: access to health data through Health Service ' +
-          'Kit has to be granted to the app by Huawei, and FairWear does not have it yet.')
+        Text($r('app.string.consent_platform_unavailable'))
           .attributeModifier(BODY_SECONDARY)
       }
     }
@@ -139,7 +138,7 @@ export struct PlatformConsentPage {
     NavDestination() {
       Scroll() {
         Column({ space: 16 }) {
-          Text('Step 1 of 2 · HUAWEI Health authorization').attributeModifier(LABEL)
+          Text($r('app.string.consent_platform_step_label')).attributeModifier(LABEL)
 
           if (this.phase === PHASE_ASKING) {
             this.asking()
@@ -148,12 +147,13 @@ export struct PlatformConsentPage {
           }
 
           Column({ space: 4 }) {
-            Text('Read access FairWear asks for').attributeModifier(TITLE)
-            Text('Last 90 days, read only.').attributeModifier(CAPTION)
+            Text($r('app.string.consent_platform_scopes_title')).attributeModifier(TITLE)
+            Text($r('app.string.consent_platform_scopes_caption')).attributeModifier(CAPTION)
             ForEach(ALL_HEALTH_SCOPES, (scope: HealthScope) => {
-              Text('•  ' + scopeLabel(scope)).attributeModifier(BODY).margin({ top: 4 })
+              Text(str($r('app.string.consent_platform_scope_bullet'), scopeLabel(scope)))
+                .attributeModifier(BODY).margin({ top: 4 })
             }, (scope: HealthScope) => scope)
-            Text('Not requested: location, ECG, blood pressure, SpO₂, weight, contacts.')
+            Text($r('app.string.consent_platform_not_requested'))
               .attributeModifier(CAPTION)
               .margin({ top: 8 })
           }
@@ -180,7 +180,7 @@ export struct PlatformConsentPage {
               })
           }
           if (this.phase === PHASE_PLACEHOLDER) {
-            Button('Simulate consent')
+            Button($r('app.string.consent_platform_simulate_consent'))
               .buttonStyle(ButtonStyleMode.EMPHASIZED)
               .width('100%')
               .id('fw_simulate_consent')
@@ -188,7 +188,7 @@ export struct PlatformConsentPage {
                 AddonSession.shared().recordPlatformConsent(true);
                 this.nav.replacePathByName(ROUTE_DATA_CONSENT, null);
               })
-            Button('Simulate refusal')
+            Button($r('app.string.consent_platform_simulate_refusal'))
               .buttonStyle(ButtonStyleMode.NORMAL)
               .width('100%')
               .id('fw_simulate_refusal')
@@ -210,7 +210,7 @@ export struct PlatformConsentPage {
       .align(Alignment.Top)
       .scrollBar(BarState.Off)
     }
-    .title('Connect HUAWEI Health')
+    .title($r('app.string.consent_platform_title'))
     .backgroundColor($r('sys.color.background_secondary'))
   }
 }
