@@ -1,0 +1,25 @@
+FairWear - HAPs for the HackYeah 2026 submission
+
+Commit:  531e4f92943b22a9ac460abe387a6749c1e06a12 (branch merge/final-into-main)
+Date:    2026-10-04 09:41 CEST
+Built:   all four modules with hvigor assembleHap (debug, product default) from a clean working tree at 531e4f9.
+         FairWear entry, watch and Health Sim entry compiled at 1fcc573 (09:26), Health Sim watch at 07:50; the commits
+         up to 531e4f9 change documents only and hvigor reported all outputs up to date at 531e4f9.
+
+Files:
+  fairwear-entry-531e4f9.hap    FairWear, phone (com.fairwear.app, module entry)
+  fairwear-watch-531e4f9.hap    FairWear, wearable (com.fairwear.app, module watch)
+  healthsim-entry-531e4f9.hap   Health Sim, phone (com.fairwear.healthsim, module entry) - optional, for the full demo
+  healthsim-watch-531e4f9.hap   Health Sim, wearable (com.fairwear.healthsim, module watch) - optional
+  SHA256SUMS.txt                SHA-256 of the four files
+
+SDK:     HarmonyOS targetSdkVersion 6.1.1(24), compatibleSdkVersion 6.0.0(20); hvigor modelVersion 6.1.1;
+         DevEco Studio bundled toolchain (hdc 3.2.0d). Emulators: Phone and Wearable, HarmonyOS 6.1.1, API 24.
+
+These are unsigned debug builds, accepted by the emulators; install with hdc -t <target> install -r <hap>
+Phone emulator: fairwear-entry, healthsim-entry. Wearable emulator: fairwear-watch, healthsim-watch.
+
+Checked on the phone emulator (2026-10-04 09:46, fairwear-entry and healthsim-entry of this build, data from Health Sim):
+  Kasia B / 71, coverage 75%, Medium (health insurance); B / 71, 65%, Medium (life insurance).
+  Ewa C / 58, coverage 80%, High (health insurance); C / 59, 70%, Medium (life insurance). As in docs/HES.md.
+Not re-checked on the emulators for this build: fairwear-watch and healthsim-watch (not installed in this pass).
