@@ -31,7 +31,7 @@ export default function demoFeedTest() {
       }
     });
 
-    it('there is exactly one break: no reading and not charging from 12:30 to 14:00', 0, () => {
+    it('there is exactly one break: no reading and not charging from 12:00 to 15:00', 0, () => {
       let breakMinutes = 0;
       let first = -1;
       let last = -1;
@@ -45,9 +45,9 @@ export default function demoFeedTest() {
           last = m;
         }
       }
-      expect(first).assertEqual(at(12, 30));
-      expect(last).assertEqual(at(14, 0) - 1);
-      expect(breakMinutes).assertEqual(90);
+      expect(first).assertEqual(at(12, 0));
+      expect(last).assertEqual(at(15, 0) - 1);
+      expect(breakMinutes).assertEqual(180);
     });
 
     it('every minute of the day is scripted and the script is deterministic', 0, () => {

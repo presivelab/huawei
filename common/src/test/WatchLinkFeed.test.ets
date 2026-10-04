@@ -2,6 +2,7 @@
 // tools/logic-tests/node-ports.ts).
 import { describe, it, expect } from '@ohos/hypium';
 import { FsTextStore, makeTempDir, NodeHasher, NodeSigner, removeDir } from '@fairwear/node-ports';
+import { DEFAULT_THRESHOLDS } from '../main/ets/model/defaults';
 import { DayPacketCodec } from '../main/ets/watchlink/DayPacketCodec';
 import { WatchLinkEngine } from '../main/ets/watchlink/WatchLinkEngine';
 import { Clock } from '../main/ets/watchlink/WatchLinkPorts';
@@ -92,7 +93,7 @@ export default function watchLinkFeedTest() {
         expect(count(view.slots, 'C') > 60).assertTrue();
         expect(count(view.slots, 'W') > 150).assertTrue();
         const off = count(view.slots, 'O');
-        expect(off >= 12 && off <= 22).assertTrue();
+        expect(off >= 28 && off <= 38).assertTrue();
 
         const seq = await b.watch.closeDayNow();
         expect(seq).assertEqual(1);
@@ -102,6 +103,13 @@ export default function watchLinkFeedTest() {
           expect(packet.clock).assertEqual('DEMO_X300_FEED');
           expect(packet.date).assertEqual(D4);
           expect(count(packet.slots, 'W') > 150).assertTrue();
+          // The 3 h break is long enough to be reported, with the context the phone's break rule needs.
+          expect(packet.breaks.length).assertEqual(1);
+          expect(packet.breaks[0].startMin).assertLargerOrEqual(720);
+          expect(packet.breaks[0].startMin).assertLessOrEqual(750);
+          expect(packet.breaks[0].endMin).assertLargerOrEqual(885);
+          expect(packet.breaks[0].endMin).assertLessOrEqual(905);
+          expect(packet.breaks[0].hrSlots24hBefore).assertLargerOrEqual(DEFAULT_THRESHOLDS.minHrReadingsBeforeGap);
         }
         b.dispose();
       });
