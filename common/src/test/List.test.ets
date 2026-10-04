@@ -8,6 +8,8 @@ import demoFeedTest from './DemoFeed.test';
 import claimHardeningTest from './ClaimHardening.test';
 import watchDayPresentTest from './WatchDayPresent.test';
 import hesTest from './Hes.test';
+import hesPersonasTest from './HesPersonas.test';
+import hesSessionTest from './HesSession.test';
 
 export default function testsuite() {
   claimTest();
@@ -20,4 +22,6 @@ export default function testsuite() {
   claimHardeningTest();
   watchDayPresentTest();
   hesTest();
+  hesPersonasTest();
+  hesSessionTest();
 }

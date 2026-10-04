@@ -315,4 +315,12 @@ export {
 } from './src/main/ets/hes/HesTier';
 export { whyThisTier } from './src/main/ets/hes/HesWhy';
 export { composeHes, computeHes } from './src/main/ets/hes/HesEngine';
+export { HesPrng } from './src/main/ets/hes/HesPrng';
 export { HesDaySource, HesSession } from './src/main/ets/hes/HesSession';
+export {
+  generatePersonaDay,
+  generatePersonaHistory,
+  HesPersonas,
+  HesPersonaSpec,
+  HES_PERSONA_END_DATE
+} from './src/main/ets/hes/HesPersonas';
