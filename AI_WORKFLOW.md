@@ -25,8 +25,8 @@ they were not used at all; from then on they are read as documents from the chec
 ## Important prompts and instructions
 
 - `AGENTS.md` — repository-wide hackathon constraints and working agreement.
-- `IMPLEMENTATION.md` — the team's implementation plan, written with Claude (claude.ai) and used as the standing instruction for the coding agent: ArkTS rules, data contract, steps K0–K9, approved UI direction (sections 12–13), tests, and the list of what is real and what is simulated.
-- The team's later briefs, each written by a team member and handed to a coding-agent session as its standing instruction: the change of direction (FairWear as an add-on for HUAWEI Health users), the Watch Link brief, the security brief, the single plan that replaced the earlier briefs, the HES-Lite specification the score was rebuilt from, and the four briefs of the last night (engine, screens, watch, share). Each of the four names the session's files, the values nobody may change (the seven claim keys, the thresholds, the persona results), the checks after every step and the times at which the branches are merged. These briefs are not in this repository.
+- `IMPLEMENTATION.md` (not in this repository; the decisions from it still in force are in `HACKATHON_BRIEF.md`) — the team's first implementation plan, written with Claude (claude.ai) and used as the standing instruction for the coding agent: ArkTS rules, data contract, steps K0–K9, approved UI direction (sections 12–13), tests, and the list of what is real and what is simulated.
+- The team's later briefs, each written by a team member and handed to a coding-agent session as its standing instruction: the change of direction (FairWear as an add-on for HUAWEI Health users), the Watch Link brief, the security brief, the single plan that replaced the earlier briefs, the HES-Lite specification the score was rebuilt from, and the four briefs of the last night (engine, screens, watch, share). Each of the four names the session's files, the values nobody may change (the seven claim keys, the thresholds, the persona results), the checks after every step and the times at which the branches are merged. The briefs that were saved as files are in `docs/prompts/`, as written (in Polish), with an index in `docs/prompts/README.md` that says which ones were replaced; the Watch Link brief, the four briefs of the last night and the Health Sim round were pasted from claude.ai conversations and are described by the work log below.
 - `.claude/skills/fairwear-ui/SKILL.md` — the look and wording rules every session reads before it changes a screen.
 
 ## AI-assisted work log
@@ -62,7 +62,7 @@ signing, the home-screen card) were chosen in that plan and checked against the 
 
 ### Implementation
 
-The code was written by Claude Code sessions, each from a written brief of the team. During the last night
+The code was written by Claude Code sessions, each from a written brief of the team. Everything was written during HackYeah 2026; the device-signing helpers (`ProofSigner`, `CryptoUtil`, `Bytes`) were first written in `dowod-aktywnosci`, the team's own prototype from earlier in the hackathon, and ported in commit `5d84938`. During the last night
 four sessions worked at once, each in its own git worktree on its own branch, with a list of the files it
 owns; shared files could only be appended to. One commit per step, no squash. One session merges the branches
 at the times the briefs set; merging into `main` is done by a person. Each row of the work log above says
