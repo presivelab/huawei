@@ -1087,3 +1087,30 @@ Changed after the first look: the banner used the system warning colour, which i
 Not run: a switch turned off and then Allow from this session (agent 4 checked a type off on FairWear's own
   consent, not on this screen); the FairWear-not-installed sentence (FairWear is never uninstalled here);
   the healthsim://authorize link; a screen reader; the large system font.
+
+==== A17 known limits (branch fix/known-limits), 2026-10-04 09:50 ====
+tools/run-logic-tests.sh common   460/460 passed (458 before; +1 ShareFlow: ledger entry of a visit code, +1 Visits: reminder moment)
+tools/run-logic-tests.sh watch    6/6 passed; HealthSimCopies.test.ets (Node only) 2/2 passed
+tools/check-wording.sh            0 hits; tools/lint.sh 0 errors (entry 7 warnings, watch 2, common 0); assembleHap entry: BUILD SUCCESSFUL
+Merged by hand onto merge/final-into-main a94ff4a (one conflict, ReportService.ets): common 512/512, watch 6/6, copies 2/2, build OK.
+Phone emulator (127.0.0.1:5557), unsigned debug HAP of this branch, Health Sim data after both consents:
+  Day dial (08:53-08:57): Ania, chip "Sat 3 Oct", 7,954 steps, "Sleep 23:22-07:51". Demo controls: steps set to 10,000,
+    "Close the day" once -> chip "Sun 4 Oct", 10,000 steps, "Sleep 23:31-07:48". "Reset demo" -> "Sat 3 Oct", 7,954 steps again.
+    Screenshot docs/screenshots/final/a7-dial-after-close-light.jpeg.
+  Visit code in the ledger (08:58-08:59): Ewa > Open visits > Outpatient visit 30 Sep 2026 > Share: QR shown, 396 of 512
+    characters, HUKS key; the line "Demo: shown on this screen only." is gone. Share tab > "What left this phone": a line
+    "Partner · visit code shown on this screen", "Visit proof · 30 Sep 2026", the fv1 token, "396 bytes"; the tier code
+    of the Share tab is its own line above it ("Tier C · Eligible: yes · 4 Sep - 3 Oct", 305 bytes).
+    Screenshot docs/screenshots/final/a7-ledger-visit-light.jpeg.
+  Count units (09:47-09:50): Ola, Report, "What unlocks your score": "8 of 14 nights" (sleep duration, sleep timing
+    regularity), "14 of 14 days" (steps, active minutes), "10 of 10 days" (resting heart rate). Ewa, "Why this tier":
+    "Heart-rate recovery ... 22 bpm in 60 s · weight 6.7%" and "VO₂max, Not measured".
+Not run / not seen:
+  The units "workouts" and "estimates" did not come up on any screen reached: Ola's unlock card lists the five core
+    measures only, and Ewa's recovery row is a measured row without a count. No a7-units screenshot was taken, and
+    countUnit (entry/ReportTexts.ets) has no logic test.
+  Follow-up reminder: checked by a logic test, not run on the emulator. The demo has no visit whose follow-up is still
+    ahead (Ewa's follow-up took place), and no demo data was added for it.
+  A second opening of "Share visit" for the same code (no second ledger line) was not walked on the emulator; the
+    rule is in ShareService.recordVisitCode.
+  Dark mode, a screen reader and the large system font for the two changed screens.
