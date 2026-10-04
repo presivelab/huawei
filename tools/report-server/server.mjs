@@ -54,11 +54,14 @@ function prompt(s) {
 `measured by their watch for a ${product} discount programme.\n\n` +
 `Their month: score ${score}; evidence coverage ${s.coveragePct}%; data confidence ${s.confidence}; ` +
 `eligible for the discount: ${s.eligible ? 'yes' : 'no'}; discount ${s.discountPct}%.\nComponent scores:\n${lines}\n\n` +
-`Write at most 110 words in plain English, second person, friendly and factual:\n` +
-`1. one sentence on the overall picture;\n2. what is going well (highest scores);\n` +
-`3. one or two concrete, everyday habits to improve the lowest measured scores.\n` +
+`Write a warm, personal note of 170 to 240 words in plain English, second person, encouraging but honest. ` +
+`Use three short paragraphs separated by a blank line:\n` +
+`1. the overall picture of the month in two or three sentences, including what the tier and discount mean for them;\n` +
+`2. what is going well: name the strongest areas and why they matter for everyday energy and wellbeing;\n` +
+`3. two or three concrete, realistic habits for the weakest measured areas, each with a small first step ` +
+`they can start this week, then one closing line of encouragement.\n` +
 `Rules: no diagnosis, no medical advice, no promises about prices or health outcomes, do not invent numbers, ` +
-`treat "not measured" as missing (never as bad), no headings, no markdown.`;
+`treat "not measured" as missing (never as bad), no headings, no markdown, no bullet symbols, no emoji.`;
 }
 
 async function gemini(text) {
@@ -68,7 +71,7 @@ async function gemini(text) {
     headers: { 'content-type': 'application/json', 'x-goog-api-key': KEY },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } }
+      generationConfig: { temperature: 0.5, maxOutputTokens: 900, thinkingConfig: { thinkingBudget: 0 } }
     }),
     signal: AbortSignal.timeout(20000)
   });
@@ -76,7 +79,7 @@ async function gemini(text) {
   const data = await res.json();
   const out = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
   if (!out) throw new Error('empty');
-  return out.slice(0, 1200);
+  return out.slice(0, 3000);
 }
 
 function send(res, code, body) {

@@ -126,6 +126,6 @@ sends the summary already on screen (profile, tier, score, coverage, confidence,
 eight component scores; no name, no dates, no daily readings) to the FairWear server, which asks Gemini 2.5 Flash
 (Google Vertex AI) for a few plain sentences and returns them. The exact summary is written to "What left this
 phone" before it is sent, and the card marks the note as written automatically. The server keeps the model key,
-checks a fixed schema and limits use (5 notes per 10 minutes per address, 300 a day, short answers); it logs
+checks a fixed schema and limits use (5 notes per 10 minutes per address, 300 a day, up to 900 output tokens); it logs
 counts only. The model never decides anything: the score, the tier, the wear rules and the discount stay
 deterministic rules and curves calculated on the phone.

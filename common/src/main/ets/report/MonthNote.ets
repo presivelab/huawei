@@ -15,7 +15,7 @@ export const MONTH_NOTE_URL: string = 'https://fairwear-130-61-179-157.sslip.io/
 export const LEDGER_KIND_NOTE: string = 'NOTE';
 export const LEDGER_DESTINATION_NOTE: string = 'FairWear server · month note';
 /** The longest note a screen shows; a longer answer is cut. */
-export const MONTH_NOTE_MAX_CHARS: number = 1200;
+export const MONTH_NOTE_MAX_CHARS: number = 3000;
 
 interface NoteComponent {
   id: string;
