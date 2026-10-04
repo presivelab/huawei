@@ -1,13 +1,23 @@
-import { claimLine, LedgerEntry, logTimeText, TierClaim, tokenClaim } from 'common';
+import {
+  claimLine,
+  LEDGER_KIND_VISIT,
+  LedgerEntry,
+  logTimeText,
+  TierClaim,
+  tokenClaim,
+  VisitClaim,
+  visitDateText,
+  visitTokenClaim
+} from 'common';
 import { KEY_SHARE_REVISION, ShareService } from '../share/ShareService';
-import { LEDGER_EMPTY, LEDGER_NOTE, LEDGER_TITLE, ledgerBytesLine } from '../share/ShareTexts';
+import { LEDGER_EMPTY, LEDGER_NOTE, LEDGER_TITLE, ledgerBytesLine, ledgerVisitLine } from '../share/ShareTexts';
 import { EmptyState } from '../ui/kit/EmptyState';
 import { SYMBOL_INFO } from '../ui/kit/KitTokens';
 import { BODY, BODY_SECONDARY, CAPTION, CARD_LARGE } from './Styles';
 
 // "What left this phone" (route ROUTE_LEDGER), opened from the Share tab. Every code the phone has shown,
-// newest first, with its exact text, its size and what the claim in it says. The list comes from the
-// ledger file the Share service writes before a code is shown (share/ledger.json).
+// newest first, with its exact text, its size and what the claim in it says: a tier code or a visit code.
+// The list comes from the ledger file the Share service writes before a code is shown (share/ledger.json).
 @Component
 export struct LedgerPage {
   @StorageProp(KEY_SHARE_REVISION) @Watch('load') shareRevision: number = 0;
@@ -30,6 +40,11 @@ export struct LedgerPage {
     return claim === null ? '' : claimLine(claim);
   }
 
+  private visitText(token: string): string {
+    const claim: VisitClaim | null = visitTokenClaim(token);
+    return ledgerVisitLine(claim === null ? '' : visitDateText(claim.visitDate));
+  }
+
   build() {
     NavDestination() {
       Scroll() {
@@ -47,7 +62,7 @@ export struct LedgerPage {
               Column({ space: 6 }) {
                 Text(`${logTimeText(e.t)} · ${e.destination}`)
                   .attributeModifier(CAPTION)
-                Text(this.claimText(e.payload))
+                Text(e.kind === LEDGER_KIND_VISIT ? this.visitText(e.payload) : this.claimText(e.payload))
                   .attributeModifier(BODY)
                 Text(e.payload)
                   .fontSize($r('sys.float.Body_S'))

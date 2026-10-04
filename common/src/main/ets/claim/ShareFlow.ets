@@ -156,6 +156,21 @@ export function claimLedgerEntry(token: string, nowMs: number): LedgerEntry {
   return entry;
 }
 
+export const LEDGER_KIND_VISIT: string = 'VISIT';
+export const LEDGER_DESTINATION_VISIT: string = 'Partner · visit code shown on this screen';
+
+/** The ledger line of one shown visit code: the exact text that left the phone and its size. */
+export function visitLedgerEntry(token: string, nowMs: number): LedgerEntry {
+  const entry: LedgerEntry = {
+    t: nowMs,
+    kind: LEDGER_KIND_VISIT,
+    destination: LEDGER_DESTINATION_VISIT,
+    payload: token,
+    bytes: utf8Encode(token).length
+  };
+  return entry;
+}
+
 export class CheckState {
   static readonly PASSED: string = 'passed';
   static readonly FAILED: string = 'failed';

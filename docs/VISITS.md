@@ -125,7 +125,7 @@ signed it. The receipt of such a visit can still be verified and kept on the pho
 | Follow-up reminder                  | real system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead; the demo dates are in the past, so the demo sets none          |
 | Watch recording | real microphone capture on the watch after the doctor agreed (`VisitRecord.ets`, app "Visit notes"), kept in the watch sandbox; "Demo recording" where there is no capture or no permission; no transfer from the watch to the phone, so the notes on the phone come from the demo transcript |
 | Day dial                            | real drawing from the newest completed day; demo data before launch                                                                                                                       |
-| Ledger "What left this phone"       | visit codes are not written to the ledger in this build                                                                                                                                   |
+| Ledger "What left this phone"       | visit codes are written to the ledger before they are shown                                                                                                                                   |
 
 ## Code and tests
 

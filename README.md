@@ -145,7 +145,7 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 - Visits (demo data for Ewa only): receipts checked against a demo register, visit notes taken from a demo
   transcript by fixed rules, follow-up adherence, and a signed visit claim (nine keys, token `fv1`) with its
   own partner check. A separate path: it does not touch the tier claim, the partner verifier of the tier or
-  the score. Visit codes are not written to the ledger behind "What left this phone". On the watch a second
+  the score. A visit code is written to the ledger behind "What left this phone" before it is shown. On the watch a second
   entry, "Visit notes", records a visit after the doctor's consent into the watch sandbox; nothing is sent to
   the phone. Description: `docs/VISITS.md`.
 - Day dial: the card "24-hour day" on the Report tab, the night as an arc through 00:00, the steps of the day

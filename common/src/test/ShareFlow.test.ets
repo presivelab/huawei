@@ -21,7 +21,10 @@ import {
   claimPeriodText,
   claimTierLine,
   keySourceLabel,
+  LEDGER_DESTINATION_PARTNER,
+  LEDGER_DESTINATION_VISIT,
   LEDGER_KIND_CLAIM,
+  LEDGER_KIND_VISIT,
   mintClaimToken,
   shareOffer,
   SHARE_NO_SCORE_REASON,
@@ -32,7 +35,8 @@ import {
   tamperTargetTier,
   tokenClaim,
   tokenLengthLine,
-  verdictLine
+  verdictLine,
+  visitLedgerEntry
 } from '../main/ets/claim/ShareFlow';
 import { TIER_CLAIM_KEYS } from '../main/ets/claim/TierClaimCodec';
 import { b64urlDecode } from '../main/ets/platform/Bytes';
@@ -167,6 +171,28 @@ export default function shareFlowTest() {
       expect(entry.t).assertEqual(NOW);
       expect(token.length <= MAX_TOKEN_CHARS).assertTrue();
       expect(tokenLengthLine(token)).assertEqual(`${token.length} of 512 characters`);
+    });
+
+    it('Ledger entry of a visit code: kind VISIT, the exact token, its size in UTF-8 bytes', 0, async () => {
+      const visitToken = 'fv1.eyJ2IjoxfQ.sig.a1b2c3d4.SOFTWARE';
+      const entry = visitLedgerEntry(visitToken, NOW);
+      expect(entry.kind).assertEqual(LEDGER_KIND_VISIT);
+      expect(entry.kind).assertEqual('VISIT');
+      expect(entry.destination).assertEqual(LEDGER_DESTINATION_VISIT);
+      expect(entry.payload).assertEqual(visitToken);
+      expect(entry.bytes).assertEqual(visitToken.length);
+      expect(entry.t).assertEqual(NOW);
+      // Bytes, not characters: 'é' is one character and two bytes.
+      expect(visitLedgerEntry('é', NOW).bytes).assertEqual(2);
+      // The ledger line of a tier code is what it was.
+      const desk = new Desk();
+      const token = await desk.share('ania');
+      const tier = claimLedgerEntry(token, NOW);
+      expect(tier.kind).assertEqual(LEDGER_KIND_CLAIM);
+      expect(tier.kind).assertEqual('CLAIM');
+      expect(tier.destination).assertEqual(LEDGER_DESTINATION_PARTNER);
+      expect(tier.payload).assertEqual(token);
+      expect(tier.bytes).assertEqual(token.length);
     });
 
     it('Texts: period, tier line, key source, five checks', 0, () => {

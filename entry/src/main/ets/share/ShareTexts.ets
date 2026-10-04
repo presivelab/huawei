@@ -21,6 +21,12 @@ export const LEDGER_EMPTY: string = 'No code has been shown yet.';
 export function ledgerBytesLine(bytes: number): string {
   return `${bytes} bytes`;
 }
+export const LEDGER_VISIT_LABEL: string = 'Visit proof';
+
+/** "Visit proof · 26 Sep 2026"; the label alone when the code does not give a date. */
+export function ledgerVisitLine(dateText: string): string {
+  return dateText.length === 0 ? LEDGER_VISIT_LABEL : `${LEDGER_VISIT_LABEL} · ${dateText}`;
+}
 export const TIER_FROM_PREVIEW: string = 'Tier from preview data';
 export const CODE_USED: string = 'Used once · no longer valid';
 export const NEW_CODE_LABEL: string = 'Make a new code';
