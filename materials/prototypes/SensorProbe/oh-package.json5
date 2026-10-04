@@ -1,8 +1,0 @@
-{
-  "modelVersion": "6.1.1",
-  "description": "Probe: live heart rate and step count from the wearable emulator's sensor simulation.",
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "modelVersion": "6.1.1",
-  "description": "Health-style watch demo driven by the wearable emulator sensors.",
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
-}
