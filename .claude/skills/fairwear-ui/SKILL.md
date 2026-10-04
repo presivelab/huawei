@@ -71,6 +71,8 @@ Build screens from the UI kit, not from hand-made rows and columns:
 | `SectionCard`   | a rounded card with a title, no border                                                                  |
 | `EmptyState`    | a symbol and one sentence                                                                               |
 | `DayStrip`      | seven days as small rings: worn, charging, off, not observed                                            |
+| `WearBar`       | one day as a bar of worn, charging, off, not observed; `WearLegend` names the four colours              |
+| `KitTokens`     | the colour and symbol constants (`COLOR_*`, `SYMBOL_*`, `wearColor`); import them, do not repeat `$r`   |
 
 Spacing grid: 4, 8, 12, 16, 24. Cards are rounded and have no border. Navigation is the system
 `Navigation`. Motion: rings fill in 300–600 ms; nothing else moves on its own.

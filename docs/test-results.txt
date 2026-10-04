@@ -1,6 +1,43 @@
 FairWear test results
 =====================
 
+2026-10-04 02:19 CEDT  branch feature/ui-kit  (block K5.2 and the pre-gate part of K5.3: tokens, phone UI kit, Watch link cards)
+----------------------------------------------------
+Base: feature/ui-foundation af58db4.
+Node run (tools/run-logic-tests.sh): common 141/141 (was 130/130), watch 6/6.
+  New: WatchDayPresent 11 (in the hypium list): durations always carry units; day titles; clock times and
+  breaks; the four wear states in fixed order adding up to the day; "Worn 0 min" is listed only for a day
+  the watch observed, an unobserved day lists only "Not observed"; a missing day is not verified and not a
+  demo day; demo clock and demo feed labels; the strip takes the newest seven days oldest first; last sync
+  as today / yesterday / date; the relay is named "Demo relay (hdc)"; summaries.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits. No hex colour in any .ets under entry.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; entry 9 warnings (was 9), watch 2 (was 2), common 0, all the same
+  performance rule (custom component instead of @Builder).
+Phone emulator (127.0.0.1:5557), real data in the sandbox (watch linked, 4 verified days, all recorded on the
+  demo clock): Watch link cards and "Verification details" opened and photographed in light and in dark mode;
+  dark mode was switched in system Settings > Display & brightness and switched back to light afterwards.
+  Screenshots in docs/screenshots/design/: before-watchlink-light, before-watchlink-days-light,
+  after-watchlink-light, after-watchlink-days-light, after-verification-details-light,
+  after-verification-details-log-light, after-watchlink-dark, after-watchlink-days-dark,
+  after-verification-details-dark.
+  The files kit-preview-*-sample-light show kit states the real data does not reach (worn and charging time,
+  steps, a demo-feed day, a missing day, the pairing prompt, MetricTile, a partly filled RingStat). They were
+  taken with a temporary harness that fed sample values and titled the card "Kit preview · sample data";
+  the harness is not in the branch.
+Found and fixed on the emulator: RingStat went back to empty after a light/dark switch (the ring is now
+  rebuilt from the value the last animation ended on).
+Not done / not verified:
+  - no "before" screenshot in dark mode (the old cards were photographed in light mode only);
+  - the states "no watch linked", "linked, no day yet" and a real missing day were not seen with real data;
+    "Sync now", "Forget watch", "Confirm" and "Not now" were not tapped (Forget would delete the watch days);
+  - MetricTile is in the kit but on no screen yet (the dashboard keeps its rows until the scoring data
+    exists); the UI kit for the watch module is not part of this block;
+  - snapshot_display on the phone emulator sometimes returns a torn frame (missing status-bar icons, a stray
+    line through a ring); such shots were retaken, the cause was not investigated;
+  - the pairing prompt still shows the watch code ("Pair watch <code>?"): it is the code the user compares
+    with the watch, and docs/WATCH_LINK.md describes the flow by that text.
+
 2026-10-04 01:45 CEDT  branch feature/claim-verifier  (block K3: hardened claim decode, token format, PartnerVerifier)
 ----------------------------------------------------
 Base: feature/ui-foundation 7595dd8.
