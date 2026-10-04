@@ -593,3 +593,24 @@ Phone emulator (127.0.0.1:5557, light mode unless said), unsigned debug HAP, rep
 Not run: a screen reader (the accessibility texts are set, nobody listened to them); the large system font;
   dark mode for Marek, Tomek and Ania; Evidence and Why for Ania and Ewa as screenshots (opened for Ania only
   in passing); an appeal surviving an app restart (appeals live in AppStorage and are gone after a restart).
+
+==== Agent 2 SCREENS, G3 walk on the merged build (feature/engine-reports e991ad1 fast-forwarded into feature/phone-screens), 2026-10-04 ====
+tools/run-logic-tests.sh common   362/362 passed
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL. No source file changed in this step.
+Phone emulator (127.0.0.1:5557), the merged HAP, six personas, light mode and then dark mode (system
+Settings > Display & brightness, switched back to light at the end). For every persona: the Report headline,
+"Why this tier", Evidence > Calendar and the sheet of 17 September. Same values in both modes:
+  Ania   A / 92, coverage 100%, full benefit; Why "HES 92"; 30 of 30 days, 0 suspicious breaks; 17 Sep compliant
+  Marek  B / 75, "5 points to A", no benefit; 26 of 30 days, 3 suspicious breaks, "Flagged" and the flag line;
+         17 Sep suspicious break with the reason and "Appeal this day"
+  Kasia  B / 73, "7 points to A", partial benefit; Why with the what-if sentence and "Missing data";
+         26 of 30 days, 1 suspicious break, no flag
+  Tomek  B / 79, "1 point to A", partial benefit; 29 of 30 days, 0 suspicious breaks
+  Ewa    C / 59, "1 point to B", no benefit; 27 of 30 days, 0 suspicious breaks
+  Ola    no score; Why with "Measured so far", "Needed for a score" (8 of 14 nights twice), "Missing data";
+         8 of 30 days; 17 Sep short ("Worn 16 h 35 min of 20 h ...; night not worn ...") with "Appeal this day"
+Looked at in dark mode as pictures: Marek's day sheet, Kasia's "Why this tier", Ania's Live card and demo
+controls. No defect found; nothing was changed.
+Not run in this walk: the appeal tap, the sliders, Close the day and Reset demo (checked before G2 on
+7213345, see the section above); a screen reader; the large system font.
