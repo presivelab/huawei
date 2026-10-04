@@ -83,6 +83,7 @@ import { StatusPill } from '../ui/kit/StatusPill';
 import { TextLink } from '../ui/kit/TextLink';
 import { TierBadge } from '../ui/kit/TierBadge';
 import { DayDialCard } from './DayDialCard';
+import { VisitsCard } from './VisitsCard';
 import { DemoLiveCard } from './DemoLiveCard';
 import { CAPTION, CARD_LARGE, HEADING, statusDotColor } from './Styles';
 
@@ -564,6 +565,7 @@ export struct ReportView {
           DayDialCard({ personaId: this.report.id })
           this.wearCard()
           this.tiles()
+          VisitsCard({ personaId: this.report.id })
           DemoLiveCard({ hr: this.report.live.hr, steps: this.report.live.steps, personaId: this.report.id })
           Text(DISCLAIMER)
             .attributeModifier(CAPTION)
@@ -573,6 +575,7 @@ export struct ReportView {
           this.previewLine()
           DayDialCard({ personaId: this.report.id })
           this.unlockCard()
+          VisitsCard({ personaId: this.report.id })
           DemoLiveCard({ hr: this.report.live.hr, steps: this.report.live.steps, personaId: this.report.id })
           Text(SHARE_NEEDS_SCORE)
             .attributeModifier(CAPTION)

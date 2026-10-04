@@ -550,6 +550,7 @@ export {
   Adherence,
   daysBetween,
   isIsoDate,
+  isoDateMs,
   isServiceType,
   isShareableServiceType,
   MedicalReceipt,
