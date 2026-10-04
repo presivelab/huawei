@@ -1,4 +1,5 @@
 import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit';
+import { ArcSwiper } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { NO_HEART_RATE, STATUS_NOT_PAIRED, STATUS_SYNCED, WatchLinkView, WearState } from 'common';
 import { LiveSensors, LiveSnapshot, SensorLink } from '../sensors/LiveSensors';
@@ -597,14 +598,18 @@ struct Index {
   }
 
   build() {
-    Swiper() {
+    ArcSwiper() {
       this.DialPage()
       this.DemoPage()
       this.PhonePage()
     }
     .vertical(true)
-    .loop(false)
     .indicator(false)
+    // The crown (the mouse wheel on the emulator) turns the pages; it only reaches the component in focus.
+    .digitalCrownSensitivity(CrownSensitivity.MEDIUM)
+    .focusable(true)
+    .defaultFocus(true)
+    .focusOnTouch(true)
     .width('100%')
     .height('100%')
   }

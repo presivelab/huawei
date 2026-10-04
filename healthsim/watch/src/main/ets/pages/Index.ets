@@ -5,6 +5,7 @@
  *      and off-wrist time.
  * Nothing here is measured. FairWear on this watch asks WatchExportAbility for the same script.
  */
+import { ArcSwiper } from '@kit.ArkUI';
 import { BUILT_IN_SCRIPT, FeedStretch, MINUTES_PER_DAY } from '../fw/watchlink/DemoFeed';
 import {
   arcsOf,
@@ -219,13 +220,17 @@ struct Index {
   }
 
   build() {
-    Swiper() {
+    ArcSwiper() {
       this.activityPage()
       this.wearPage()
     }
     .vertical(true)
-    .loop(false)
     .indicator(false)
+    // The crown (the mouse wheel on the emulator) turns the pages; it only reaches the component in focus.
+    .digitalCrownSensitivity(CrownSensitivity.MEDIUM)
+    .focusable(true)
+    .defaultFocus(true)
+    .focusOnTouch(true)
     .width('100%')
     .height('100%')
     .backgroundColor($r('app.color.page'))
