@@ -26,6 +26,8 @@ import {
   previewReport,
   previewReports
 } from '../main/ets/report/PreviewReports';
+import { dayStateLabel, metricSpoken, scoreSpoken, wearSpoken } from '../main/ets/report/ReportSpeech';
+import { periodDayIso, periodDaySpoken } from '../main/ets/report/ReportDates';
 import { validateTierClaimJson } from '../main/ets/claim/ClaimValidation';
 import { buildTierClaim, encodeTierClaim } from '../main/ets/claim/TierClaimCodec';
 import { buildCardDigest, encodeCardDigest } from '../main/ets/card/CardDigest';
@@ -261,6 +263,48 @@ export default function reportTest() {
       const olaJson = encodeCardDigest(buildCardDigest(HealthStatus.DEMO, ola.coveragePct, hasScore(ola)));
       expect(olaJson.indexOf('"coveragePct":43') >= 0).assertTrue();
       expect(olaJson.indexOf('"resultReady":false') >= 0).assertTrue();
+    });
+
+    it('spoken texts: score ring, metric tile, month bar', 0, () => {
+      expect(scoreSpoken(previewReport('ania'))).assertEqual('Score 92, tier A, coverage 100 percent');
+      expect(scoreSpoken(previewReport('ola'))).assertEqual('No score yet, coverage 43 percent');
+      expect(metricSpoken('Steps', '9,412', '/day', true)).assertEqual('Steps, 9412 per day');
+      expect(metricSpoken('Sleep', '7 h 24', 'min', true)).assertEqual('Sleep, 7 hours 24 minutes');
+      expect(metricSpoken('Sleep regularity', '±22', 'min', true))
+        .assertEqual('Sleep regularity, plus or minus 22 minutes');
+      expect(metricSpoken('VO₂max', '82nd', 'percentile', true)).assertEqual('VO₂max, 82nd percentile');
+      expect(metricSpoken('HRV', '', '', false)).assertEqual('HRV, not measured');
+      expect(wearSpoken(previewReport('ania'))).assertEqual('28 of 30 days compliant, 2 short');
+      expect(wearSpoken(previewReport('marek')))
+        .assertEqual('26 of 30 days compliant, 1 short, 3 with a suspicious break, 3 marked as sick days');
+    });
+
+    it('day states read as words, an unknown state as no data', 0, () => {
+      expect(dayStateLabel(DayState.COMPLIANT)).assertEqual('Compliant');
+      expect(dayStateLabel(DayState.SHORT)).assertEqual('Short');
+      expect(dayStateLabel(DayState.SUSPICIOUS)).assertEqual('Suspicious break');
+      expect(dayStateLabel(DayState.SICK)).assertEqual('Sick day');
+      expect(dayStateLabel(DayState.UNKNOWN)).assertEqual('No data');
+      expect(dayStateLabel('')).assertEqual('No data');
+    });
+
+    it('days of the period have dates: day 1 is the first day, day 30 the last', 0, () => {
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 1)).assertEqual('2026-09-04');
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 17)).assertEqual('2026-09-20');
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 27)).assertEqual('2026-09-30');
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 28)).assertEqual('2026-10-01');
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 30)).assertEqual('2026-10-03');
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 0)).assertEqual('');
+      expect(periodDayIso(PREVIEW_PERIOD_ISO, 1.5)).assertEqual('');
+      expect(periodDayIso('4 Sep – 3 Oct', 1)).assertEqual('');
+      expect(periodDayIso('', 1)).assertEqual('');
+    });
+
+    it('a day is spoken as its date and its state', 0, () => {
+      expect(periodDaySpoken(PREVIEW_PERIOD_ISO, 14, DayState.SUSPICIOUS)).assertEqual('17 September, suspicious break');
+      expect(periodDaySpoken(PREVIEW_PERIOD_ISO, 30, DayState.COMPLIANT)).assertEqual('3 October, compliant');
+      expect(periodDaySpoken(PREVIEW_PERIOD_ISO, 8, DayState.SICK)).assertEqual('11 September, sick day');
+      expect(periodDaySpoken('not a date', 3, DayState.SHORT)).assertEqual('Day 3, short');
     });
   });
 }

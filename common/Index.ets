@@ -291,3 +291,5 @@ export {
   fwTargetOpensSettings,
   fwTargetTab
 } from './src/main/ets/nav/EntryTarget';
+export { dayStateLabel, metricSpoken, scoreSpoken, wearSpoken } from './src/main/ets/report/ReportSpeech';
+export { periodDayIso, periodDaySpoken } from './src/main/ets/report/ReportDates';
