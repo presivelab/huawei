@@ -1,6 +1,110 @@
 FairWear test results
 =====================
 
+2026-10-04 08:22 CEDT  branch merge/final-into-main  (round of three agents: A3, A1 and A2 merged; both projects built; walked on both emulators)
+----------------------------------------------------
+Base 908b9d9. Merges into merge/final-into-main, each with --no-ff, logic tests after each:
+  feature/a3-healthsim-docs  ba6d075 -> a7ee5e3   no conflict                      common 380/380, watch 6/6
+  fix/a1-consent             6e1f248 -> 140f6f4   no conflict                      common 393/393, watch 6/6
+  feature/a2-visits          af654a8 -> 6d77065   common/src/test/List.test.ets,   common 458/458, watch 6/6
+                                                  both sides kept
+New tests against 908b9d9: ConsentScopes 8, CardDigest 3, ClaimVerifier 2 (A1); DayDial 10, Visits 34,
+  VisitClaim 21 (A2). HealthSimCopies.test.ets 2/2 (the copies under healthsim/*/src/main/ets/fw are identical
+  to common after A1's change of HealthSimPayload.ets).
+Builds at 6d77065: FairWear assembleHap entry and watch BUILD SUCCESSFUL; Health Sim (cd healthsim) assembleHap
+  entry and watch BUILD SUCCESSFUL.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Emulators (phone 127.0.0.1:5557, wearable 127.0.0.1:5555, API 24). The four HAPs built at 6d77065 installed
+with install -r (FairWear's home-screen card was kept, so FairWear was not uninstalled; Health Sim was
+uninstalled on the phone for the built-in path and installed again), a fresh start of each app, taps with
+uitest, texts from the layout dump, 08:06-08:22.
+Phone, six personas on the Health Sim path, all data types on, light and dark (the same texts in both): PASS.
+  Ania   92 · A · Coverage 100% · Confidence High · Full benefit, Eligible
+  Marek  75 · B · Coverage 85% · Confidence High · No benefit this month, 3 suspicious breaks
+  Kasia  73 · B · Coverage 70% · Confidence Medium · Partial benefit
+  Tomek  79 · B · "1 point to A" · Coverage 90% · Confidence High · Partial benefit
+  Ewa    59 · C · Coverage 75% · Confidence Medium · No benefit this month
+  Ola    "No score yet" · 43% evidence
+Phone, consent with HRV switched off: PASS on both paths.
+  Built-in path (Health Sim uninstalled: "Health Sim is not installed: built-in demo data" -> Simulate
+  consent -> HRV off): Ania 93 · A · Coverage 90% · Confidence High, "HUAWEI Health · Demo data".
+  Health Sim path (Allow in Health Sim, HRV off in FairWear's consent): Ania 93 · A · Coverage 90% ·
+  Confidence High, "Health Sim · Simulated data".
+Phone, refusal: "Don't allow" in Health Sim -> FairWear welcome "HUAWEI Health · Not connected", "HUAWEI Health
+  was not connected · No health data was read." PASS.
+Phone, Close the day: Ewa -> 64 · B, "score to 4 Oct"; Reset demo -> 59 · C. PASS. Tomek on the fourth closed
+  day -> 80 · A (walked at 140f6f4, before the merge of A2; not repeated at 6d77065).
+Phone, Share -> partner view (Ania): "Tier A · Eligible: yes", 304 of 512 characters, HUKS key; Use the code
+  from this phone -> "Signature valid"; Verify the same code again -> "Already used · stopped at: not used
+  before"; Change tier to A and verify -> "Invalid signature · stopped at: signature"; back on Share "Used
+  once · no longer valid". PASS.
+Phone, home-screen card after connecting through Health Sim: "Coverage · Score ready · Health Sim · Simulated
+  data". PASS.
+Phone, Visits (Ewa): card "2 visits · 2 with a verified receipt"; list: Outpatient visit 30 Sep 2026 and
+  Check-up 3 Sep 2026; check-up notes with the three recommendations; Share visit: 396 of 512 characters, HUKS
+  key; partner check: "Signature valid", "Outpatient visit · 30 Sep 2026 · Follow-up on time"; the share page
+  then reads "This code was used"; a new code from the same receipt -> "Receipt already claimed · stopped at:
+  receipt not claimed before"; Change visit date -> "Invalid signature · stopped at: signature". PASS.
+Phone, day dial on the Report tab ("24-hour day"): sleep arc, steps in the middle, wear ring, the now marker,
+  "Before launch: demo data"; looked at in dark mode (Ola). PASS.
+Phone, Health Sim (new layout): tabs Health and Me; "Activity records" with the Steps and Exercise rings (Ania
+  7,954 / 10,000 steps, 31 / 30 min); cards Heart rate 58 bpm, Sleep 8 h 2 min, Steps; tiles VO₂max "—" and
+  HRV 58 percentile; Heart rate detail with 30 days; Me: Demo person, Connected apps, the FairWear card with
+  "Simulated integration point"; Open FairWear -> "Allow Health Sim to open FairWear?" -> FairWear. Health Sim's
+  consent lists "Exercise" in place of "Activity minutes". Light, and the Health tab in dark. PASS.
+Watch, FairWear: starts on the dial; Demo clock ×300 -> Get today from Health Sim -> "Today from Health Sim ·
+  used by the demo feed"; Demo feed on -> the dial reads "FEED · Health Sim". PASS.
+Watch, Health Sim: page 1 "Activity records", Steps 12,090 and Exercise 1 h 30 min as two rings; swipe up:
+  "Wear today · for FairWear" (Worn 14 h 30 min, Charging 6 h 30 min, Off wrist 12:00–15:00); a second swipe
+  up stays on that page (no loop). PASS.
+Shots: a7-healthsim-health-light, a7-healthsim-health-dark, a7-healthsim-metric-detail-light,
+  a7-healthsim-me-fairwear-light, a7-healthsim-watch-rings, a7-healthsim-watch-wear (this round, A3);
+  a5-* (A1) and a6-* (A2) are from their branches.
+Not run on the merged build: the watch entry "Visit notes" and the follow-up reminder (A2 walked the recorder
+  on its branch, its entry below); Add receipt cases; the Watch Link relay between the emulators; Reset demo
+  after changes to the visits; the F5 units ("1 workout", "1 estimate") on screen. Dark mode was switched in
+  Settings > Display & brightness and switched back to light.
+
+2026-10-04 08:05 CEDT  branch feature/a2-visits af654a8 (base 908b9d9; day dial and Visits), as reported by that session
+----------------------------------------------------
+Logic tests under Node (tools/run-logic-tests.sh): common 445/445 (380 before; new: DayDial 10, Visits 34,
+VisitClaim 21 with real ECDSA P-256 from Node), watch 6/6. tools/check-wording.sh: 0 hits, 0 enum names.
+tools/lint.sh: 0 errors (entry 7 warnings, watch 2, common 0; none in the new files).
+Builds: assembleHap entry and watch, unsigned debug.
+Phone emulator (127.0.0.1:5557, API 24), install -r, fresh start, Health Sim connected, persona Ewa, taps by
+element id with uitest, texts from the layout dump, 07:49-07:56:
+  Day dial: sleep arc starts before 00 and runs clockwise; the now marker matches the emulator clock; the
+    outer ring shows the newest watch day; light and dark.
+  Visits card "2 visits · 2 with a verified receipt"; list: Outpatient visit 30 Sep 2026 and Check-up
+    3 Sep 2026, both "Verified receipt" and "Follow-up on time", the check-up with "Notes".
+  Check-up notes: 3 recommendations, 1 medication, "Lipid panel", follow-up "Due by 1 Oct 2026" with
+    "Follow-up done on time", 2 questions; a tap shows the source sentence with its time. Light and dark.
+  Add receipt: Tampered "Receipt data doesn't match the issuer's record · Nothing was added"; Old "Older than
+    12 months, can't be checked online · Kept in your visits as a rejected receipt"; Emergency "Receipt
+    verified at source (demo) · Added to your visits"; Check-up again "Already in your visits".
+  Share visit (follow-up): QR code, 395 of 512 characters, HUKS key.
+  Partner check · visit: "Signature valid", "Outpatient visit · 30 Sep 2026 · Follow-up on time", seven checks
+    passed; Change visit date "Invalid signature · stopped at: signature"; the same code again "Already used ·
+    stopped at: not used before"; a new code from the same receipt "Receipt already claimed".
+  Delete recording and transcript: the notes go, the due date and "Follow-up done on time" stay.
+  Not run: Reset demo after changes to the visits, "Paste QR text", the share screen of an emergency visit,
+    the follow-up reminder, the other Visits screens in dark mode.
+Wearable emulator (127.0.0.1:5555), 07:59-08:01: "Visit notes" -> "Record visit notes" -> the doctor's consent
+  -> the system microphone prompt (allowed) -> recording with the timer and "Stays on this watch" -> Stop ->
+  "Saved. Notes appear on your phone (demo)"; two .pcm files in files/visit-notes of the watch sandbox.
+Screenshots: docs/screenshots/final/a6-*.jpeg (nine files).
+
+2026-10-04 07:48 CEDT  branch fix/a1-consent 6e1f248 (base 908b9d9; F1-F7 of brief 14), as reported by that session
+----------------------------------------------------
+Node run: common 393/393 (was 380/380; new: ConsentScopes 8, CardDigest 3, ClaimVerifier S-15b and S-10b),
+watch 6/6, HealthSimCopies 2/2. ArkTS compile: FairWear entry and watch, Health Sim entry BUILD SUCCESSFUL.
+Lint 0 errors (entry 7 warnings, watch 2, common 0). Wording check 0 hits, enum-in-UI check 0 hits.
+Phone emulator: Health Sim path with HRV off: Ania A / 93, coverage 90%, High; five closed days: still 90%, HRV
+under "Missing data". Built-in path with HRV off: A / 93, 90%, High. Home-screen card: "Health Sim · Simulated
+data". Partner: "Signature valid", then "Already used", then "Invalid signature".
+Not verified: F5 units on screen; the key-id refusal on the device; the stored consent after an app restart.
+
 2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
 ----------------------------------------------------
 H0: feature/watch-link-tour (eb6daf8, a relayed file still being written is left for the next look) merged

@@ -126,6 +126,18 @@ two disagree.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
   `tools/shot.sh`, `tools/watch-phone-relay.mjs` (the development relay that carries signed day packets between
   the two emulators over `hdc`). Results: `docs/test-results.txt`.
+- Visits (`common/src/main/ets/visits/`, `entry/src/main/ets/visits/`, pages `Visits*`, `AddReceiptPage`):
+  receipts checked against a demo register, visit notes taken from a demo transcript by fixed rules,
+  follow-up adherence, and the `VisitClaim` (nine keys, token `fv1`) signed with the device key and checked by
+  `VisitVerifier`. Demo data for Ewa only. A separate path: it does not touch `TierClaim`, `PartnerVerifier`
+  or the score. Visit codes are not written to the ledger. Description: `docs/VISITS.md`.
+- Day dial: `common/src/main/ets/present/DayDialModel.ets` and `view/DayDialCard.ets` on the Report tab. It
+  reads the persona's starting history, not the running demo session.
+- Watch: a second ability, `VisitRecordAbility` ("Visit notes"), records a visit after the doctor's consent
+  into the watch sandbox; nothing is sent to the phone.
+- Consent scopes: the data types switched on in FairWear's consent filter the starting history and every day
+  "Close the day" adds, on the Health Sim path and on the built-in path (`engineSession(id, scopes)`,
+  `EngineReportService.useScopes`, `healthsim/scopes.json` in the sandbox).
 
 **What is NOT in the repository yet**
 
@@ -142,6 +154,8 @@ brief; its copy is `docs/prompts/00-FAIRWEAR_PLAN.md`, next to the other briefs,
 - Verified watch days are shown, not scored. Never write that the watch feeds the score.
 - Rules and the score are deterministic and are never called AI.
 - Logs carry counters only, never heart-rate or step values in public fields.
+- Visit notes and receipt checks are deterministic rules and a demo register, and are never called AI.
+  Emergency and inpatient visits are never shared with a partner; the rule is in `buildVisitClaim`.
 
 **UI work**
 
