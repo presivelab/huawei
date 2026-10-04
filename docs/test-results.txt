@@ -1,6 +1,28 @@
 FairWear test results
 =====================
 
+2026-10-04 04:28 CEDT  branch feature/watch-link-tour  (G3, agent 3: watch -> phone once more on the merged build)
+----------------------------------------------------
+Base: feature/engine-reports e991ad1 (fast-forward). No code file changed: this record and one screenshot.
+Node run (tools/run-logic-tests.sh): common 362/362, watch 6/6.
+Both HAPs built at e991ad1 in this worktree (assembleHap watch and entry BUILD SUCCESSFUL) and installed with
+  install -r on the wearable and the phone emulator; the app data of the G2 run was kept.
+  Phone, Evidence > Watch days: "All 4 days verified" before the run, the four days of the G2 run unchanged.
+  Watch: demo clock x300 with the demo feed; the day sealed by itself as #5, 2026-10-08, DEMO_X300_FEED,
+    one break 12:10-15:00 with 171 heart-rate slots, resting 56 bpm and 12,161 steps in the 24 h before.
+  Relay: "#5 ACCEPTED (Accepted)"; phone "All 5 days verified", Thu 8 Oct: worn 14 h 40 min, charging
+    5 h 55 min, off wrist 3 h 10 min, not observed 15 min, 12,142 steps, "Off wrist 12:10-15:00", demo-feed
+    label (docs/screenshots/watchlink-19-phone-g3-five-days.jpeg); watch "Synced ✓".
+    Off wrist is 20 min longer than on the other days: between the two runs the watch recorded 20 min on the
+    real-speed clock, where the emulator's heart rate is 0. It is under the break minimum and is not a break.
+  Tour on the merged build: the timeline and the three checks ("Invalid signature · Not taken in",
+    "Duplicate day · Acknowledged again, counted once", "Accepted · Missing 1 day(s)" then "Accepted · Fills
+    the gap", 3 ms each, "Your stored days were not changed"); afterwards still "All 4 days verified".
+Not done: --tamper and --drop were not repeated at G3 (run at G2, see the entry of 04:05 below).
+Seen: after the install the foreground app on the wearable emulator was com.fairwear.healthdemo (the paused
+  prototype, running there since about 02:00), not FairWear; why is not known. FairWear records only while
+  it is open, so it was started again with `aa start` before the run. Check the dial before a live demo.
+
 2026-10-04 04:12 CEDT  branch feature/engine-reports  (G2: the four branches of the night merged)
 ----------------------------------------------------
 Merged into feature/engine-reports (d50a231), in this order, each with --no-ff:
