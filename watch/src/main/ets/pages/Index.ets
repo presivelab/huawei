@@ -93,6 +93,10 @@ struct Index {
   @State slotState: string = 'U';
   @State statusLine: string = STATUS_NOT_PAIRED;
   @State demoOn: boolean = false;
+  // Demo feed: scripted readings shown in place of the sensor values, always labelled.
+  @State feedOn: boolean = false;
+  @State feedHr: number = 0;
+  @State feedSteps: number = 0;
   @State clockLabel: string = CLOCK_REAL;
   @State recorderDate: string = '';
   @State recorderMinute: number = 0;
@@ -189,6 +193,9 @@ struct Index {
     this.slotState = view.state;
     this.statusLine = view.statusLine;
     this.demoOn = view.demoClock;
+    this.feedOn = view.demoFeed;
+    this.feedHr = view.feedHr;
+    this.feedSteps = view.stepsToday;
     this.clockLabel = view.clockLabel.length > 0 ? view.clockLabel : CLOCK_REAL;
     this.recorderDate = view.recorderDate;
     this.recorderMinute = view.recorderMinute;
@@ -200,24 +207,37 @@ struct Index {
   }
 
   private heartText(): string {
+    if (this.feedOn) {
+      return this.feedHr > 0 ? this.feedHr.toString() : MISSING;
+    }
     return this.heartRate > 0 ? Math.round(this.heartRate).toString() : MISSING;
   }
 
   private heartLabel(): string {
+    if (this.feedOn) {
+      return 'Heart rate · demo feed';
+    }
     const note = linkNote(this.heartSensor);
     return note.length > 0 ? `Heart rate · ${note}` : 'Heart rate · live';
   }
 
   private stepsText(): string {
+    if (this.feedOn) {
+      return this.feedSteps.toString();
+    }
     return this.steps >= 0 ? this.steps.toString() : MISSING;
   }
 
   private stepsLabel(): string {
+    if (this.feedOn) {
+      return 'Steps · demo feed';
+    }
     const note = linkNote(this.stepSensor);
     return note.length > 0 ? `Steps ${note}` : 'Steps today';
   }
 
   // The wear state the recorder uses (60 s without heart rate, 3 s on the demo clock), once it runs.
+  // Until then the same rule (WearStateMachine) answers through the live sensors.
   private wearText(): string {
     if (this.linkReady) {
       if (this.slotState === 'W') {
@@ -234,8 +254,11 @@ struct Index {
     if (this.wear === WearState.WORN) {
       return 'worn';
     }
+    if (this.wear === WearState.CHARGING) {
+      return 'charging';
+    }
     if (this.wear === WearState.REMOVED) {
-      return 'removed';
+      return 'not on wrist';
     }
     return 'no data';
   }
@@ -280,7 +303,7 @@ struct Index {
   // Shown whenever recorder time is not real time. 'DEMO ×300' while the fast clock runs.
   private demoText(): string {
     if (this.demoOn) {
-      return `DEMO ×300 · ${this.recorderTime()}`;
+      return this.feedOn ? `DEMO ×300 · FEED · ${this.recorderTime()}` : `DEMO ×300 · ${this.recorderTime()}`;
     }
     return `DEMO TIME · ${this.recorderDate.substring(5)} ${this.recorderTime()}`;
   }
@@ -289,6 +312,12 @@ struct Index {
     const turnOn = !this.demoOn;
     this.link.setDemoClock(turnOn);
     this.lastAction = turnOn ? 'Demo clock ×300 on · screen stays on' : 'Demo clock off';
+    this.showLink();
+  }
+
+  private toggleFeed(): void {
+    const on = this.link.setDemoFeed(!this.feedOn);
+    this.lastAction = on ? 'Demo feed on · scripted heart rate and steps' : 'Demo feed off · sensors again';
     this.showLink();
   }
 
@@ -427,9 +456,14 @@ struct Index {
         }
       })
       if (this.demoOn) {
-        Text(`On · recorder time ${this.recorderTime()}`)
-          .fontSize($r('app.float.note_font_size'))
-          .fontColor($r('sys.color.warning'))
+        // Only offered on the demo clock. The dial then reads "DEMO ×300 · FEED".
+        ControlButton({
+          label: this.feedOn ? 'Demo feed: on' : 'Demo feed: off',
+          labelColor: this.feedOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
+          onTap: () => {
+            this.toggleFeed();
+          }
+        })
       }
       if (this.lastAction.length > 0) {
         Text(this.lastAction)

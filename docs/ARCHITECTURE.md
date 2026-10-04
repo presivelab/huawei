@@ -43,6 +43,7 @@ measures, scores it on the phone, and shares only a signed tier.
 | Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not in this branch yet. The demo source is empty, so the screens show "—".                                                              |
 | Scoring (HES-Lite), tier, coverage                                    | Not in this branch yet. The tier is shown as "—" with "HES-Lite not connected".                                                         |
 | VO₂max and HRV from HUAWEI Health                                     | Will not be scored without a cited percentile table.                                                                                    |
+| Watch demo feed | Simulated. A fixed script of heart rate, steps and charging (night on the charger, worn hours, one break, a walk, a workout) replaces the sensor readings. It runs only on the demo clock, the dial reads "DEMO ×300 · FEED", and the signed day packet carries the clock label `DEMO_X300_FEED`. It goes through the same wear rule and recorder as sensor readings (`common/src/main/ets/watchlink/DemoFeed.ets`). |
 
 ## Permissions
 
@@ -81,10 +82,11 @@ Everything that opens FairWear uses that same ability and one optional parameter
 
 `EntryAbility` passes the want to `routeFromWant` (`entry/src/main/ets/nav/EntryRouter.ets`) in `onCreate`
 and `onNewWant`; the start page opens the screen. The value is untrusted input. `resolveFwTargetFromWant`
-(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `share` and `source`; a missing value, an
+(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `evidence`, `share` and `source`; a missing value, an
 unknown value, a non-string, an oversized string or malformed card parameters open the start page and never
-throw (7 tests in `common/src/test/EntryTarget.test.ets`). `share` is reserved for the share screen, which
-is not in this build, so it opens the start page and there is no shortcut for it yet.
+throw (11 tests in `common/src/test/EntryTarget.test.ets`). After consent the start page is three tabs:
+`dashboard` selects Report, `evidence` Evidence and `share` Share (`fwTargetTab`); `source` opens Settings
+above the Report tab. The Share tab is a placeholder in this build and there is no shortcut for it yet.
 
 Checked on the Phone emulator (API 24): cold start and a second start of the running app with
 `--ps fwTarget source`, with an unknown value and with no parameter; the shortcut; the card tap.

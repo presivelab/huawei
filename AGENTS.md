@@ -79,3 +79,62 @@ Update the work log after a coherent piece of material work and before handover.
 - README/setup/architecture notes reflect any changed command or design.
 - `AI_WORKFLOW.md` records material AI-assisted work and how it was reviewed.
 - No secret, generated build output, or unrelated change was added.
+
+## Project state
+
+Read this before relying on any earlier prompt or report. Check the repository, not a document, when the
+two disagree.
+
+**What is in the repository**
+
+- Modules: `entry` (phone), `watch` (wearable), `common` (HAR, shared logic). Minimum API 20, target API 24.
+- Phone: the add-on flow (connect, two-step consent, disconnect), the home-screen card, one entry through
+  `fwTarget`, device signing with HUKS and a software fallback.
+- Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
+  over `hdc`.
+- Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`); the Report
+  screen is built; Share, "Why this tier", the partner view and the ledger are placeholders with routes.
+- Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
+- Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
+  (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
+  `feature/hes-lite` → `feature/engine-reports`; the package `fairwear-ui` never arrived. Description and
+  decisions: `docs/HES.md`.
+- Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
+  from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
+  `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
+- Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
+  `tools/shot.sh`. Results: `docs/test-results.txt`.
+
+**What is NOT in the repository yet**
+
+- The screens Share, the partner view, the content of "Why this tier" and the Evidence calendar are still
+  being built. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
+  that chooses between the fixed preview (`PreviewReports`) and the engine (`engineReport` /
+  `engineReportOf`). While the preview is shown it is labelled as preview on screen.
+- The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
+  histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
+  this repository; check `docs/HES.md` and the code.
+
+**Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
+brief; a copy goes to `docs/prompts/` with the other prompts)
+
+- The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
+- One wear rule on the watch: `WearStateMachine`. A reading of 0 bpm or less is no reading.
+- Verified watch days are shown, not scored. Never write that the watch feeds the score.
+- Rules and the score are deterministic and are never called AI.
+- Logs carry counters only, never heart-rate or step values in public fields.
+
+**UI work**
+
+- Read the project skill `.claude/skills/fairwear-ui/SKILL.md` first.
+- Use the HarmonyOS skills from the challenge repository: `hmos-arkui-develop-skill`,
+  `hmos-arkui-scenario-development`, `hmos-arkui-mvvm-pattern`, and `hmos-arkts-knowledge-retriever` for
+  any API that is not certain. If they are not installed as agent skills, read them from a checkout of
+  `onirodeveloper/hackyeah2026-challenge` (`skills/`).
+- Do not use skills written for iOS or the web: `apple-design`, `write-swift`, `animate-expo`,
+  `pick-ui-library`, `ask-sonner`, `emil-design-eng`.
+
+**Working with several sessions**
+
+- One session per branch. Check `git branch --show-current` before the first edit.
+- Merging into `main` is done by a person.

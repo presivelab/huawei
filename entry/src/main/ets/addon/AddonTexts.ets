@@ -5,6 +5,15 @@ import { HealthScope, healthSourceLabel, HealthStatus } from 'common';
 export const ROUTE_PLATFORM_CONSENT: string = 'consent-platform';
 export const ROUTE_DATA_CONSENT: string = 'consent-data';
 export const ROUTE_SETTINGS: string = 'settings';
+export const ROUTE_VERIFICATION: string = 'verification-details';
+export const ROUTE_WHY: string = 'why';
+export const ROUTE_PARTNER: string = 'partner';
+export const ROUTE_LEDGER: string = 'ledger';
+export const ROUTE_TOUR: string = 'watch-link-tour';
+
+export const VERIFICATION_LABEL: string = 'Verification details';
+export const VERIFICATION_HINT: string = 'Watch key, sequence numbers, chain and sync log';
+export const TOUR_LABEL: string = 'How Watch Link works';
 
 export const BRAND: string = 'HUAWEI Health';
 export const CONNECT_LABEL: string = 'Connect HUAWEI Health';
@@ -32,11 +41,6 @@ export const LEAVES_TITLE: string = 'Leaves the phone';
 export const LEAVES_SHORT: string = 'Only a signed tier, and only when you share it';
 export const DETAILS_LABEL: string = 'Details';
 
-// Empty states: a symbol and one sentence, never a bare dash.
-export const NO_SCORE_TITLE: string = 'No score yet';
-export const NO_SCORE_SENTENCE: string = 'Score appears after HUAWEI Health data is connected.';
-export const NO_RECORDS_VALUE: string = 'No records yet';
-
 export const PRIVACY_SETTINGS_SENTENCE: string =
   'You can also end the connection in HUAWEI Health privacy settings.';
 
@@ -48,10 +52,6 @@ export const REFUSED_BODY: string =
 export const DISCONNECTED_TITLE: string = 'HUAWEI Health disconnected';
 export const DISCONNECTED_BODY: string =
   'Health data held in memory was cleared and the tier is hidden. Connecting again asks for your consent again.';
-
-export const HES_NOT_CONNECTED: string = 'HES-Lite not connected';
-export const HES_NOT_CONNECTED_BODY: string =
-  'The scoring module (HES-Lite) is not part of this build yet, so no score, coverage or tier is calculated.';
 
 export function scopeLabel(scope: HealthScope): string {
   if (scope === HealthScope.STEPS) {
@@ -96,8 +96,4 @@ export function statusExplanation(status: string): string {
     return 'HUAWEI Health is unavailable in this build.';
   }
   return 'Not connected: FairWear has no permission to read from HUAWEI Health.';
-}
-
-export function signalsHeading(status: string): string {
-  return status === HealthStatus.CONNECTED ? 'Signals from HUAWEI Health' : 'Demo signals';
 }

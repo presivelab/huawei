@@ -3,7 +3,7 @@ import { preferences } from '@kit.ArkData';
 import { common } from '@kit.AbilityKit';
 import { batteryInfo, BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { LiveWearState, WearState, NO_HEART_RATE, DEFAULT_REMOVED_AFTER_MS } from 'common';
+import { isValidHeartRate, LiveWearState, WearState, NO_HEART_RATE } from 'common';
 import { DaySteps, NO_STEPS } from '../model/DaySteps';
 
 const DOMAIN = 0x0000;
@@ -14,6 +14,7 @@ const STORE_KEY = 'day_steps_v1';
 const PERMISSION_DENIED = 201;
 const PERSIST_EVERY_TICKS = 10;
 const SUMMARY_EVERY_TICKS = 10;
+const CHARGING_EVERY_TICKS = 5;
 
 export enum SensorLink {
   WAITING,
@@ -36,10 +37,10 @@ function dayKey(now: Date): string {
   return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 }
 
-// Owns the sensor subscriptions of the watch module. The wear-state rules live in common
-// (LiveWearState); this class only feeds it raw readings and timestamps.
+// Owns the sensor subscriptions of the watch module. The wear rule lives in common (WearStateMachine,
+// reached through LiveWearState); this class only feeds it raw readings, charging and timestamps.
 export class LiveSensors {
-  private wear: LiveWearState = new LiveWearState(DEFAULT_REMOVED_AFTER_MS);
+  private wear: LiveWearState = new LiveWearState();
   private steps: DaySteps = new DaySteps();
   private store: preferences.Preferences | null = null;
   private heartLink: SensorLink = SensorLink.WAITING;
@@ -50,7 +51,6 @@ export class LiveSensors {
   private heartEvents: number = 0;
   private heartValidEvents: number = 0;
   private stepEvents: number = 0;
-  private lastHeartRaw: number = NO_HEART_RATE;
   // Watch Link: the wear-detection sensor (when the watch has one), raw readings for the recorder.
   private wearLink: SensorLink = SensorLink.WAITING;
   private heartTap: ((bpm: number) => void) | null = null;
@@ -76,7 +76,8 @@ export class LiveSensors {
     }
     this.running = true;
     // Nothing was read while the sensors were off, so the wear state starts again from "no data".
-    this.wear = new LiveWearState(DEFAULT_REMOVED_AFTER_MS);
+    this.wear = new LiveWearState();
+    this.wear.onCharging(Date.now(), this.isCharging());
     this.heartEvents = 0;
     this.heartValidEvents = 0;
     this.stepEvents = 0;
@@ -107,6 +108,7 @@ export class LiveSensors {
     if (ids.includes(sensor.SensorId.WEAR_DETECTION)) {
       this.wearLink = this.subscribe('wear detection', () => {
         sensor.on(sensor.SensorId.WEAR_DETECTION, (data: sensor.WearDetectionResponse) => {
+          this.wear.onWear(Date.now(), data.value);
           const tap = this.wearTap;
           if (tap !== null) {
             tap(data.value);
@@ -134,6 +136,9 @@ export class LiveSensors {
   // Call about once a second: ages the last valid heart rate even when the sensor is silent.
   tick(nowMs: number): LiveSnapshot {
     this.wear.advance(nowMs);
+    if (this.ticks % CHARGING_EVERY_TICKS === 0) {
+      this.wear.onCharging(nowMs, this.isCharging());
+    }
     this.ticks++;
     if (this.ticks % PERSIST_EVERY_TICKS === 0) {
       this.persist();
@@ -149,7 +154,7 @@ export class LiveSensors {
     view.heartSensor = this.heartLink;
     view.stepSensor = this.stepLink;
     view.heartRate = this.heartLink === SensorLink.LIVE ? this.wear.heartRate() : NO_HEART_RATE;
-    view.wear = this.heartLink === SensorLink.LIVE ? this.wear.state() : WearState.NO_DATA;
+    view.wear = this.wear.state();
     view.steps = this.stepLink === SensorLink.LIVE ? this.steps.today(dayKey(new Date())) : NO_STEPS;
     return view;
   }
@@ -219,11 +224,10 @@ export class LiveSensors {
 
   private onHeartRate(value: number): void {
     this.heartEvents++;
-    this.lastHeartRaw = value;
-    if (value > 0) {
+    if (isValidHeartRate(value)) {
       this.heartValidEvents++;
     }
-    // LiveWearState treats every reading <= 0 as "no reading".
+    // The wear rule treats 0 and every value outside 25-230 bpm as "no reading".
     this.wear.onReading(Date.now(), value);
     const tap = this.heartTap;
     if (tap !== null) {
@@ -258,12 +262,11 @@ export class LiveSensors {
     }
   }
 
+  // Counters and link states only: heart-rate and step values never go to the log.
   private logSummary(): void {
     const view = this.snapshot();
     const line = `live hrLink=${this.heartLink} hrEvents=${this.heartEvents} hrValid=${this.heartValidEvents}` +
-      ` hrRaw=${this.lastHeartRaw} hrShown=${view.heartRate} wear=${view.wear}` +
-      ` stepLink=${this.stepLink} stepEvents=${this.stepEvents} stepsRaw=${this.steps.lastRaw()}` +
-      ` stepsToday=${view.steps}`;
+      ` wear=${view.wear} stepLink=${this.stepLink} stepEvents=${this.stepEvents}`;
     hilog.info(DOMAIN, TAG, '%{public}s', line);
   }
 }

@@ -7,6 +7,10 @@ import {
   FileTextStore,
   PhoneLinkEngine,
   PhoneLinkView,
+  PROBE_NEEDS_DAY,
+  ProbeKind,
+  ProbeResult,
+  ReceivedPacketInfo,
   SystemClock,
   TRANSPORT_WEAR_ENGINE,
   WatchDayFacts
@@ -163,6 +167,41 @@ export class WatchLinkService {
     } catch (e) {
       this.fail('days', e as BusinessError);
       return [];
+    }
+  }
+
+  // Watch Link tour: the newest received day as stored. Read-only.
+  latestReceived(): ReceivedPacketInfo | null {
+    const engine = this.engine;
+    if (engine === null) {
+      return null;
+    }
+    try {
+      return engine.latestReceived();
+    } catch (e) {
+      this.fail('tour', e as BusinessError);
+      return null;
+    }
+  }
+
+  // Watch Link tour: runs one check with the real verifier on a copy of the chain. Writes nothing.
+  async probe(kind: ProbeKind): Promise<ProbeResult> {
+    const engine = this.engine;
+    if (engine === null) {
+      const none = new ProbeResult(kind);
+      none.reason = PROBE_NEEDS_DAY;
+      return none;
+    }
+    try {
+      const result = await engine.probe(kind);
+      hilog.info(DOMAIN, TAG, 'watchlink tour check %{public}s: ran=%{public}s steps=%{public}d unchanged=%{public}s',
+        kind, `${result.ran}`, result.steps.length, `${result.storedUnchanged}`);
+      return result;
+    } catch (e) {
+      this.fail('tour check', e as BusinessError);
+      const failed = new ProbeResult(kind);
+      failed.reason = this.lastError;
+      return failed;
     }
   }
 

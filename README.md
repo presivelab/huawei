@@ -22,6 +22,7 @@ can be ended in FairWear ("Disconnect HUAWEI Health") or in HUAWEI Health privac
 toolchain (Git Bash on Windows):
 
 ```
+source tools/env.sh && ohpm.bat install --all    # once after cloning: links the local common module
 tools/deploy.sh entry    # builds entry, installs it on the running phone emulator and starts it
 tools/deploy.sh watch    # the same for the wearable emulator
 ```
@@ -33,19 +34,27 @@ The HAPs are written to `entry/build/default/outputs/default/entry-default-unsig
 **How to check it.** Follow `docs/DEMO_SCRIPT.md`: connect, both consent steps, result, disconnect, consent
 again, result. That is the path Huawei asks to see when it verifies an integration, here with DEMO data.
 
-**Watch: live heart rate and wear state (emulator).** The watch module subscribes to the heart-rate and step-counter sensors and shows three live values: heart rate, steps today and wear state. These values stay on the watch and are not part of the score. The wearable emulator has a heart-rate sensor and a step counter but no wear-detection sensor, so the wear state is derived from heart rate: any reading ≤ 0 counts as no reading, and the watch counts as removed after 10 s without a valid reading.
+**Watch: live heart rate and wear state (emulator).** The watch module subscribes to the heart-rate and step-counter sensors and shows three live values: heart rate, steps today and wear state. These values stay on the watch and are not part of the score. The wearable emulator has a heart-rate sensor and a step counter but no wear-detection sensor, so the wear state is derived from heart rate. There is one wear rule on the watch, `WearStateMachine` in `common`, used by the screen and by the Watch Link recorder: charging (from `batteryInfo.pluggedType`) comes first, then the wear-detection sensor when the watch has one, then heart rate. Any reading of 0 or outside 25–230 bpm counts as no reading, and the watch counts as not on wrist after more than 60 s without a valid reading. Only the demo clock shortens that limit (to 3 s), and the dial then shows a `DEMO ×300` label.
 
-What we observed on the emulator with nothing set in the Virtual sensor panel: heart-rate events arrive about 6 times a second with the value 0 (not silence) and the step counter stays at 1000. The screen shows "—" for heart rate, 0 steps today and the wear state "no data". No real heart rate was read on the emulator.
+What we observed on the emulator with nothing set in the Virtual sensor panel: heart-rate events arrive about 6 times a second with the value 0 (not silence) and the step counter stays at 1000. The screen shows "—" for heart rate, 0 steps today and the wear state "not on wrist" (`docs/screenshots/i3-watch-wear-state.jpeg`). No real heart rate was read on the emulator, and the charging state was not reached there.
 
-**Manual check, not yet done:** in the emulator window open the menu → Virtual sensor and set heart rate to 70, then 0, then 70 again. Expected: 70 shows "70 bpm" and "worn"; after 0 the heart rate changes to "—" at once and the wear state changes to "removed" 10 s later; 70 brings back "70 bpm" and "worn". This sequence is covered by the Node test (`tools/run-logic-tests.sh common common/src/test/LiveWear.test.ets live`), but it has not been run in the emulator panel. Write the observed result here after running it.
+**Manual check, not yet done:** in the emulator window open the menu → Virtual sensor and set heart rate to 70, then 0, then 70 again. Expected: 70 shows "70 bpm" and "worn"; after 0 the heart rate changes to "—" at once and the wear state changes to "not on wrist" a little more than 60 s later; 70 brings back "70 bpm" and "worn". This sequence is covered by the Node test (`tools/run-logic-tests.sh common common/src/test/LiveWear.test.ets live`), but it has not been run in the emulator panel. Write the observed result here after running it.
 
 **Phone: home-screen card and icon shortcut (emulator).** The DevEco phone emulator shows service widgets. Long-press the FairWear icon → Widgets → Add to home screen: the 2x2 card shows the data source, the coverage and whether a score is ready, never the tier. Long-press the icon again: the shortcut "Data source" opens Settings with the data-source card. Both open the app through the same parameter, `fwTarget` (`docs/ARCHITECTURE.md`, "One entry point"). Screenshots: `docs/screenshots/ta1-home-card-phone.jpeg`, `ta1-home-card-after-consent-phone.jpeg`, `ta2-icon-shortcut-phone.jpeg`.
+
+**Watch: demo feed (simulated).** The wearable emulator sends heart rate 0, so a recorded day would be empty. On the watch, page "Watch link": switch on "Demo clock ×300", then "Demo feed". A fixed script of heart rate, steps and charging then replaces the sensor readings: night on the charger, worn hours, one break from 12:30 to 14:00, a walk and a workout. The dial reads "DEMO ×300 · FEED" and every value is labelled "demo feed"; the signed day packet carries the clock label `DEMO_X300_FEED`. The script goes through the same wear rule and recorder as real sensor readings. The real sensors still work when the feed is off: set the heart rate in the emulator's Virtual sensor panel. Screenshots: `docs/screenshots/design/after-watch-dial-feed-later.jpeg`, `before-watch-dial.jpeg`.
 
 ## State of this branch
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
-- The scoring module (HES-Lite) and the demo data set are not in this branch yet. The tier, score, coverage
-  and last sync are shown as "—"; no number on the screens is invented.
+- The scoring module (HES-Lite) is not in this branch yet. Phone screens currently render fixed preview data
+  matching the expected persona results; the HES-Lite engine replaces it. The screens say so: the source pill
+  reads "Demo data · preview" and the line under the score card reads "Score engine not connected — preview
+  values". The preview lives in `common/src/main/ets/report/PreviewReports.ets`; the one place that chooses
+  where reports come from is `entry/src/main/ets/report/ServiceLocator.ets`.
+- After consent the phone shows three tabs: Report (the month of the selected demo persona), Evidence (the
+  watch days) and Share (not built yet). Benefit level: eligible and tier A is a full benefit, eligible and
+  tier B a partial benefit, anything else no benefit this month, always shown with its reason.
 - What is real and what is simulated: the table in `docs/ARCHITECTURE.md`.
 
 ## Tests
@@ -58,6 +67,28 @@ tools/check-wording.sh                                                   # text 
 
 Results are recorded in `docs/test-results.txt`. The Node run compiles the `.ets` files as strict TypeScript
 with the compiler bundled in DevEco Studio; it does not replace the ArkTS compiler or a run on a device.
+
+## Security & privacy
+
+- **Phone.** The phone app declares no permissions and has no network code: health history and the score
+  never leave the phone. The only output meant for a partner is the signed tier claim. The Watch Link code
+  also answers the paired watch with ACK packets (sequence number, status, reason; no health values).
+- **Watch.** Two permissions, `READ_HEALTH_DATA` (heart rate) and `ACTIVITY_MOTION` (steps), each with a
+  stated reason and used only while the app is open. A refused permission shows "—" and "unavailable"
+  (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg`), never a made-up value. The sensors are
+  switched off when the page is hidden.
+- **Entry points.** Only the two start abilities are exported; the home-screen card ability is not.
+- **Logs.** `%{public}` log fields carry screen names, error texts, counters, key ids and sandbox paths. No
+  heart rate, step count or other health value is logged. Check: `git grep -n "%{public}" -- common entry watch`.
+- **Dependencies.** `entry` and `watch` depend only on the local `common` module. The two external packages,
+  `@ohos/hypium` 1.0.24 and `@ohos/hamock` 1.0.0, are OpenHarmony's test libraries, declared as
+  devDependencies for the test sources. The `oh-package-lock.json5` files are committed, so an install
+  resolves the same versions by hash.
+- **Signing.** The committed `build-profile.json5` has an empty `signingConfigs` list. For a signed HAP let
+  DevEco Studio fill it locally (File → Project Structure → Signing Configs → Automatically generate
+  signature) and do not commit the changed file.
+- **Commit hook.** `tools/hooks/pre-commit` blocks a commit that stages signing material, a local Wear Engine
+  config or a password line. Install it once per clone: `cp tools/hooks/pre-commit .git/hooks/pre-commit`.
 
 ## Watch Link: signed day packets from the watch
 
@@ -74,11 +105,11 @@ node tools/watch-phone-relay.mjs once --tamper   # demo: the phone answers "Inva
 node tools/watch-phone-relay.mjs once --drop 3   # demo: the phone shows "1 day missing"
 ```
 
-| Part | Real or simulated |
-| --- | --- |
-| Watch recorder | **Real** sensor code (heart rate, steps, wear sensor when present; heart-rate signal on the emulator). Records **while the app is open**. |
-| Day packets | **Real** ECDSA P-256 signing on the watch (HUKS on the wearable emulator, software fallback otherwise) and a hash chain. |
-| Watch → phone transport | **Real** Wear Engine code path, **not demonstrable** on emulators (needs paired devices and Wear Engine approval) and not run. The demo uses `tools/watch-phone-relay.mjs` over hdc, carrying the identical files. |
-| Demo clock ×300 | **Simulated time**, labelled on the watch and in every packet recorded with it. |
-| 24 h background recording | **Not implemented.** No continuous-task type fits health logging. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs. |
-| Watch days in the score | **Not connected in this branch**: the scoring module is not in this checkout. The phone shows the received days and their source. |
+| Part                      | Real or simulated                                                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Watch recorder            | **Real** sensor code (heart rate, steps, wear sensor when present; heart-rate signal on the emulator). Records **while the app is open**.                                                                          |
+| Day packets               | **Real** ECDSA P-256 signing on the watch (HUKS on the wearable emulator, software fallback otherwise) and a hash chain.                                                                                           |
+| Watch → phone transport   | **Real** Wear Engine code path, **not demonstrable** on emulators (needs paired devices and Wear Engine approval) and not run. The demo uses `tools/watch-phone-relay.mjs` over hdc, carrying the identical files. |
+| Demo clock ×300           | **Simulated time**, labelled on the watch and in every packet recorded with it.                                                                                                                                    |
+| 24 h background recording | **Not implemented.** No continuous-task type fits health logging. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs.                             |
+| Watch days in the score   | **Not connected in this branch**: the scoring module is not in this checkout. The phone shows the received days and their source.                                                                                  |

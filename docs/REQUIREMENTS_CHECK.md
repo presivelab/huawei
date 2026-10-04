@@ -92,5 +92,5 @@ Not requested and not to be copied from sample code: `INTERNET`, `GET_NETWORK_IN
 
 | Input                         | Rule                                                                                                                                  | Evidence               |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `want.parameters['fwTarget']` | only `dashboard`, `share`, `source`; anything else, any non-string and any value over 32 characters opens the dashboard; never throws | `EntryTarget.test.ets` |
+| `want.parameters['fwTarget']` | only `dashboard`, `evidence`, `share`, `source`; anything else, any non-string and any value over 32 characters opens the dashboard; never throws | `EntryTarget.test.ets` |
 | Tier claim JSON               | strict decode: exactly seven keys, fixed value types; an extra key, a missing key or malformed JSON is rejected                       | `Claim.test.ets`       |

@@ -1,0 +1,26 @@
+{
+  "color": [
+    { "name": "fw_metric_steps", "value": "#69D17C" },
+    { "name": "fw_metric_heart", "value": "#FF7A99" },
+    { "name": "fw_metric_sleep", "value": "#93A8FF" },
+    { "name": "fw_metric_activity", "value": "#FFA05E" },
+    { "name": "fw_metric_vo2max", "value": "#4FC8EC" },
+    { "name": "fw_metric_hrv", "value": "#C29BFA" },
+    { "name": "fw_metric_workout", "value": "#F383C1" },
+    { "name": "fw_wear_worn", "value": "#3ECFBA" },
+    { "name": "fw_wear_charging", "value": "#F0B63E" },
+    { "name": "fw_wear_off", "value": "#F08C6C" },
+    { "name": "fw_wear_unobserved", "value": "#596070" },
+    { "name": "fw_tier_a", "value": "#48D3A2" },
+    { "name": "fw_tier_b", "value": "#EDBE4E" },
+    { "name": "fw_tier_c", "value": "#DE9A72" },
+    { "name": "fw_tier_a_tint", "value": "#2948D3A2" },
+    { "name": "fw_tier_b_tint", "value": "#29EDBE4E" },
+    { "name": "fw_tier_c_tint", "value": "#29DE9A72" },
+    { "name": "fw_flag_tint", "value": "#29F08C6C" },
+    { "name": "fw_tier_a_text", "value": "#48D3A2" },
+    { "name": "fw_tier_b_text", "value": "#EDBE4E" },
+    { "name": "fw_tier_c_text", "value": "#DE9A72" },
+    { "name": "fw_flag_text", "value": "#F08C6C" }
+  ]
+}

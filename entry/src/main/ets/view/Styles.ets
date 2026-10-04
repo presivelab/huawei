@@ -13,12 +13,29 @@ export class CardStyle implements AttributeModifier<ColumnAttribute> {
   }
 }
 
+// The cards of the report screens: larger radius and padding, as on the design canvas.
+export class LargeCardStyle implements AttributeModifier<ColumnAttribute> {
+  applyNormalAttribute(instance: ColumnAttribute): void {
+    instance
+      .width('100%')
+      .padding({
+        left: 20,
+        right: 20,
+        top: 18,
+        bottom: 18
+      })
+      .backgroundColor($r('sys.color.comp_background_primary'))
+      .borderRadius(24)
+      .alignItems(HorizontalAlign.Start);
+  }
+}
+
 export class TextStyle implements AttributeModifier<TextAttribute> {
   private size: Resource;
   private color: Resource;
-  private weight: FontWeight;
+  private weight: FontWeight | number;
 
-  constructor(size: Resource, color: Resource, weight: FontWeight) {
+  constructor(size: Resource, color: Resource, weight: FontWeight | number) {
     this.size = size;
     this.color = color;
     this.weight = weight;
@@ -30,6 +47,10 @@ export class TextStyle implements AttributeModifier<TextAttribute> {
 }
 
 export const CARD: CardStyle = new CardStyle();
+export const CARD_LARGE: LargeCardStyle = new LargeCardStyle();
+// The heading of a report card or section: 16 / 600.
+export const HEADING: TextStyle =
+  new TextStyle($r('sys.float.Subtitle_M'), $r('sys.color.font_primary'), 600);
 export const TITLE: TextStyle =
   new TextStyle($r('sys.float.Subtitle_L'), $r('sys.color.font_primary'), FontWeight.Bold);
 export const BODY: TextStyle =

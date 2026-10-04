@@ -1,19 +1,22 @@
 import { common } from '@kit.AbilityKit';
-import { buildCardDigest, CARD_COVERAGE_NONE } from 'common';
+import { buildCardDigest, hasScore, PersonaReport } from 'common';
 import { AddonSession } from '../addon/AddonSession';
 import { CardStore } from '../platform/CardStore';
+import { selectedReport } from '../report/ServiceLocator';
 
 /*
- * Pushes the current state to the home-screen card. Called by the start page whenever the session changes.
- * HES-Lite is not part of this build yet, so there is no coverage figure and no result to report:
- * the card shows the data source and dashes.
+ * Pushes the current state to the home-screen card. Called by the start page whenever the session or the
+ * selected report changes. The card gets the data source, the coverage of the selected report and whether
+ * a score exists ("Score ready"). It never gets the tier or the score. Without a connection the digest
+ * carries no coverage and no result (buildCardDigest).
  */
 export function syncCard(context: common.Context | undefined): void {
   if (context === undefined) {
     return;
   }
   const status = AddonSession.shared().source().status();
-  CardStore.publish(context, buildCardDigest(status, CARD_COVERAGE_NONE, false)).catch(() => {
+  const report: PersonaReport = selectedReport();
+  CardStore.publish(context, buildCardDigest(status, report.coveragePct, hasScore(report))).catch(() => {
     // CardStore logs its own failures; a card that cannot be refreshed must not affect the app.
   });
 }

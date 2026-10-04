@@ -1,6 +1,222 @@
 FairWear test results
 =====================
 
+2026-10-04 03:42 CEDT  branch feature/engine-reports  (G1: the phone reports come from the scoring engine)
+----------------------------------------------------
+Base: feature/phone-screens b9ce4b2 (fast-forward). Commit 69b3417.
+Node run (tools/run-logic-tests.sh): common 336/336 (was 329/329), watch 6/6. No existing assertion was changed.
+  New, EngineReports (7, 33 in the file): a closed day adds one completed day and the score equals
+  computeHes of that history, for all six personas; Ewa C / 59 -> B / 64 after one closed day and C / 59
+  after reset; live readings never change a score, before or after a closed day; day details: thirty days
+  per persona equal to the report and the wear month, Marek 17 September ("Off the wrist 13:05 for 5 h 35 min
+  after resting HR +9 bpm and 46% fewer steps in the 24 h before"), Kasia's break with 8 heart-rate readings
+  ("break not judged (8 heart-rate readings before it, 12 needed)"), every day has a one-line reason.
+ArkTS compile: assembleHap (entry), assembleHap (watch): BUILD SUCCESSFUL.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues; none in a changed file.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Phone emulator (127.0.0.1:5557, API 24), unsigned debug HAP, consent and the persona sheet with uitest clicks,
+texts read from the uitest layout dump, Report tab, light mode:
+  Ania   92  A  "Strong overall profile"  Coverage 100%  High    Full benefit · Eligible            30 of 30 days
+  Marek  75  B  "5 points to A"           Coverage 85%   High    No benefit · 3 suspicious breaks   26 of 30 days
+  Kasia  73  B  "7 points to A"           Coverage 70%   Medium  Partial benefit · Score B          26 of 30 days
+  Tomek  79  B  "1 point to A"            Coverage 90%   High    Partial benefit · Score B          29 of 30 days
+  Ewa    59  C  "Tier C this month"       Coverage 75%   Medium  No benefit · Score C               27 of 30 days
+  Ola    no score, 43% evidence, "What unlocks your score" with 8 of 14 nights
+  Source pill: "HUAWEI Health · Demo data". No text with "preview" on any of the six screens.
+  Shots: docs/screenshots/final/a1-report-{ania,marek,kasia,tomek,ewa,ola}-light.jpeg (top of the screen).
+Not run on the emulator: Close the day, reset and the live readings (no screen calls them yet; covered by the
+  Node tests), the day details (no screen shows them yet), dark mode, the lower part of the Report screen.
+  The Today card of the Report screen still prints the live readings as they are; with the engine they start
+  as "no reading" (-1). The card belongs to the Report screen and is not changed on this branch.
+
+2026-10-04 03:23 CEDT  branch feature/phone-screens  (brief 13: M-1, M-2, M-3, the Report screen of M-4, M-5 texts and M-6 shots for Report)
+----------------------------------------------------
+Base: feature/ui-foundation 45f67f8.
+Node run (tools/run-logic-tests.sh): common 162/162 (was 141/141), watch 6/6. No existing assertion was changed.
+  New, Report (17, in the hypium list): benefitLevel for every combination of eligible, tier and score;
+  benefit labels and reasons; the six preview personas equal the expected results (score, tier, coverage,
+  confidence, benefit, eligible); notes of the expected results (Marek flagged with 3 breaks and 4 days not
+  compliant, Kasia one break and no flag, Tomek one point to A, Ola no score); the stored benefit is the one
+  benefitLevel gives; weights of the available components add up to 100 (±1); component scores weighted by
+  their weights give the score (±1); eight components each and a missing one has no value, score or bar;
+  thirty days each and the day states agree with the wear summary; Ola's counters; persona list, default
+  and unknown id; the period is written the way the claim accepts it; the home-screen card takes coverage and
+  "score ready" from a report, never the tier; spoken texts of the score ring, a tile and the month bar; day
+  states as words; dates of the period days; a day spoken as its date and state.
+  New, EntryTarget (4): 'evidence' is a known target from a shortcut and from a card; each target maps to
+  its tab; 'source' opens Settings above the Report tab and no other target does; unknown text never selects
+  another tab.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh, fresh shell): 0 errors; entry 8 warnings (was 9), watch 2 (was 2), common 0, all the same
+  performance rule (custom component instead of @Builder).
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits. No hex colour in any .ets under entry.
+Phone emulator (127.0.0.1:5557, 1320x2856, density 3.5, 377 vp wide): welcome, both consent steps, then the
+  three tabs. Report opened for Ania, Tomek, Marek and Ola in light and in dark mode; the persona sheet; the
+  Evidence tab (existing Watch link cards) and the Share placeholder. Checked by reading the layout dump:
+  "Why this tier" opens its page, "Evidence" on the wear card selects the Evidence tab, the source pill and the
+  gear open Settings, Disconnect returns to the welcome screen, and
+  `aa start ... --ps fwTarget evidence|share|source|dashboard|nonsense` opens Evidence, Share, Settings, Report,
+  Report. Dark mode was switched in system Settings > Display & brightness and switched back to light.
+  Screenshots in docs/screenshots/design/: before-phone-dashboard-light; phone-report-ania-{light,dark},
+  phone-report-ania-tiles-{light,dark}, phone-report-ola-{light,dark}, phone-report-tomek-light,
+  phone-report-tomek-tiles-dark, phone-report-marek-{light,dark}, phone-persona-sheet-{light,dark},
+  phone-evidence-tab-light, phone-share-tab-light, phone-welcome-{light,dark}.
+During the run the emulator's render service froze once (sysfreeze render_service SERVICE_BLOCK, 09:09 emulator
+  time; it also froze the other apps on the device) and came back with display density 1.5. The phone
+  emulator was rebooted (hdc shell reboot), density returned to 3.5, and every screenshot was taken after that.
+Not done / not verified:
+  - Why, the Evidence calendar with the day sheet, Share, Partner and Ledger: placeholders with routes only;
+  - the home-screen card with the new digest was not looked at on the home screen (the mapping is tested);
+  - no screenshot at a large system font; no screen-reader pass (the spoken texts are set and unit-tested);
+  - liveSet (demo controls for the live readings) has no UI yet and was not exercised on the device;
+  - the welcome screen with the "disconnected" note clips the watch-phone-shield row above the button
+    (seen in phone-welcome-dark); the screen itself was not changed apart from the title bar.
+
+2026-10-04 03:22 CEDT  branch feature/engine-reports  (the phone report built from the engine: EngineReports)
+----------------------------------------------------
+Base: 8b29c77 (feature/hes-lite) + merge of 6f9be82 (report view models, benefit rule, fixed preview) = 7501cfb.
+Pure logic in common, no UI, no emulator run. Description and decisions: docs/HES.md, "The report on the phone".
+Node run (tools/run-logic-tests.sh): common 308/308, watch 6/6.
+  Before the merge 265/265; after the merge 282/282 (Report 13, EntryTarget 4 new); after this work 308/308.
+  New: EngineReports 26 (fixed results 6, components 6, wear month 3, live values and the session 5,
+  the counterfactual 6). One file alone: EngineReports.test.ets 26/26, Report.test.ets 13/13.
+Engine report against the fixed table and against the preview (score, tier, coverage, confidence, benefit,
+eligible): equal for all six personas.
+  Ania A/92, 100%, High, full benefit, eligible.  Marek B/75, 85%, High, no benefit, not eligible (flag).
+  Kasia B/73, 70%, Medium, partial benefit, eligible.  Tomek B/79, 90%, High, partial benefit, 1 point to A.
+  Ewa C/59, 75%, Medium, no benefit, eligible, 1 point to B.  Ola no score, 43%, no benefit, not eligible.
+Wear in the report: Marek 26/30, 3 suspicious breaks, flagged, 4 red days; Kasia 26/30, 1 suspicious, no flag;
+  Ania 30/30, Tomek 29/30, Ewa 27/30, Ola 8/30 with 6 unknown days. 30 day cells each.
+Live: setLive(200, 99999) changes only `live` in the report of all six personas.
+Counterfactual (one Core component to a point of its curve, recalculated by the engine):
+  Marek  250 active minutes a week instead of 117 -> 80, tier A.
+  Kasia  bed and wake times within ±30 min instead of ±88 min -> 81, tier A.
+  Tomek  6 h 30 min of sleep a night instead of 6 h 6 min -> 81, tier A.
+  Ewa    bed and wake times within ±90 min instead of ±94 min -> 60, tier B.
+  Ania (tier A) and Ola (no score): none.
+ArkTS compile: hvigorw assembleHar (common) BUILD SUCCESSFUL; assembleHap entry and watch BUILD SUCCESSFUL.
+  Compiler warnings in common: 22, all in src/main/ets/platform (unchanged), none in report/, hes/ or wear/.
+Lint (tools/lint.sh): 0 errors; entry 9 warnings (was 9), watch 2 (was 2), common 0.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+Not done / not verified:
+  - nothing was run on an emulator or a device; the hypium run of List.test.ets on a device was not made;
+  - no screen uses the engine report yet: the phone's service locator is on feature/phone-screens;
+  - the engine report differs from the preview in every illustrative field (component values, bars, day cells,
+    live values, units of VO2max and HRV, one-decimal weights); the list is in the hand-over report;
+  - the wear month does not move when a day is closed in a session.
+
+2026-10-04 03:07 CEDT  branch feature/hes-lite  (HES-Lite v1.0 rebuilt from the specification, personas, wear month)
+----------------------------------------------------
+Base: 45f67f8. Pure logic in common, no UI, no emulator run. Description and decisions: docs/HES.md.
+Node run (tools/run-logic-tests.sh): common 265/265 (was 141/141), watch 6/6.
+  New: Hes 75 (every line of specification section 15 as its own test, 26 tests, then sections 2 to 11:
+  weights, composite and coverage, piecewise, the eight curves, raw values, data sufficiency, confidence,
+  tiering, "Why this tier"); HesPersonas 16; HesSession 11; WearMonth 22.
+  One file alone: Hes.test.ets 75/75, HesPersonas.test.ets 16/16, HesSession.test.ets 11/11,
+  WearMonth.test.ets 22/22.
+Personas (engine output, all equal to the fixed table):
+  Ania A/92, coverage 100%, High.  Marek B/75, 85%, High.  Kasia B/73, 70%, Medium.
+  Tomek B/79, 90%, High.  Ewa C/59, 75%, Medium.  Ola no score, 43%, Insufficient data.
+  Unrounded: 92.000, 74.996, 72.988, 79.000, 58.999. Only persona parameters were tuned; weights, curves
+  and thresholds are the specification's.
+  setLive(200, 99999) leaves the score of all six personas unchanged (HesSession test "S-19").
+Wear month (30 days, default thresholds):
+  Marek 26/30 compliant (86.7%), 5 breaks, 3 suspicious, flagged, 4 red days (3 suspicious + 1 short).
+  Kasia 26/30 compliant (86.7%), 4 breaks, 3 judged, 1 suspicious, not flagged.
+  Ania 30/30, Tomek 29/30, Ewa 27/30, Ola 8/30 with 6 unknown days; none of them flagged.
+ArkTS compile: hvigorw assembleHar (common) BUILD SUCCESSFUL; assembleHap entry and watch BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; entry 9 warnings (was 9), watch 2 (was 2), common 0.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+Not done / not verified:
+  - nothing was run on an emulator or a device: the new code is checked by the Node tests (TypeScript) and
+    by the ArkTS compiler only, the hypium run of List.test.ets on a device was not made;
+  - no screen uses the engine yet; SyntheticHealthSource, the mapper from HealthRecords to the HES history
+    and the benefit level are not part of this block;
+  - the valid-day rule (worn at least 10 h between 07:00 and 23:00) is not applied: it waits for a decision;
+  - AGENTS.md "Project state" still says the scoring module is not in the repository (not edited here).
+
+2026-10-04 02:22 CEST  branch feature/ui-kit  (review of the UI kit block; demo-feed day end to end)
+----------------------------------------------------
+Re-run by the reviewing session: common 141/141, watch 6/6; wording check 0 hits, enum-in-UI check 0 hits;
+lint 0 errors (entry 9 warnings, watch 2, common 0).
+Relay (node tools/watch-phone-relay.mjs once) with both emulators running: the watch day recorded with the
+demo feed went to the phone as packet #5 and came back ACCEPTED. The phone shows it as Thu 8 Oct, Verified,
+worn 16 h 5 min, charging 5 h 25 min, off wrist 2 h 25 min, 12,785 steps, labelled as demo feed
+(docs/screenshots/design/after-watchlink-days-feed-light.jpeg).
+
+2026-10-04 02:19 CEDT  branch feature/ui-kit  (block K5.2 and the pre-gate part of K5.3: tokens, phone UI kit, Watch link cards)
+----------------------------------------------------
+Base: feature/ui-foundation af58db4.
+Node run (tools/run-logic-tests.sh): common 141/141 (was 130/130), watch 6/6.
+  New: WatchDayPresent 11 (in the hypium list): durations always carry units; day titles; clock times and
+  breaks; the four wear states in fixed order adding up to the day; "Worn 0 min" is listed only for a day
+  the watch observed, an unobserved day lists only "Not observed"; a missing day is not verified and not a
+  demo day; demo clock and demo feed labels; the strip takes the newest seven days oldest first; last sync
+  as today / yesterday / date; the relay is named "Demo relay (hdc)"; summaries.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits. No hex colour in any .ets under entry.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; entry 9 warnings (was 9), watch 2 (was 2), common 0, all the same
+  performance rule (custom component instead of @Builder).
+Phone emulator (127.0.0.1:5557), real data in the sandbox (watch linked, 4 verified days, all recorded on the
+  demo clock): Watch link cards and "Verification details" opened and photographed in light and in dark mode;
+  dark mode was switched in system Settings > Display & brightness and switched back to light afterwards.
+  Screenshots in docs/screenshots/design/: before-watchlink-light, before-watchlink-days-light,
+  after-watchlink-light, after-watchlink-days-light, after-verification-details-light,
+  after-verification-details-log-light, after-watchlink-dark, after-watchlink-days-dark,
+  after-verification-details-dark.
+  The files kit-preview-*-sample-light show kit states the real data does not reach (worn and charging time,
+  steps, a demo-feed day, a missing day, the pairing prompt, MetricTile, a partly filled RingStat). They were
+  taken with a temporary harness that fed sample values and titled the card "Kit preview · sample data";
+  the harness is not in the branch.
+Found and fixed on the emulator: RingStat went back to empty after a light/dark switch (the ring is now
+  rebuilt from the value the last animation ended on).
+Not done / not verified:
+  - no "before" screenshot in dark mode (the old cards were photographed in light mode only);
+  - the states "no watch linked", "linked, no day yet" and a real missing day were not seen with real data;
+    "Sync now", "Forget watch", "Confirm" and "Not now" were not tapped (Forget would delete the watch days);
+  - MetricTile is in the kit but on no screen yet (the dashboard keeps its rows until the scoring data
+    exists); the UI kit for the watch module is not part of this block;
+  - snapshot_display on the phone emulator sometimes returns a torn frame (missing status-bar icons, a stray
+    line through a ring); such shots were retaken, the cause was not investigated;
+  - the pairing prompt still shows the watch code ("Pair watch <code>?"): it is the code the user compares
+    with the watch, and docs/WATCH_LINK.md describes the flow by that text.
+
+2026-10-04 01:45 CEDT  branch feature/claim-verifier  (block K3: hardened claim decode, token format, PartnerVerifier)
+----------------------------------------------------
+Base: feature/ui-foundation 7595dd8.
+Node run (tools/run-logic-tests.sh common): 130/130 (was 98/98). New: 32 (31 from the K3 block, 1 added in review: a second UTF-8 spelling of a claim is refused).
+  ClaimHardening (7, in the hypium list): field rules, canonical form, length limits, envelope (kid match,
+  DER at most 72 bytes), token round trip, strict token decode, worst-case token 461 characters.
+  PartnerVerifier S-1 to S-20 (24, real ECDSA P-256 signatures from Node, not in the list): S-0 happy path,
+  S-1..S-18 and S-20, plus S-8b (DER over 72 bytes), S-14b (nonce at the time limit), and two registry tests.
+  S-16 builds a second valid signature (r, n-s) in the test and checks it verifies on its own first.
+  S-19 is NOT done: it needs the scoring module (HES-Lite), which is not in this repository.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+ArkTS compile: hvigorw assembleHar assembleHap BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; 2 warnings (watch 2, common 0).
+Not done: S-19; the screen that calls the verifier (no UI in this block); the device RandomSource
+  (DeviceRandom, CSPRNG from cryptoFramework) compiles but has not run on a device or emulator; the
+  placeholder no-score tier value 'NONE' has to be aligned with HES-Lite.
+
+2026-10-04 01:37 CEST branch feature/ui-foundation  (project state and skill; watch demo feed)
+----------------------------------------------------
+Base: main 491bcb4 with feature/security-watch merged in (common 85/85, watch 6/6 after the merge).
+Node run (tools/run-logic-tests.sh): common 98/98, watch 6/6.
+  New: DemoFeed script 7 (in the hypium list) and WatchLink demo feed 6 (engine run under Node):
+  the feed cannot run without the demo clock; a fed day has charging, worn and off-wrist slots and steps
+  and its signed packet carries the clock label DEMO_X300_FEED; sensor readings are not mixed in;
+  the label stays on a day that received any scripted readings; switching the demo clock off stops the feed.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh): 0 errors; 11 warnings of one performance rule (entry 9, watch 2, common 0).
+Wearable emulator (API 24): Watch link page -> Demo clock x300 -> Demo feed: on. The dial then showed
+  a heart rate (74 bpm at recorder time 07:15, 68-70 bpm at 20:41), steps 181 then 12245, state worn,
+  the line DEMO x300 - FEED - hh:mm, and a slot ring with charging, worn and off-wrist segments
+  (docs/screenshots/design/before-watch-dial.jpeg, after-watch-dial-feed-morning.jpeg,
+  after-watch-dial-feed-later.jpeg, after-watch-demo-controls.jpeg).
+Not done: sending a fed day to the phone through the relay; the real sensor path with a non-zero heart
+  rate (Virtual sensor panel, manual); dark and light variants of the watch screenshots.
+
 2026-10-04 01:02 CEST  branch feature/integration  (I-1 merge of home-card and watch-link; W-0 look fixes)
 ----------------------------------------------------
 After the I-1 merge (f1709ca): common 80/80, watch 6/6, build of entry, watch and common successful.
@@ -181,3 +397,30 @@ Not run: a non-zero heart rate on the emulator (worn state, green ring, the 60 s
 Not run: Wear Engine transport (needs paired devices and Wear Engine approval for the app).
 Not run: Reset watch data, Forget watch, app restarts, a real midnight on the emulators (covered by the Node tests only).
 Not present in this checkout: HES engine, HesSession, personas. Watch days are not scored here.
+
+==== Security S0-S2 and one wear rule (branch feature/security-watch), 2026-10-04 ====
+Base: feature/integration 491bcb4, fast-forwarded into main after tools/run-logic-tests.sh common 83/83,
+  watch 6/6 and assembleHap for entry and watch (BUILD SUCCESSFUL) were run on it.
+  A clean directory needs "ohpm install --all" first; without it the build cannot resolve "common".
+After each block (S0, S1, S2, wear rule): both test runs and both builds were repeated.
+tools/run-logic-tests.sh common   85/85 passed (83 + 2 new LiveWear tests: charging, wear-detection sensor)
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry), assembleHap (watch): BUILD SUCCESSFUL.
+tools/check-wording.sh            0 hits (14 wordings, 4 status names)
+S0 history scan over all branches (git log -p --all with the secret patterns; file names with signing
+  extensions or local.json): 0 lines, 0 files. gitleaks is not installed; the grep fallback was used.
+S0 pre-commit hook, 7 cases in a scratch repository: .p12, rawfile/local.json, a password key with a value
+  (double and single quotes) and a private-key block are blocked; a document that only names the keys and a
+  clean file pass.
+LiveWear.test.ets, assertions changed because LiveWearState now answers from WearStateMachine:
+  - zeros only: REMOVED (was NO_DATA); NO_DATA only before any sensor event
+  - the limit is "more than N" (was "N or more"): worn at exactly N, removed at N + 1 ms
+  - default limit 60 000 ms (was 10 000 ms); DEFAULT_REMOVED_AFTER_MS no longer exists
+  - 24 and 231 bpm added to the invalid readings (the rule accepts 25-230 bpm)
+Wearable emulator (127.0.0.1:5555), unsigned debug HAP installed with tools/deploy.sh watch:
+  screen: heart rate "—", 0 steps, wear state "not on wrist" (docs/screenshots/i3-watch-wear-state.jpeg)
+  log:    live hrLink=1 hrEvents=54 hrValid=0 wear=REMOVED stepLink=1 stepEvents=54
+          (no heart-rate or step value in the line; the previous build wrote hrRaw, hrShown, stepsRaw, stepsToday)
+Not run: a non-zero heart rate on the emulator (worn, the 60 s limit), the charging state, a watch with a
+  wear-detection sensor. These are covered by the Node tests only.
+Not run: the entry HAP on the phone emulator (built only; no entry source file changed).
