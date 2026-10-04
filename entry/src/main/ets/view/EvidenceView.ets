@@ -32,7 +32,7 @@ import {
   DAY_NIGHT_NO,
   DAY_NIGHT_YES,
   DAY_WORN,
-  daysOfLine,
+  DAYS_LABEL,
   dayStateNote,
   EVIDENCE_SEGMENT_CALENDAR,
   EVIDENCE_SEGMENT_WATCH,
@@ -179,7 +179,7 @@ export struct EvidenceView {
       .alignItems(VerticalAlign.Center)
 
       Row({ space: 12 }) {
-        this.stat(daysOfLine(this.report.wear.compliantDays, this.report.wear.totalDays), 'Compliant', false)
+        this.stat(`${this.report.wear.compliantDays} of ${this.report.wear.totalDays}`, DAYS_LABEL, false)
         this.stat(`${this.report.wear.nightsWorn} of ${this.report.wear.totalDays}`, NIGHTS_LABEL, false)
         this.stat(`${this.report.wear.suspicious}`, BREAKS_LABEL, this.report.wear.suspicious > 0)
       }

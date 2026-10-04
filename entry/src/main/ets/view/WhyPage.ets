@@ -154,6 +154,7 @@ export struct WhyPage {
         .attributeModifier(CAPTION)
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
     .accessibilityGroup(true)
     .accessibilityText(`${row.label}, score ${row.score} of 100, ${whyRowDetail(row)}`)
   }

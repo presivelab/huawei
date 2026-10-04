@@ -130,6 +130,7 @@ export function grouped(n: number): string {
 export const EVIDENCE_SEGMENT_CALENDAR: string = 'Calendar';
 export const EVIDENCE_SEGMENT_WATCH: string = 'Watch days';
 export const CALENDAR_TITLE: string = 'This month';
+export const DAYS_LABEL: string = 'Days compliant';
 export const NIGHTS_LABEL: string = 'Nights worn';
 export const BREAKS_LABEL: string = 'Suspicious breaks';
 export const FLAG_CHIP: string = 'Flagged';
@@ -162,11 +163,6 @@ export function dayStateNote(state: string): string {
     return 'A sick day. It is left out of the month and never sent to your partner.';
   }
   return 'No watch yet: there is no record from the watch for this day.';
-}
-
-// "26 of 30 days".
-export function daysOfLine(have: number, total: number): string {
-  return `${have} of ${total} days`;
 }
 
 // --- "Why this tier" ---
