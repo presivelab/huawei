@@ -10,6 +10,7 @@ import watchDayPresentTest from './WatchDayPresent.test';
 import hesTest from './Hes.test';
 import hesPersonasTest from './HesPersonas.test';
 import hesSessionTest from './HesSession.test';
+import wearMonthTest from './WearMonth.test';
 
 export default function testsuite() {
   claimTest();
@@ -24,4 +25,5 @@ export default function testsuite() {
   hesTest();
   hesPersonasTest();
   hesSessionTest();
+  wearMonthTest();
 }

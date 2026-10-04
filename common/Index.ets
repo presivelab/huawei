@@ -324,3 +324,24 @@ export {
   HesPersonaSpec,
   HES_PERSONA_END_DATE
 } from './src/main/ets/hes/HesPersonas';
+// Wear month of the demo personas: compliance, breaks and the selective non-wear flag. Pure logic.
+export {
+  buildWearMonth,
+  countedWearMinutes,
+  isDayCompliant,
+  isNightWorn,
+  judgeBreak,
+  WearBreak,
+  WearBreakResult,
+  WearDayRecord,
+  WearDayResult,
+  WearDayState,
+  WearMonthResult
+} from './src/main/ets/wear/WearMonth';
+export {
+  generateWearDay,
+  generateWearMonth,
+  WearEvent,
+  WearPersonas,
+  WEAR_MONTH_DAYS
+} from './src/main/ets/wear/WearPersonas';
