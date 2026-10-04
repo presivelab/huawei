@@ -271,11 +271,11 @@ function ania(): PersonaReport {
     '');
 }
 
-// B/75, coverage 88%, High: flagged after three suspicious breaks, so no benefit. Days as on the
+// B/75, coverage 87.5%, High: flagged after three suspicious breaks, so no benefit. Days as on the
 // Evidence mock-up: suspicious on 3, 17 and 24, short on 10, sick on 11, 12 and 25.
 function marek(): PersonaReport {
   return report(
-    expected('marek', 'Marek', 75, ReportTier.B, 88, ReportConfidence.HIGH, false, 5),
+    expected('marek', 'Marek', 75, ReportTier.B, 87.5, ReportConfidence.HIGH, false, 5),
     [
       steps(measured(78, '7,820', '/day', 17, 26, [58, 72, 64, 80, 52, 76, 70])),
       active(measured(72, '142', 'min/week', 23, 26, [48, 66, 30, 74, 58, 80, 62])),
@@ -311,10 +311,10 @@ function kasia(): PersonaReport {
     '');
 }
 
-// B/79, coverage 93%, High: one point to A. Components as on the "Why this tier" mock-up.
+// B/79, coverage 92.5%, High: one point to A. Components as on the "Why this tier" mock-up.
 function tomek(): PersonaReport {
   return report(
-    expected('tomek', 'Tomek', 79, ReportTier.B, 93, ReportConfidence.HIGH, true, 1),
+    expected('tomek', 'Tomek', 79, ReportTier.B, 92.5, ReportConfidence.HIGH, true, 1),
     [
       steps(measured(86, '8,640', '/day', 16, 28, [66, 82, 74, 88, 70, 90, 80])),
       active(measured(67, '118', 'min/week', 22, 28, [40, 58, 32, 66, 50, 72, 54])),
@@ -351,10 +351,10 @@ function ewa(): PersonaReport {
     '');
 }
 
-// No score, coverage 48%: fourteen days of history and too few nights. Counters as on the mock-up.
+// No score, coverage 47.5%: fourteen days of history and too few nights. Counters as on the mock-up.
 function ola(): PersonaReport {
   return report(
-    expected('ola', 'Ola', HES_NONE, ReportTier.NONE, 48, ReportConfidence.INSUFFICIENT, false, POINTS_UNKNOWN),
+    expected('ola', 'Ola', HES_NONE, ReportTier.NONE, 47.5, ReportConfidence.INSUFFICIENT, false, POINTS_UNKNOWN),
     [
       steps(measured(HES_NONE, '6,120', '/day', 0, 14, [44, 60, 52, 66, 48, 70, 58])),
       active(measured(HES_NONE, '96', 'min/week', 0, 14, [30, 48, 26, 56, 40, 60, 44])),

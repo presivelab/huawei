@@ -104,7 +104,7 @@ export interface HesResult {
   status: HesStatus;
   score: number;             // integer 0..100; HES_MISSING when the Core set is incomplete
   tier: string;              // 'A' | 'B' | 'C', or 'NONE' when there is no score
-  coverage: number;          // Evidence Coverage, integer percent
+  coverage: number;          // Evidence Coverage, percent in steps of 0.5 (never rounded)
   confidence: HesConfidence;
   components: HesComponentResult[];  // always all eight, in the order of HES_COMPONENTS
 }

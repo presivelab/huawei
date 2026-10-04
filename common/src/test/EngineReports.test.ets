@@ -208,11 +208,11 @@ export default function engineReportsTest() {
     it('the six personas equal the fixed table: score, tier, coverage, confidence, benefit, eligible', 0, () => {
       expect(engineReports().length).assertEqual(6);
       expectPersona('ania', 92, ReportTier.A, 100, ReportConfidence.HIGH, BenefitLevel.FULL, true);
-      expectPersona('marek', 75, ReportTier.B, 88, ReportConfidence.HIGH, BenefitLevel.NONE, false);
+      expectPersona('marek', 75, ReportTier.B, 87.5, ReportConfidence.HIGH, BenefitLevel.NONE, false);
       expectPersona('kasia', 71, ReportTier.B, 75, ReportConfidence.MEDIUM, BenefitLevel.PARTIAL, true);
-      expectPersona('tomek', 79, ReportTier.B, 93, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
+      expectPersona('tomek', 79, ReportTier.B, 92.5, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
       expectPersona('ewa', 58, ReportTier.C, 80, ReportConfidence.HIGH, BenefitLevel.NONE, true);
-      expectPersona('ola', HES_NONE, ReportTier.NONE, 48, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
+      expectPersona('ola', HES_NONE, ReportTier.NONE, 47.5, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
         false);
       expect(hasScore(engineReport('ola'))).assertFalse();
       expect(hasScore(engineReport('ewa'))).assertTrue();

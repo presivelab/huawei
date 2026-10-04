@@ -111,11 +111,11 @@ export default function reportTest() {
     it('preview: the six personas equal the expected results', 0, () => {
       expect(previewReports().length).assertEqual(6);
       expectPersona('ania', 92, ReportTier.A, 100, ReportConfidence.HIGH, BenefitLevel.FULL, true);
-      expectPersona('marek', 75, ReportTier.B, 88, ReportConfidence.HIGH, BenefitLevel.NONE, false);
+      expectPersona('marek', 75, ReportTier.B, 87.5, ReportConfidence.HIGH, BenefitLevel.NONE, false);
       expectPersona('kasia', 71, ReportTier.B, 75, ReportConfidence.MEDIUM, BenefitLevel.PARTIAL, true);
-      expectPersona('tomek', 79, ReportTier.B, 93, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
+      expectPersona('tomek', 79, ReportTier.B, 92.5, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
       expectPersona('ewa', 58, ReportTier.C, 80, ReportConfidence.HIGH, BenefitLevel.NONE, true);
-      expectPersona('ola', HES_NONE, ReportTier.NONE, 48, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
+      expectPersona('ola', HES_NONE, ReportTier.NONE, 47.5, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
         false);
     });
 
@@ -273,13 +273,13 @@ export default function reportTest() {
       expect(json.indexOf('92')).assertEqual(-1);
       const ola = previewReport('ola');
       const olaJson = encodeCardDigest(buildCardDigest(HealthStatus.DEMO, ola.coveragePct, hasScore(ola)));
-      expect(olaJson.indexOf('"coveragePct":48') >= 0).assertTrue();
+      expect(olaJson.indexOf('"coveragePct":47.5') >= 0).assertTrue();
       expect(olaJson.indexOf('"resultReady":false') >= 0).assertTrue();
     });
 
     it('spoken texts: score ring, metric tile, month bar', 0, () => {
       expect(scoreSpoken(previewReport('ania'))).assertEqual('Score 92, tier A, coverage 100 percent');
-      expect(scoreSpoken(previewReport('ola'))).assertEqual('No score yet, coverage 48 percent');
+      expect(scoreSpoken(previewReport('ola'))).assertEqual('No score yet, coverage 47.5 percent');
       expect(metricSpoken('Steps', '9,412', '/day', true)).assertEqual('Steps, 9412 per day');
       expect(metricSpoken('Sleep', '7 h 24', 'min', true)).assertEqual('Sleep, 7 hours 24 minutes');
       expect(metricSpoken('Sleep regularity', '±22', 'min', true))
