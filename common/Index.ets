@@ -387,3 +387,17 @@ export {
   fwTargetOpensSettings,
   fwTargetTab
 } from './src/main/ets/nav/EntryTarget';
+// The same report built from the scoring engine, the persona history and the wear month.
+export {
+  ENGINE_DEFAULT_ID,
+  ENGINE_SOURCE,
+  enginePersonas,
+  engineReport,
+  engineReportOf,
+  engineReports,
+  engineSession,
+  engineWhatIf,
+  EngineWhatIf,
+  nextTierOf,
+  reportComponentId
+} from './src/main/ets/report/EngineReports';
