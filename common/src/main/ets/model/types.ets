@@ -52,7 +52,7 @@ export interface MonthlyReport {
   eligible: boolean;                // compliance.passes && !selectiveNonWear
   score: ScoreResult;
   discountPct: number;
-  pausedDays: number;               // K11 — NEVER sent to the insurer
+  pausedDays: number;               // K11 — NEVER sent to the partner
   whatIf: WhatIfSuggestion[];       // K12
 }
 export interface WhatIfSuggestion { factor: string; change: string; newTier: string; newDiscountPct: number; }
@@ -68,7 +68,7 @@ export interface LedgerEntry {      // K14 — everything that left the device
   payload: string;                  // exact content sent
   bytes: number;
 }
-export interface TierClaim {        // the ONLY thing the insurer sees; exactly these seven keys
+export interface TierClaim {        // the ONLY thing the partner sees; exactly these seven keys
   v: number; period: string;
   tier: string; eligible: boolean;
   nonce: string; issuedAt: number;
@@ -80,6 +80,6 @@ export interface LiveSample {       // watch, about once per second
   t: number;
   hr: number;                       // 0 = no signal
   steps: number;                    // counter since start
-  wornSource: string;               // 'WEAR_SENSOR' | 'HR_SIGNAL' (emulator) — see IMPLEMENTATION.md section 10
+  wornSource: string;               // 'WEAR_SENSOR' | 'HR_SIGNAL' (emulator) — see docs/WATCH_LINK.md, wear state
   worn: boolean;
 }
