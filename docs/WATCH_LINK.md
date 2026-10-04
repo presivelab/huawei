@@ -22,14 +22,14 @@ Why the chain matters: detecting selective non-wear is pointless if a day can be
 
 | Part                                                                  | State                                                                                                                                      |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Data contract and logic (`common/src/main/ets/watchlink/`)            | Done. 38 tests under Node (`WatchLink.test.ets` 32, `WatchLinkFlow.test.ets` 6).                                                           |
+| Data contract and logic (`common/src/main/ets/watchlink/`)            | Done. Tests under Node: `WatchLink.test.ets` 32, `WatchLinkFlow.test.ets` 8, `WatchLinkFeed.test.ets` 6, `DemoFeed.test.ets` 7, `LinkProbe.test.ets` 7, `WatchDayPresent.test.ets` 11, `TourContent.test.ets` 7, `TourSnippets.test.ets` 2. |
 | Watch: recorder, signing, dial ring, controls, outbox                 | Done. Run on the wearable emulator (see "Checked on the emulators").                                                                       |
 | Dev relay `tools/watch-phone-relay.mjs`                               | Done. Run between the two emulators, including `--tamper` and `--drop`.                                                                    |
 | Phone: pairing, verification, chain, ACKs, Watch link card, days list | Done. Run on the phone emulator.                                                                                                           |
-| Wear Engine transport (watch) and receiver (phone)                    | Code present behind guards. **Not run**: needs paired devices and Wear Engine approval for the app.                                        |
-| Import of watch days into HES (`HesSession.appendObservedDay`)        | **Not done.** This checkout has no HES engine, no `HesSession`, no calendar. The seam is `PhoneLinkEngine.timeline()` (`WatchDayFacts[]`). |
+| Wear Engine transport (watch) and receiver (phone)                    | Send path present behind guards; the watch does not start a receiver for ACKs and does not resend its outbox. **Not run**: needs paired devices and Wear Engine approval for the app. |
+| Import of watch days into HES                                         | **Not done, by decision.** Verified watch days are shown, not scored; HES-Lite (`common/src/main/ets/hes/`) runs on the persona histories. The seam is `PhoneLinkEngine.timeline()` (`WatchDayFacts[]`). |
 | "Ring fills green" with a simulated heart rate                        | **Not run**: the heart rate has to be set by hand in the emulator's Virtual sensor panel.                                                  |
-| Dark mode of the phone cards                                          | Not looked at. The cards use system colour resources only.                                                                                 |
+| Dark mode of the phone cards                                          | Watch link cards and Verification details checked in dark mode (`docs/screenshots/design/after-watchlink-dark.jpeg`). |
 
 ## What leaves the watch
 
@@ -81,7 +81,7 @@ Freshness is measured in real time, never in demo time: 60 s with the real clock
 | `nightChargingMin` | int         | `C` slots 0–71 × 5                                                                                                                                                             |
 | `breaks`           | array, ≤ 12 | see below                                                                                                                                                                      |
 | `wearSource`       | string      | `SENSOR` or `HR_SIGNAL`                                                                                                                                                        |
-| `clock`            | string      | `REAL`, `DEMO_X300` (fast demo clock) or `DEMO_OFFSET` (real speed, shifted by earlier demo time)                                                                              |
+| `clock`            | string      | `REAL`, `DEMO_X300` (fast demo clock), `DEMO_X300_FEED` (fast demo clock with the scripted feed) or `DEMO_OFFSET` (real speed, shifted by earlier demo time)                                                                              |
 | `iat`              | int         | epoch seconds                                                                                                                                                                  |
 | `sig`              | string      | ECDSA P-256 / SHA-256, ASN.1 DER, base64url                                                                                                                                    |
 
@@ -175,9 +175,9 @@ The phone app reads its inbox when it comes to the foreground, every 2 s while i
 5. `Close day (demo)` again, relay with `--tamper` → phone log: `Invalid signature`, day not taken in. Relay again → `Accepted`.
 6. Close two more days, relay with `--drop 3` → phone: `1 day missing`, `#3 · not received`. Relay again → the gap is filled.
 
-**With the demo feed (no Virtual sensor panel).** Steps 2 to 4 become: watch, second page: `Demo clock ×300`, then `Demo feed: off` → `on`. The dial reads `DEMO ×300 · FEED · hh:mm`, heart rate and steps are scripted, and from 12:00 to 15:00 of recorder time (36 s) the ring turns red, `not on wrist`. The watch closes the day by itself at midnight of recorder time, 4 min 48 s after the previous one: `1 to sync` → relay → the phone shows the day with worn, charging and off-wrist time, steps and `Off wrist 12:05–15:00`. `Demo clock ×300` again stops the feed. Start from a fresh pair (see "Known limitations", stale ACK files) so the list holds feed days only.
+**With the demo feed (no Virtual sensor panel).** Steps 2 to 4 become: watch, second page: `Demo clock ×300`, then `Demo feed: off` → `on`. The dial reads `DEMO ×300 · FEED · hh:mm`, heart rate and steps are scripted, and from 12:00 to 15:00 of recorder time (36 s) the ring turns red, `not on wrist`. The watch closes the day by itself at midnight of recorder time, 4 min 48 s after the previous one: `1 to sync` → relay → the phone shows the day with worn, charging and off-wrist time, steps and `Off wrist 12:05–15:00`. `Demo clock ×300` again stops the feed. Start from a fresh pair (see "Known limitations", stale ACK files) so the list holds feed days only. Tap `Close day (demo)` once right after switching the feed on: a feed started around midday gives a first day whose break has too little heart-rate context to be judged; full days always carry one judged break (12:10–14:55).
 
-Line for the jury: "The watch measures, the phone judges with the same open rules, the insurer sees only a signed tier. Every day is signed on the wrist and chained, so a day can't be quietly deleted or edited."
+Line for the jury: "The watch measures, the phone judges with the same open rules, the partner sees only a signed tier. Every day is signed on the wrist and chained, so a day can't be quietly deleted or edited."
 
 ## Checked on the emulators (2026-10-04, agent-run, not yet confirmed by a team member)
 
@@ -226,11 +226,11 @@ Seen during the run, not changed: on the watch's second page the title and the `
 - The demo clock shifts recorder time for good. After any demo time the recorder runs on `DEMO_OFFSET` and its packets are labelled as simulated time. `Reset watch data` returns to the real clock and starts a new chain; the phone then has to `Forget watch` and pair again.
 - Time zone: the offset of the device at app start is used for the whole run; a change of offset (travel, daylight saving) during a run is not handled.
 - If HUKS fails and the software key is used, the key lives in app memory: a restart creates a new key and a new chain.
-- Days are imported by packet order. The phone does not place them on a calendar; there is none in this checkout.
+- Days are listed under Evidence › Watch days in packet order; they are not placed on the persona's Evidence calendar.
 
 ## Deviations from the brief
 
-1. **This checkout has no HES engine.** There is no `common/src/main/ets/hes/`, `HesSession`, `BreakRuleChecker`, `EngineFairWearService`, `ui/DayDial` or `ui/WatchModels` on any branch, and no 43 + 23 test suites. The branch was cut from `feature/health-addon` (28 common tests, 6 watch tests). Consequence: brief 4.2 "Import" stops at `WatchDayFacts`; nothing is appended to a score, no persona result can change, and "persona results identical to the report" could not be checked here.
+1. **(Written on the Watch Link branch, before HES-Lite was rebuilt.)** **This checkout has no HES engine.** There is no `common/src/main/ets/hes/`, `HesSession`, `BreakRuleChecker`, `EngineFairWearService`, `ui/DayDial` or `ui/WatchModels` on any branch, and no 43 + 23 test suites. The branch was cut from `feature/health-addon` (28 common tests, 6 watch tests). Consequence: brief 4.2 "Import" stops at `WatchDayFacts`; nothing is appended to a score, no persona result can change, and "persona results identical to the report" could not be checked here.
 2. `TierClaim` here has `v, period, tier, eligible, nonce, issuedAt, kid`, not the field list in the brief. Not touched.
 3. Name mapping: `SensorHub` → the existing `LiveSensors` (extended); `InboxScanner` → `PhoneLinkEngine.scanInbox()`; `DayImporter` → `factsOfPacket` / `timeline()`; `OutboxTransport` → the outbox write inside `WatchLinkEngine`; `DemoClock` → `RecorderClock`; `WatchLinkService` keeps its name. The watch and phone logic sits in `common` (`WatchLinkEngine`, `PhoneLinkEngine`) so it runs in the Node tests; the modules hold only platform glue.
 4. `ProofSigner`, `CryptoUtil` and `Bytes` moved from `entry/platform` to `common/platform` so the watch can use them; `entry/platform/*` re-export them. `ProofSigner.forAlias(alias)` was added; `ProofSigner.shared()`, the phone's alias and its behaviour are unchanged.
@@ -244,7 +244,7 @@ Seen during the run, not changed: on the watch's second page the title and the `
 12. A rejected packet stays in the watch's outbox (the copy the phone saw may have been damaged on the way); only `ACCEPTED` and `DUPLICATE` remove it.
 13. The pinned watch and the ledger are stored as files in the phone sandbox (`watchlink/ledger.json`), not in Preferences `watchlink`: one storage port for everything, covered by the tests.
 14. Watch pages are stacked vertically (dial, demo page, phone page) and do not scroll: on a watch a swipe to the right leaves the app. The dial keeps the existing centre (heart rate, steps, wear state); the three-line note under it gave way to the status line.
-15. The phone has no calendar here, so "calendar day details" is the card `Days from the watch`. `resetDemo()` does not exist here; nothing removes received days except `Forget watch`.
+15. (Watch Link branch, before the Evidence calendar existed.) The phone has no calendar here, so "calendar day details" is the card `Days from the watch`. `resetDemo()` does not exist here; nothing removes received days except `Forget watch`.
 16. The relay runs on Node 18 and newer (the brief says 22), because DevEco Studio bundles Node 18.
 17. A break that reaches back past the start of the previous day's record reports `startMin = -1440`; its context then has no slots.
 18. `local.json` for Wear Engine also exists on the phone side (`entry/src/main/resources/rawfile/local.json`, the watch app's fingerprint); both are ignored by git, the `local.example.json` files are committed.
