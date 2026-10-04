@@ -110,6 +110,13 @@ two disagree.
 - Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
   from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
   `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
+- Health Sim (`healthsim/`, its own DevEco project, bundle `com.fairwear.healthsim`): our simulator app that
+  stands in for HUAWEI Health on the emulators, with the same six people and the banner "SIMULATED DATA". On
+  the phone, **Connect HUAWEI Health** asks it for data with `startAbilityForResult`
+  (`entry/src/main/ets/platform/HealthSimClient.ets`): Health Sim's own consent first, then FairWear's. On the
+  watch, **Get today from Health Sim** fetches the script of the demo day. Without Health Sim FairWear uses its
+  built-in demo data and says so. `common/src/test/HealthSimCopies.test.ets` keeps the copies under
+  `healthsim/*/src/main/ets/fw/` identical to `common`. Build and install: `healthsim/README.md`.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
   `tools/shot.sh`. Results: `docs/test-results.txt`.
 
@@ -121,11 +128,11 @@ two disagree.
   `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed
   preview (`PreviewReportService`) is still in the code and not in use.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
-  histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
+  histories (from Health Sim when it is connected, otherwise the built-in ones). The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
   this repository; check `docs/HES.md` and the code.
 
 **Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
-brief; a copy goes to `docs/prompts/` with the other prompts)
+brief; its copy is `docs/prompts/00-FAIRWEAR_PLAN.md`, next to the other briefs, indexed in `docs/prompts/README.md`)
 
 - The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
 - One wear rule on the watch: `WearStateMachine`. A reading of 0 bpm or less is no reading.
