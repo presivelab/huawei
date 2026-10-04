@@ -12,7 +12,7 @@ The first plan (`IMPLEMENTATION.md`, written with Claude on claude.ai) is not in
 
 **Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing).
 
-**Distinctive platform capability:** One capability end to end: watch sensors (Sensor Service Kit: heart rate, pedometer, wear detection) → on-device compliance rules and score → signed tier. HUKS (Universal Keystore Kit) is the trust link in that same chain, not a separate feature.
+**Distinctive platform capability:** One capability end to end: watch sensors (Sensor Service Kit: heart rate, pedometer, wear detection) → signed, hash-chained wear days (shown next to the score, not scored); on-device compliance rules and score → signed tier. HUKS (Universal Keystore Kit) keeps every signing key on its device. What it does not give the partner yet is proof that a key really is in a device's keystore: HUKS key attestation at enrolment is the next step (README, "What the signatures prove").
 
 ## Target
 

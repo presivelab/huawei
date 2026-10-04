@@ -64,6 +64,14 @@ with the older of two unsent days as `<seq>` → "… of … days verified" and 
 Close the day per persona, for a longer demo: Tomek reaches A on the fourth closed day; Ania stays A; Marek
 stays flagged; Ola does not reach a score (she wears the watch too rarely at night). Reset after each.
 
+**Scores near a tier edge.** Ewa (C / 59, 1 point to B) and Tomek (B / 79, 1 point to A) sit on an edge on
+purpose. One **Close the day** moves Ewa to B / 64; Tomek reaches A after four. Close a day only where this
+script says so, and **Reset demo** before you move to the next persona.
+
+**After installing the build with signed ACKs.** A watch paired with an older build counts as not paired
+(it has no phone key yet): **Pair phone** on the watch, relay, **Confirm** on the phone, relay. The watch then
+reads `Pairing: Paired · phone <code>`.
+
 ### Plan B (live demo fails)
 
 - Health Sim is not installed, or does not answer: nothing breaks. On the phone the Connect page says

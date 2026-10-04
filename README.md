@@ -28,7 +28,7 @@ technology, digital wellbeing).
 | --- | --- |
 | Originality | Selective non-wear: Marek and Kasia wear the watch on the same 26 of 30 days, but only Marek's breaks follow a raised resting heart rate and fewer steps, so only he is flagged. The partner gets a signed, single-use A/B/C tier and nothing else. `common/src/main/ets/wear/`, `docs/screenshots/final/a2-evidence-marek-*` |
 | Usefulness | For people in a programme that rewards activity and sleep habits, and for the partner that runs it: a benefit without handing over raw health data, a reason for every day and an appeal. Benefits only, never a penalty. "Who it is for" above, `docs/DEMO_SCRIPT.md` |
-| Technical execution | 380 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
+| Technical execution | 398 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
 | Platform capabilities | Sensor Service Kit on the watch, HUKS keys on the phone and the watch, Crypto Architecture Kit, Ability Kit between two apps (Health Sim), Form Kit card, icon shortcut, phone and wearable built from one `common` module. Table "Platform capabilities" below |
 | Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
 | Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
@@ -210,7 +210,17 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 
 - **Phone.** The phone app declares no permissions and has no network code: health history and the score
   never leave the phone. The only output meant for a partner is the signed tier claim. The Watch Link code
-  also answers the paired watch with ACK packets (sequence number, status, reason; no health values).
+  also answers the paired watch with ACK packets (sequence number, status, reason, the hash of the packet
+  answered; no health values), signed with the phone's own Watch Link key, which the watch pins at pairing:
+  a forged or replayed answer cannot take a day out of the watch's outbox or unpair it.
+- **What the signatures prove, and what they do not.** The partner checks that a claim is intact, fresh,
+  used once and answers its own nonce, signed by a key it enrolled; it works the key id out from the key and
+  never lets a second key take over a key id. The phone checks the same for each watch day, plus the chain.
+  What they do not prove yet: that the key sits in a real device's keystore. Keys are enrolled without HUKS
+  key attestation, so a key made outside a device could sign any tier; and the score runs on the phone, from
+  data the user controls. Next step: the partner checks a HUKS key attestation at enrolment. Watch days travel
+  signed, not encrypted: on real devices Wear Engine is the channel; the hdc relay of the demo is a
+  development tool.
 - **Watch.** Two permissions, `READ_HEALTH_DATA` (heart rate) and `ACTIVITY_MOTION` (steps), each with a
   stated reason and used only while the app is open. A refused permission shows "unavailable" and the wear
   state "no data", never a made-up value (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg` shows

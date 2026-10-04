@@ -26,6 +26,7 @@ disagree, the repository and `docs/` are right. The decisions still in force are
 | `11-DANE_WYMAGANIA_BRAKI.md` | Data: what is collected, what the score needs, what is missing | 4 Oct 02:01 | complements `00` |
 | `12-TELEFON_RAPORT_UI.md` | Phone report: what goes where on the screens and how to build it natively | 4 Oct 02:18 | complements `00` |
 | `13-MOCK_TELEFON_ARKUI.md` | Phone screens from the design canvas as working ArkUI on the emulator | 4 Oct 02:27 | complements `00` |
+| `14-TEKSTY_UI_DO_ZASOBOW.md` | UI texts of `entry`, `watch` and the card moved into string resources (`$r`), English unchanged; sentences built in `common` left for a second step | 4 Oct 08:10 | prepared by Claude in the review session, not run yet |
 
 Not in this folder:
 
