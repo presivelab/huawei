@@ -424,3 +424,51 @@ Wearable emulator (127.0.0.1:5555), unsigned debug HAP installed with tools/depl
 Not run: a non-zero heart rate on the emulator (worn, the 60 s limit), the charging state, a watch with a
   wear-detection sensor. These are covered by the Node tests only.
 Not run: the entry HAP on the phone emulator (built only; no entry source file changed).
+
+==== Agent 2 SCREENS: Evidence calendar with appeal (T3), Why this tier and demo controls (T4), branch feature/phone-screens, 2026-10-04 ====
+Base: b9ce4b2, then feature/engine-reports 7213345 merged in (G1); one conflict in common/Index.ets, both sides kept.
+tools/run-logic-tests.sh common   353/353 passed (336 after the merge + 17 new: EvidenceCalendar.test.ets 10, WhySections.test.ets 7)
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL. The watch module was not rebuilt (no watch file changed).
+tools/lint.sh                     entry 0 errors, 7 warnings (the same 7 as before, none in a file of this step);
+                                  watch 0 errors, 2 warnings; common 0 defects
+tools/check-wording.sh            0 hits (14 wordings, 4 status names)
+Phone emulator (127.0.0.1:5557, light mode unless said), unsigned debug HAP, reports from the scoring engine:
+  T3 Evidence > Calendar
+    Marek: "26 of 30 Days compliant", "30 of 30 Nights worn", "3 Suspicious breaks", chip "Flagged", the line
+      "Selective non-wear: flagged → no benefit this month" and the flag rule sentence. Calendar: 13, 17 and
+      24 September red (suspicious break), 8 September amber (short): 4 red days, 3 of them suspicious.
+    Marek, 17 September: sheet "Thu 17 Sep", day bar, 16 h 41 min worn, 1 h 15 min charging, night worn, break
+      "Off the wrist 13:05 · 5 h 35 min · Suspicious" and the reason from the report service. "Appeal this day"
+      becomes "Appeal sent" (disabled), the sheet shows the chip "Appeal sent" and the calendar day gets a check
+      mark. The score and the day did not change.
+    Kasia: 26 of 30 days compliant, 1 suspicious break, no "Flagged" chip and no flag line.
+    Ola: 8 of 30 days compliant, 0 suspicious breaks, 4 to 9 September grey ("No data", 6 days); 6 September
+      opens with "No record from the watch for this day." and no appeal button. The summary changed when the
+      persona was switched while the tab was open.
+  T3 Evidence > Watch days: the Watch link card ("All 4 days verified"), "Days from the watch" and
+    "Verification details" as before; switching back to Calendar works.
+  T4 Why this tier
+    Tomek: "HES 79 · 1 point to A", Coverage 90%, Confidence High, Partial benefit. Strongest: sleep timing
+      regularity 96, VO₂max 89, daily steps 84. To improve: heart-rate recovery 56, sleep duration 68, active
+      minutes 70. The what-if sentence from the report. "How it's calculated" opens.
+    Ola (opened with "Why no score yet" on the Report tab): "No score yet", Coverage 43%. Measured so far:
+      daily steps, active minutes and resting heart rate 24 days each (enough), heart-rate recovery 1 day.
+      Needed for a score: sleep duration 8 of 14 nights, sleep timing regularity 8 of 14 nights.
+      Missing data: VO₂max, HRV.
+  T4 Report > Live and Demo controls
+    Ania: Live shows "— bpm now", "— steps today" with the chip "Demo values" at the start. Heart-rate slider
+      to 153 bpm and steps to 5,750 (taps on the slider tracks; 150 exactly was not hit): the Live card and the
+      slider labels follow, the score stays 92 / tier A / coverage 100%.
+    Ania, Close the day: the score stays 92 (her closed day does not move a rounded number), steps go back to
+      "—". Reset demo: "—" for both readings, A / 92.
+    Ewa, Close the day: C / 59 "1 point to B", no benefit -> B / 64 "16 points to A", partial benefit.
+      Reset demo: back to C / 59. The period and the 30 day cells do not change (docs/HES.md decision 31).
+  Dark mode (system Settings > Display & brightness, switched back to light afterwards): Evidence and
+    "Why this tier" for Ola. With its default colours the system SegmentButton kept a light selected segment
+    with a white label in dark mode; the colours are now set from system resources.
+  Screenshots in docs/screenshots/final/: a2-evidence-marek-light, a2-evidence-marek-day-appeal-light,
+    a2-evidence-ola-dark, a2-why-tomek-light, a2-why-ola-dark, a2-report-live-ania-light.
+Not run: a screen reader (the accessibility texts are set, nobody listened to them); the large system font;
+  dark mode for Marek, Tomek and Ania; Evidence and Why for Ania and Ewa as screenshots (opened for Ania only
+  in passing); an appeal surviving an app restart (appeals live in AppStorage and are gone after a restart).

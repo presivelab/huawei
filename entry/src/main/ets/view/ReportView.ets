@@ -37,7 +37,6 @@ import {
   EVIDENCE_LABEL,
   EVIDENCE_NOTE,
   EVIDENCE_TITLE,
-  grouped,
   NO_SCORE_BODY,
   NO_SCORE_HEADLINE,
   NOT_MEASURED,
@@ -49,26 +48,19 @@ import {
   SHARE_NEEDS_SCORE,
   tierHeadline,
   tileName,
-  TODAY_CHIP_LIVE,
-  TODAY_CHIP_PREVIEW,
-  TODAY_NOTE,
-  TODAY_TITLE,
   UNLOCK_STEPS,
   UNLOCK_TITLE,
   WEAR_TITLE,
-  WHY_LABEL
+  WHY_LABEL,
+  WHY_NO_SCORE_LABEL
 } from '../report/ReportTexts';
 import { CountBar } from '../ui/kit/CountBar';
 import { DayStrip, DayStripItem } from '../ui/kit/DayStrip';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
   COLOR_FLAG_TEXT,
-  COLOR_HEART,
-  COLOR_NOTE_TEXT,
-  COLOR_NOTE_TINT,
   COLOR_OFF,
   COLOR_OK_TEXT,
-  COLOR_STEPS,
   componentColor,
   componentSymbol,
   dayStateColor,
@@ -77,9 +69,7 @@ import {
   SYMBOL_BENEFIT_PARTIAL,
   SYMBOL_CHECK,
   SYMBOL_FORWARD,
-  SYMBOL_HEART,
   SYMBOL_INFO,
-  SYMBOL_STEPS,
   tierColor,
   tierTextColor
 } from '../ui/kit/KitTokens';
@@ -89,7 +79,7 @@ import { RingStat } from '../ui/kit/RingStat';
 import { StatusPill } from '../ui/kit/StatusPill';
 import { TextLink } from '../ui/kit/TextLink';
 import { TierBadge } from '../ui/kit/TierBadge';
-import { VALUE_TILE, ValueWithUnit } from '../ui/kit/ValueWithUnit';
+import { DemoLiveCard } from './DemoLiveCard';
 import { CAPTION, CARD_LARGE, HEADING, statusDotColor } from './Styles';
 
 const CARD_GAP: number = 14;
@@ -214,7 +204,8 @@ function unlockRows(report: PersonaReport): ComponentRow[] {
 }
 
 // The Report tab: the month of the selected persona. With a score: the score card, wear, the eight
-// components and today's readings. Without one: how much evidence there is and what is still needed.
+// components, the live readings and the demo controls. Without one: how much evidence there is, what is
+// still needed, and the same demo controls.
 // While the report comes from the fixed preview, the source pill and a line under the score card say so.
 @Component
 export struct ReportView {
@@ -465,52 +456,6 @@ export struct ReportView {
   }
 
   @Builder
-  todayCard() {
-    Column({ space: 10 }) {
-      Row({ space: 8 }) {
-        Text(TODAY_TITLE)
-          .attributeModifier(HEADING)
-          .layoutWeight(1)
-        InfoChip({
-          text: this.preview ? TODAY_CHIP_PREVIEW : TODAY_CHIP_LIVE,
-          fill: COLOR_NOTE_TINT,
-          textColor: COLOR_NOTE_TEXT,
-          strong: true
-        })
-      }
-      .width('100%')
-      .alignItems(VerticalAlign.Center)
-
-      Row({ space: 24 }) {
-        Row({ space: 6 }) {
-          SymbolGlyph(SYMBOL_HEART)
-            .fontSize(20)
-            .fontColor([COLOR_HEART])
-          ValueWithUnit({ value: `${this.report.live.hr}`, unit: 'bpm now', level: VALUE_TILE })
-        }
-        .alignItems(VerticalAlign.Center)
-        .accessibilityGroup(true)
-        .accessibilityText(`Heart rate now, ${this.report.live.hr} beats per minute`)
-
-        Row({ space: 6 }) {
-          SymbolGlyph(SYMBOL_STEPS)
-            .fontSize(20)
-            .fontColor([COLOR_STEPS])
-          ValueWithUnit({ value: grouped(this.report.live.steps), unit: 'steps today', level: VALUE_TILE })
-        }
-        .alignItems(VerticalAlign.Center)
-        .accessibilityGroup(true)
-        .accessibilityText(`${this.report.live.steps} steps today`)
-      }
-      .width('100%')
-
-      Text(TODAY_NOTE)
-        .attributeModifier(CAPTION)
-    }
-    .attributeModifier(CARD_LARGE)
-  }
-
-  @Builder
   noScoreCard() {
     Row({ space: 18 }) {
       RingStat({
@@ -586,6 +531,14 @@ export struct ReportView {
         }, (step: string) => step)
       }
       .width('100%')
+
+      TextLink({
+        text: WHY_NO_SCORE_LABEL,
+        linkId: 'fw_why_link_no_score',
+        onTap: () => {
+          this.nav.pushPathByName(ROUTE_WHY, null);
+        }
+      })
     }
     .attributeModifier(CARD_LARGE)
   }
@@ -599,7 +552,7 @@ export struct ReportView {
           this.previewLine()
           this.wearCard()
           this.tiles()
-          this.todayCard()
+          DemoLiveCard({ hr: this.report.live.hr, steps: this.report.live.steps, personaId: this.report.id })
           Text(DISCLAIMER)
             .attributeModifier(CAPTION)
             .padding({ left: 4, right: 4 })
@@ -607,6 +560,7 @@ export struct ReportView {
           this.noScoreCard()
           this.previewLine()
           this.unlockCard()
+          DemoLiveCard({ hr: this.report.live.hr, steps: this.report.live.steps, personaId: this.report.id })
           Text(SHARE_NEEDS_SCORE)
             .attributeModifier(CAPTION)
             .padding({ left: 4, right: 4 })

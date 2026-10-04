@@ -444,5 +444,24 @@ export {
   nextTierOf,
   reportComponentId
 } from './src/main/ets/report/EngineReports';
+// The Evidence calendar and the "Why this tier" sections, from the rows of a report.
+export {
+  appealKey,
+  appealsIn,
+  CALENDAR_WEEKDAYS,
+  calendarCells,
+  CalendarCell,
+  calendarDaySpoken,
+  canAppeal,
+  clockText,
+  daysInState,
+  flagRuleText,
+  isAppealed,
+  minutesText,
+  redDays,
+  withAppeal,
+  withoutAppealsOf
+} from './src/main/ets/report/EvidenceCalendar';
+export { scoreEvidence, ScoreEvidence, weightText, whySections, WhySections } from './src/main/ets/report/WhySections';
 // The days of the wear month in detail: worn time, breaks and the reason of each day as text.
 export { DayBreak, DayDetail, dayDetailOf, engineDayDetails } from './src/main/ets/report/EngineReports';
