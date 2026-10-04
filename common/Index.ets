@@ -246,11 +246,20 @@ export {
   weekdayShort
 } from './src/main/ets/present/WatchDayPresent';
 export {
+  BUILT_IN_SCRIPT,
   CLOCK_FEED_SUFFIX,
+  decodeWatchScript,
   demoFeedAt,
   DemoFeedSample,
   demoFeedSteps,
-  feedClockLabel
+  encodeWatchScript,
+  feedClockLabel,
+  FEED_SOURCE_BUILT_IN,
+  FEED_SOURCE_HEALTH_SIM,
+  feedScriptSource,
+  FeedStretch,
+  HEALTH_SIM_WATCH_PARAM,
+  setFeedScript
 } from './src/main/ets/watchlink/DemoFeed';
 
 export {
@@ -443,8 +452,27 @@ export {
   EngineWhatIf,
   nextTierOf,
   reportComponentId,
-  SCORE_TO
+  SCORE_TO,
+  engineDayDetailsFrom,
+  engineReportFromPerson,
+  engineSessionFrom,
+  HEALTH_SIM_LABEL,
+  wearMonthFrom
 } from './src/main/ets/report/EngineReports';
+// Health Sim: the simulator app that stands in for HUAWEI Health hands its data over in this format.
+export {
+  decodeHealthSimPayload,
+  encodeHealthSimPayload,
+  HEALTH_SIM_MAX_CHARS,
+  HEALTH_SIM_PARAM,
+  HEALTH_SIM_SOURCE,
+  HEALTH_SIM_VERSION,
+  healthSimPayloadFromPersonas,
+  healthSimPerson,
+  HealthSimPayload,
+  HealthSimPerson,
+  withScopes
+} from './src/main/ets/health/HealthSimPayload';
 // The Evidence calendar and the "Why this tier" sections, from the rows of a report.
 export {
   appealKey,
