@@ -22,6 +22,31 @@ Not done: --tamper and --drop were not repeated at G3 (run at G2, see the entry 
 Seen: after the install the foreground app on the wearable emulator was com.fairwear.healthdemo (the paused
   prototype, running there since about 02:00), not FairWear; why is not known. FairWear records only while
   it is open, so it was started again with `aa start` before the run. Check the dial before a live demo.
+2026-10-04 04:35 CEDT  branch feature/share-partner  (G3, agent 4: Share and the partner view on the merged build, six personas, light and dark)
+----------------------------------------------------
+Base: feature/engine-reports e991ad1 (fast-forward; no source change on this branch since).
+Node run (tools/run-logic-tests.sh): common 362/362. ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL.
+Phone emulator (127.0.0.1:5557, API 24), unsigned debug HAP of e991ad1, HUKS key, taps by element id and texts
+from the uitest layout dump, 04:27-04:34. The same walk in light and in dark mode, the same texts in both:
+  persona  Share                                    partner: "Use the code from this phone"
+  Ania     Tier A · Eligible: yes   305 of 512      Signature valid · Full benefit
+  Marek    Tier B · Eligible: no    306 of 512      Signature valid · No benefit this month · The code does not say why.
+           + "Eligible: no · 3 suspicious breaks. The reason stays on this phone."
+  Kasia    Tier B · Eligible: yes   306 of 512      Signature valid · Partial benefit
+  Tomek    Tier B · Eligible: yes   306 of 512      Signature valid · Partial benefit
+  Ewa      Tier C · Eligible: yes   304 of 512      Signature valid · No benefit this month
+  Ola      Tier: not available, "Not enough data yet", no code, the partner button is disabled
+  For each of the five personas with a code: "Verify the same code again" -> "Already used · stopped at: not
+  used before"; "Change tier to A and verify" ("to B" for Ania) -> "Invalid signature · stopped at: signature".
+  Dark mode: the QR code stays black on a white field with a white margin; texts and symbols readable.
+  Dark mode is switched by tapping the Dark card (the picture) in Settings > Display & brightness; a tap on
+  the word "Dark" under it does nothing. Switched back to Light afterwards ("Dark mode: Off").
+  Shots: docs/screenshots/final/a4-share-{ania,marek,kasia,tomek,ewa,ola}-{light,dark}.jpeg,
+  a4-partner-{ania,marek}-{valid,cheat}-{light,dark}.jpeg.
+No fix was needed. Not run: the software-key fallback, a code older than its 10 minutes, large system font,
+  the ledger file after an app restart, a scan of the QR code by a second device.
+Not built: the screen "What left this phone" (LedgerPage.ets is still the placeholder and no screen opens it);
+  the ledger itself is written by ShareService (share/ledger.json).
 
 2026-10-04 04:12 CEDT  branch feature/engine-reports  (G2: the four branches of the night merged)
 ----------------------------------------------------
