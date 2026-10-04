@@ -29,7 +29,7 @@ technology, digital wellbeing).
 | --- | --- |
 | Originality | Selective non-wear: Marek and Kasia wear the watch on the same 26 of 30 days, but only Marek's breaks follow a raised resting heart rate and fewer steps, so only he is flagged. The partner gets a signed, single-use A/B/C tier and nothing else. `common/src/main/ets/wear/`, `docs/screenshots/final/a2-evidence-marek-*` |
 | Usefulness | For people in a programme that rewards activity and sleep habits, and for the partner that runs it: a benefit without handing over raw health data, a reason for every day and an appeal. Benefits only, never a penalty. "Who it is for" above, `docs/DEMO_SCRIPT.md` |
-| Technical execution | 380 logic tests in `common` and 6 in `watch` <!-- A3-TODO after merge: test counts --> (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
+| Technical execution | 467 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES vNext and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
 | Platform capabilities | Sensor Service Kit on the watch, HUKS keys on the phone and the watch, Crypto Architecture Kit, Ability Kit between two apps (Health Sim), Form Kit card, icon shortcut, phone and wearable built from one `common` module. Table "Platform capabilities" below |
 | Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
 | Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
@@ -76,7 +76,7 @@ The HAPs are written to `entry/build/default/outputs/default/entry-default-unsig
 
 **Health Sim (optional, for the full demo).** A second DevEco project in `healthsim/` builds the simulator app
 that stands in for HUAWEI Health on the emulators: `com.fairwear.healthsim`, one HAP for the phone and one for
-the watch. Build and install steps are in `healthsim/README.md`. With it installed, **Connect HUAWEI Health**
+the watch. Build and install steps are in `healthsim/README.md`. Health Sim carries no copies of `common` sources any more: it depends on the built package `healthsim/libs/common.har`. Run `tools/sync-common-har.sh` from the repository root before building Health Sim, and again after any change in `common`. With it installed, **Connect HUAWEI Health**
 opens Health Sim, which asks for its own consent and hands FairWear the simulated histories of the six people;
 on the watch, **Get today from Health Sim** fetches the script of the demo day. Without it FairWear uses its
 built-in demo data and says so.
@@ -85,6 +85,7 @@ The watch module of Health Sim is built and installed the same way (`healthsim/R
 module):
 
 ```
+bash tools/sync-common-har.sh        # from the repository root, first
 cd healthsim && source ../tools/env.sh && ohpm.bat install --all
 hvigorw.bat assembleHap --mode module -p module=watch@default -p product=default -p buildMode=debug --no-daemon
 hdc -t <watch> install -r watch/build/default/outputs/default/watch-default-unsigned.hap
@@ -111,11 +112,16 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 ## What is in this build
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
-- The score is calculated on the phone by HES-Lite v1.0 (`common/src/main/ets/hes/`): deterministic rules and
-  curves, no learned model and no network. It runs on the histories of six demo personas, which are synthetic
-  and generated from a seed; the source pill on the Report tab reads "HUAWEI Health · Demo data". All weights,
-  curves, thresholds and minimum counts are prototype product assumptions, not clinically tested. Description,
-  persona results and decisions: `docs/HES.md`.
+- The score is calculated on the phone by HES vNext, the Health Engagement Score (`common/src/main/ets/hes/`):
+  deterministic rules and curves, not AI / ML, no network. Eight components (five Core, three optional), two
+  weight profiles (Health & wellness, the default and the demo partner's profile; Longevity). Evidence coverage,
+  Data confidence and the tier A / B / C are shown with the score; without the five Core components the
+  screen says "No score yet". It runs on the histories of six demo personas, which are synthetic and made
+  from a recipe without random numbers (28 completed days, Ola 16); the source pill on the Report tab reads "HUAWEI Health · Demo data". All weights,
+  curves, thresholds and minimum counts are prototype product assumptions, not clinically or actuarially validated.
+  A profile switch (Health & wellness | Longevity) on the Report and Why screens only explains the other
+  reading; sharing, eligibility and benefit always use the partner's profile. The HES vNext screenshots are in
+  `docs/screenshots/vnext/`. Description, persona results and decisions: `docs/HES.md`.
 - Wear rules run next to the score (`common/src/main/ets/wear/`): compliant days, nights, breaks, and the
   selective non-wear flag. One suspicious break never raises the flag, three always do, two only when they
   are more than 30% of all breaks.
@@ -126,7 +132,7 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
   Strongest, To improve and Missing data (a missing component is never listed as weak), the one change that
   reaches the next tier, and how the score is calculated. A persona without a score gets "Measured so far"
   and "Needed for a score" with day and night counts instead.
-- Demo controls on the Report tab: the Live card shows heart rate and steps labelled "Demo values"; two
+- Demo controls on the Report tab: the Live card shows heart rate and steps labelled "Live · not scored"; two
   sliders set them and the score does not move. "Close the day" turns the running day into a completed day
   and the score is calculated again; "Reset demo" returns the persona to its starting history.
 - Evidence: the wear month as a calendar (compliant, short, suspicious break, no data), with the month's
@@ -152,10 +158,10 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 
 | Part                              | State                                                                                                                                                                                                        |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Score (HES-Lite), tier, coverage  | **Real** engine, calculated on the phone. The history it runs on is **synthetic**: six demo personas generated from a seed.                                                                                  |
+| Score (HES vNext), tier, Evidence coverage | **Real** vNext engine, calculated on the phone, on **synthetic** Health Sim history: six demo personas from a deterministic recipe. Live values are shown and not scored.                                                                                  |
 | Wear compliance and the flag      | **Real** rules, on a **synthetic** 30-day wear record per persona.                                                                                                                                           |
 | Live heart rate and today's steps | Shown, **never scored**. The score uses completed days only; today's steps enter the history when the day is closed, the live heart rate is never stored.                                                    |
-| VO₂max and HRV                    | HES-Lite uses both (as percentiles, `common/src/main/ets/hes/`) when they are present. In a real product they are watch measurements read from HUAWEI Health; in this demo they come from Health Sim and are **simulated** (synthetic in the built-in personas). A missing one lowers coverage and never the score.                                      |
+| VO₂max and HRV                    | HES vNext uses both (as percentiles, `common/src/main/ets/hes/`) when they are present. In a real product they are watch measurements read from HUAWEI Health; in this demo they come from Health Sim and are **simulated**: the percentiles are simulated in Health Sim (synthetic in the built-in personas). A missing one lowers Evidence coverage and is never counted as zero.                                      |
 | HUAWEI Health connection          | **Health Sim**, our own simulator app (`healthsim/`, bundle `com.fairwear.healthsim`), stands in for HUAWEI Health on the emulators; FairWear asks it for data with `startAbilityForResult` after its consent; without it, built-in demo data. The adapter for the real Health Service Kit stays a **stub** until Huawei grants the app access; FairWear does not copy Huawei's screen.                        |
 | Watch to phone                    | Signed day packets carried by a development relay over `hdc` (`tools/watch-phone-relay.mjs`). The Wear Engine code path exists and was not run: it needs paired devices and Wear Engine approval.            |
 | Watch days                        | **Real** recording and signing on the watch while the app is open; on the emulator the recorded days came from the labelled demo feed (the emulator sends heart rate 0). Verified watch days are shown, **not scored**. |
@@ -170,8 +176,8 @@ settings.
 
 **The consent switches are real on both paths.** A data type switched off in FairWear's own consent is missing in
 the history the score is calculated from and in every day "Close the day" adds, whether the days come from
-Health Sim or from the built-in demo histories. With HRV off, Ania reads A / 93 with 90% coverage on both paths,
-and the coverage stays at 90% however many days are closed.
+Health Sim or from the built-in demo histories. With the HRV data type off, Ania reads 93 · A with 92.5% coverage on both paths,
+and the coverage stays at 92.5% however many days are closed.
 
 More detail per part: `docs/ARCHITECTURE.md`, `docs/HES.md`, `docs/WATCH_LINK.md`.
 
@@ -197,7 +203,8 @@ node tools/logic-tests/runner.js "$HOME/fw-ts/node_modules/typescript" "$PWD" wa
 | Changed tier, reused or expired nonce, unknown key, oversized token | `ClaimVerifier.test.ets` (real ECDSA), `ShareFlow.test.ets` |
 | No score, so no code | `ShareFlow.test.ets` |
 | Flag rule (one never, three always, two above 30% of breaks) | `WearMonth.test.ets`, `Claim.test.ets` |
-| HES-Lite specification, persona results | `Hes.test.ets`, `HesPersonas.test.ets`, `EngineReports.test.ets` |
+| HES vNext specification, persona results (six personas, two profiles) | `Hes.test.ets`, `HesPersonas.test.ets`, `HesOracle.test.ets` (Node only), `EngineReports.test.ets` |
+| Health Sim contract (version 2) and its readiness tool | `HealthSimPayload.test.ets`, `HealthSimReadiness.test.ets` |
 | Close the day and reset | `HesSession.test.ets`, `EngineReports.test.ets` |
 | Changed, repeated or held-back watch day; pause; forget | `WatchLink.test.ets`, `WatchLinkFlow.test.ets`, `LinkProbe.test.ets` |
 | Heart rate 0 or out of range | `LiveWear.test.ets` |

@@ -1,6 +1,6 @@
 # Visits and the day dial
 
-Two additions next to the score. Neither changes HES-Lite, the tier claim (`TierClaim`, seven keys) or
+Two additions next to the score. Neither changes HES vNext, the tier claim (`TierClaim`, seven keys) or
 `PartnerVerifier`: they are separate paths with their own code and their own tests.
 
 - **Day dial** — a 24-hour picture of the newest completed day on the Report tab.
@@ -137,6 +137,6 @@ signed it. The receipt of such a visit can still be verified and kept on the pho
 - Phone: `entry/src/main/ets/visits/` (`VisitService`, `VisitReminder`, `VisitTexts`) and
   `entry/src/main/ets/view/` (`DayDialCard`, `VisitsCard`, `VisitsPage`, `AddReceiptPage`,
   `VisitDetailsPage`, `VisitSharePage`, `VisitCheckPage`).
-- Tests: `common/src/test/DayDial.test.ets` (10), `Visits.test.ets` (34), `VisitClaim.test.ets` (21, real
+- Tests: `common/src/test/DayDial.test.ets` (11), `Visits.test.ets` (34), `VisitClaim.test.ets` (21, real
   ECDSA from Node, not part of `List.test.ets`, like `ClaimVerifier.test.ets`). Run with
   `tools/run-logic-tests.sh common`.

@@ -1,6 +1,43 @@
 FairWear test results
 =====================
 
+2026-10-04, feature/hes-vnext (base merge/final-into-main 6d77065). HES vNext.
+----------------------------------------------------
+The score model HES-Lite v1.0 was replaced by HES vNext, the Health Engagement Score (docs/HES.md). Base
+  merge/final-into-main 6d77065 had common 458/458, watch 6/6. Results on the final tree of this branch:
+tools/run-logic-tests.sh common: 467/467.
+tools/run-logic-tests.sh watch: 6/6.
+Score-related files and counts: Hes.test.ets 33, HesPersonas.test.ets 30, HesSession.test.ets 13,
+  HesOracle.test.ets 2 (Node only), HealthSimReadiness.test.ets 6 (Health Sim has no tests of its own; its
+  Scenario tool renders this model), HealthSimPayload.test.ets 15, EngineReports.test.ets 46,
+  ConsentScopes.test.ets 9, WhySections.test.ets 12, Report.test.ets 17, CardDigest.test.ets 10,
+  DayDial.test.ets 11, WearMonth.test.ets 22, EvidenceCalendar.test.ets 10.
+  HealthSimCopies.test.ets no longer exists: Health Sim has no copies of common sources
+  (healthsim/*/src/main/ets/fw/ is gone) and depends on healthsim/libs/common.har.
+tools/check-oracle.sh: the engine equals the reference oracle (2/2). The oracle arrived cut by a paste limit
+  and its lower half was completed in the repository (the file header says so); it is not an independent
+  third-party check.
+tools/check-single-engine.sh: one engine.
+tools/check-wording.sh: 0 hits, 0 enum names.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues (same as before).
+Health Sim lint (devecocli check lint in healthsim/): entry 0 errors (2 warnings), watch 0 errors
+  (1 warning).
+Builds, unsigned debug, all BUILD SUCCESSFUL: assembleHar common; assembleHap entry and watch (FairWear);
+  assembleHap entry and watch (Health Sim). Health Sim built after tools/sync-common-har.sh.
+Wear month checksums of the six personas equal to the base commit.
+Persona results (Health & wellness / Longevity), asserted number by number in HesPersonas.test.ets:
+  Ania 92 · A · 100% · High / same; Marek 75 · B · 87.5% · High / 76 · B · 77.5% · Medium; Kasia 73 · B ·
+  75% · Medium / 74 · B · 65% · Low; Tomek 79 · B · 92.5% · High / same; Ewa 59 · C · 80% · Medium /
+  59 · C · 70% · Medium; Ola no score · 47.5% in both. (HES-Lite coverage values were 100 / 85 / 70 / 90 /
+  75 / 43.)
+Derived: with the HRV data type off Ania reads 93 · A with 92.5% coverage on both paths, and the coverage
+  stays 92.5% however many days are closed. Ewa stays 59 · C after one closed day. Ola: seven closed days
+  are not enough (coverage 55%), the eighth gives 84 · A · 82.5% · Medium.
+Payload sizes (Health Sim -> FairWear, contract version 2): six-person export 31,067 characters (Ania alone
+  6,993); the reader accepts up to 90,000.
+Emulator walk (HES vNext)
+Recorded by the session after this entry; see the lines below.
+
 2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
 ----------------------------------------------------
 H0: feature/watch-link-tour (eb6daf8, a relayed file still being written is left for the next look) merged

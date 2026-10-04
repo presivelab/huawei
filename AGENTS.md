@@ -109,10 +109,14 @@ two disagree.
   Without a score no code is signed; a score without eligibility is shared as "Eligible: no" and the reason
   never enters the claim.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
-- Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
-  (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
-  `feature/hes-lite` → `feature/engine-reports`; the package `fairwear-ui` never arrived. Description and
-  decisions: `docs/HES.md`.
+- Scoring: HES vNext, the Health Engagement Score (`common/src/main/ets/hes/`: `HesTypes`, `HesModel`,
+  `HesCurves`, `HesAggregate`, `HesEngine`, `HesExplain`, `HesFormat`, `HesSession`, `HesPersonas`; `HesPrng`
+  stays only for the wear calendar), the six personas and the wear month (`common/src/main/ets/wear/`).
+  It replaces HES-Lite v1.0 and is the only score engine. Two weight profiles (Health & wellness, the default
+  and the partner's profile; Longevity), eight components (five Core, three optional), Evidence coverage, Data
+  confidence, tier A / B / C or "No score yet". Missing data is never zero; the running day is not scored until
+  "Close the day". The watch never calculates it. Description and decisions: `docs/HES.md`; specification:
+  `docs/HES_VNEXT_SPEC.md`.
 - Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
   from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
   `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
@@ -121,9 +125,13 @@ two disagree.
   the phone, **Connect HUAWEI Health** asks it for data with `startAbilityForResult`
   (`entry/src/main/ets/platform/HealthSimClient.ets`): Health Sim's own consent first, then FairWear's. On the
   watch, **Get today from Health Sim** fetches the script of the demo day. Without Health Sim FairWear uses its
-  built-in demo data and says so. `common/src/test/HealthSimCopies.test.ets` keeps the copies under
-  `healthsim/*/src/main/ets/fw/` identical to `common`. Build and install: `healthsim/README.md`.
+  built-in demo data and says so. Health Sim has no copies of `common` sources: it depends on the built package
+  `healthsim/libs/common.har`, made by `tools/sync-common-har.sh` (run it from the repo root before building
+  Health Sim and after any change in `common`); `tools/check-single-engine.sh` fails when a formula of the model
+  appears outside `common/src/main/ets/hes` or Health Sim carries copies. The Health Sim → FairWear contract is
+  version 2 (`schema: "fairwear.health-export"`). Build and install: `healthsim/README.md`.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
+  `tools/sync-common-har.sh`, `tools/check-single-engine.sh`, `tools/check-oracle.sh`,
   `tools/shot.sh`, `tools/watch-phone-relay.mjs` (the development relay that carries signed day packets between
   the two emulators over `hdc`). Results: `docs/test-results.txt`.
 
@@ -131,13 +139,13 @@ two disagree.
 
 - Export and deletion of the data.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
-  histories (from Health Sim when it is connected, otherwise the built-in ones). The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
-  this repository; check `docs/HES.md` and the code.
+  histories (from Health Sim when it is connected, otherwise the built-in ones). The documents of the earlier HES-Lite v1.0 rebuild describe an earlier state, not this repository;
+  check `docs/HES.md` and the code.
 
 **Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
 brief; its copy is `docs/prompts/00-FAIRWEAR_PLAN.md`, next to the other briefs, indexed in `docs/prompts/README.md`)
 
-- The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
+- The claim keeps its seven keys. Code that arrives with a score specification is adapted to the repository; the formulas live only in `common/src/main/ets/hes/`.
 - One wear rule on the watch: `WearStateMachine`. A reading of 0 or outside 25–230 bpm is no reading (`common/src/main/ets/watchlink/WatchLinkTypes.ets`).
 - Verified watch days are shown, not scored. Never write that the watch feeds the score.
 - Rules and the score are deterministic and are never called AI.

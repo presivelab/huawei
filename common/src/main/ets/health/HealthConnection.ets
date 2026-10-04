@@ -9,7 +9,7 @@ import {
 } from './HealthRecords';
 import { HealthSource } from './HealthSource';
 
-// The data types FairWear asks for: exactly the ones the Health Evidence Score uses.
+// The data types FairWear asks for: exactly the ones the Health Engagement Score uses.
 export enum HealthScope {
   STEPS = 'STEPS',
   RESTING_HEART_RATE = 'RESTING_HEART_RATE',

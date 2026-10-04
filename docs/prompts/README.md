@@ -28,10 +28,11 @@ disagree, the repository and `docs/` are right. The decisions still in force are
 | `13-MOCK_TELEFON_ARKUI.md` | Phone screens from the design canvas as working ArkUI on the emulator | 4 Oct 02:27 | complements `00` |
 | `14-FIXY_PO_AUDYCIE.md` | Fixes after the claude.ai audit of 4 Oct 06:40: sections 1–4 the code fixes (consent switches on both paths, the home card label, partner fixes), 5 the documents, 6 build and emulators, 7 git | 4 Oct, morning | sections 1–4 in force; sections 5–7 replaced by `15` |
 | `15-TRZECH_AGENTOW.md` | Round of three parallel sessions: A1 consent and logic (14, sections 1–4), A2 watch face and visits, A3 Health Sim closer to the HUAWEI Health layout, documents and merge | 4 Oct, morning | replaced sections 5–7 of `14` |
+| `16-HES_VNEXT.md` | The HES vNext brief: replace HES-Lite v1.0 by the Health Engagement Score model (one engine in `common`, two weight profiles, eight components, Evidence coverage, Data confidence); Health Sim on the built package, contract version 2, the readiness tool. The paste was cut by the 50,000-character input limit inside Appendix C | 4 Oct, morning | in force for the score; replaces the HES-Lite parts of `6` and the score parts of `00` |
 
-Order of use: `00` first (it replaced `1`–`9` and `10`), then `11`–`13`, then `14`, then `15`. `15` replaced
+Order of use: `00` first (it replaced `1`–`9` and `10`), then `11`–`13`, then `14`, then `15`, then `16`. `15` replaced
 sections 5–7 of `14` (documents, build and emulators, git) with its own work for the third session; sections 1–4
-of `14` stayed the specification of the code fixes and `15` points to them. The briefs were written in Polish;
+of `14` stayed the specification of the code fixes and `15` points to them. `16` is the brief for the score: where it disagrees with `00` or `6` about HES, `16` and `docs/HES.md` are right. The briefs were written in Polish;
 the code, the UI texts and the documents of the repository are in English.
 
 Not in this folder:
@@ -41,7 +42,7 @@ Not in this folder:
 - The Watch Link brief, the four briefs of the last night (engine, screens, watch, share) and the Health Sim
   round: they were pasted into the sessions from claude.ai conversations and not saved as files. What each
   of them asked for and what came out of it is in the work log of `AI_WORKFLOW.md` and in `docs/WATCH_LINK.md`.
-- The HES-Lite specification documents. The score's specification as built is `docs/HES.md`.
+- The HES-Lite specification documents. The HES vNext specification is in the repository as `docs/HES_VNEXT_SPEC.md`, and `docs/HES.md` describes it as built.
 - The design canvas pages (`mock-telefon/*.html`) that `13` refers to.
 
 `tools/check-wording.sh` does not search this folder: the briefs quote the forbidden wordings in their
