@@ -1,6 +1,57 @@
 FairWear test results
 =====================
 
+2026-10-04 09:58 CEDT  branch merge/final-into-main  (Final integration: review fixes, HES vNext, known limits; released HAPs walked on both emulators)
+----------------------------------------------------
+Merges into merge/final-into-main (base 9a582b6), each with --no-ff, the gates after each:
+  origin/fix/review-findings  8e71941 -> a78d38c   10 conflicts (PartnerVerifier, EngineReports, ShareService,
+                                                   7 documents), both sides kept      common 479/479, watch 6/6
+  feature/hes-vnext-fix       b0d6053 -> e4a1df4   11 conflicts; hes/ from vNext plus the unwrapping of sleep
+                                                   times around 18:00                 common 510/510, watch 6/6
+  fix/known-limits            7b5afd2 -> 1fcc573   ReportService.ets (dayHistory kept) common 512/512, watch 6/6
+  fix/known-limits            73ced67 -> b7abb4e   documents only
+Expected values changed in tests: ConsentScopes.test.ets, 18 values that came from HES-Lite numbers, now what
+  the vNext engine gives: coverage Marek 85 -> 87.5, Kasia 70 -> 75, Tomek 90 -> 92.5, Ewa 75 -> 80 (Medium ->
+  High), Ola 43 -> 47.5; Kasia 73 -> 71, Ewa 59 -> 58 and 64 -> 62 after one closed day; Ania without HRV
+  coverage 90 -> 92.5, with the four basic types 70 -> 75, without sleep 73 -> 72.5. No engine code was changed
+  for a test.
+At 531e4f9 (the commit of the released HAPs): common 512/512, watch 6/6, HealthSimCopies 2/2;
+  tools/check-wording.sh 0 hits; tools/lint.sh entry 0 errors (7 warnings), watch 0 errors (2 warnings),
+  common 0 issues. The four HAPs of the release (fairwear-entry, fairwear-watch, healthsim-entry,
+  healthsim-watch, all -531e4f9) have the same SHA-256 as the build outputs of this tree. The commits after
+  531e4f9 change documents only.
+Emulators (phone 127.0.0.1:5557, wearable 127.0.0.1:5555, API 24), the released HAPs installed with install -r,
+  a fresh start, taps by element id with uitest, texts from the layout dump, 09:50-09:59, light mode.
+Phone, Connect -> "Allow FairWear to open Health Sim?" -> Health Sim consent -> FairWear consent, all types on,
+  "Health Sim · Simulated data", health insurance: PASS.
+  Ania   92 · A · Coverage 100% · Confidence High · Full benefit, Eligible
+  Marek  75 · B · Coverage 87.5% · Confidence High · No benefit this month, 3 suspicious breaks
+  Kasia  71 · B · Coverage 75% · Confidence Medium · Partial benefit
+  Tomek  79 · B · "1 point to A" · Coverage 92.5% · Confidence High · Partial benefit
+  Ewa    58 · C · "2 points to B" · Coverage 80% · Confidence High · No benefit this month
+  Ola    "No score yet" · 47.5% evidence
+Phone, Tomek with Life insurance chosen: 80 · A · Coverage 92.5% · High · Full benefit, "Illustrative discount:
+  10% of the yearly premium · The code on Share is for health insurance". PASS.
+Phone, Share (Tomek, life insurance still chosen): "Tier B · Eligible: yes", "For: Health insurance", QR code,
+  304 of 512 characters, HUKS key. Partner view: Use the code from this phone -> "Signature valid"; Verify the
+  same code again -> "Already used · stopped at: not used before"; Change tier to A and verify -> "Invalid
+  signature · stopped at: signature". PASS.
+Phone, Close the day (Ewa): 58 · C -> 62 · B; the card "24-hour day" moved from "Sat 3 Oct" (4,500 steps,
+  sleep 02:41-07:05) to "Sun 4 Oct" (5,019 steps, sleep 01:57-09:55). PASS.
+Phone, Ewa -> Visits -> Outpatient visit -> Share with partner (397 of 512 characters, HUKS key) -> Share ->
+  "What left this phone": the line "Partner · visit code shown on this screen", "Visit proof · 30 Sep 2026",
+  above the tier codes. PASS.
+Watch, FairWear: the dial starts ("Heart rate · live", "—" bpm: the emulator sends heart rate 0), steps, wear
+  state, "Not paired" (a watch paired with a build before the signed ACKs counts as not paired). PASS.
+  On the watch HAP built at e4a1df4 (08:59, same watch sources): Demo clock ×300 -> Get today from Health Sim ->
+  "Today from Health Sim · used by the demo feed"; Demo feed on -> the dial reads "FEED · Health Sim". PASS.
+Watch, Health Sim: "Activity records", Steps 12,090 and Exercise 1 h 30 min; at e4a1df4 also the second page
+  "Wear today · for FairWear" (Worn 14 h 30 min, Charging 6 h 30 min, Off wrist 12:00-15:00). PASS.
+Not run on the released build: pairing and the relay with signed ACKs between the emulators (Pair phone,
+  Confirm, --tamper); dark mode; the consent with a data type switched off on screen (covered by
+  ConsentScopes.test.ets); feature/string-resources was not merged (its worktree still had uncommitted work at 10:00).
+  The four screenshots at the top of README.md were not taken again: their captions name no changed number.
+
 2026-10-04 08:40 CEDT  branch feature/hes-vnext-fix  (HES vNext: exact coverage, no NaN or Infinity, profile switch)
 ----------------------------------------------------
 Base: origin/feature/hes-vnext-profiles (59d1174) with origin/main (bd4c970) merged as a253190, no conflict.

@@ -4,9 +4,9 @@ Working notes behind the README section "For the jury" (judging criteria → whe
 Source of the requirements: `hackathon_challenge.md` and `FAQ.md` in `onirodeveloper/hackyeah2026-challenge`.
 Every row names its evidence. A row without evidence is marked open.
 
-State on 2026-10-04 08:22, branch `merge/final-into-main` after the merge of the three branches of the last round
-(`6d77065`; the commits after it change documents only), from `docs/test-results.txt`: logic tests `common`
-458/458, `watch` 6/6 and `HealthSimCopies.test.ets` 2/2; `assembleHap` for `entry` and `watch` of FairWear and of Health Sim BUILD
+State on 2026-10-04 09:58, branch `merge/final-into-main` after the final integration (review fixes, HES vNext,
+known limits; released HAPs at `531e4f9`, the commits after it change documents only), from `docs/test-results.txt`: logic tests `common`
+512/512, `watch` 6/6 and `HealthSimCopies.test.ets` 2/2; `assembleHap` for `entry` and `watch` of FairWear and of Health Sim BUILD
 SUCCESSFUL; lint 0 errors (7 warnings in `entry`, 2 in `watch`, all one performance rule, 0 issues in
 `common`); wording check 0 hits. The logic tests were also re-run independently on a copy of the tree
 (Linux, Node 22, TypeScript 5.4.5, `tools/logic-tests/runner.js`) at the earlier state `da5ef1a`: 380/380 and
