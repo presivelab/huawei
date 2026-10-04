@@ -14,11 +14,27 @@ import { ChainLedger } from './ChainLedger';
 import { AckPacketCodec, DayPacketCodec, PAIR_ACK_SEQ, PairPacketCodec } from './DayPacketCodec';
 import { DayPacketVerifier, PairVerifier, VerifyOutcome } from './DayPacketVerifier';
 import { asObject, parseJsonObject, readArray, readInt, readString } from './JsonRead';
+import {
+  flippedSlot,
+  NOTE_COUNTED_ONCE,
+  NOTE_FILLS_GAP,
+  NOTE_NOT_TAKEN,
+  PROBE_LEDGER_UNREADABLE,
+  PROBE_NEEDS_DAY,
+  PROBE_NEEDS_TWO,
+  ProbeAction,
+  ProbeKind,
+  ProbeResult,
+  ProbeStep,
+  ReceivedPacketInfo,
+  utf8Length
+} from './LinkProbe';
 import { Clock, Hasher, SigVerifier, TextStore } from './WatchLinkPorts';
 import {
   AckStatus,
   BreakContext,
   DayPacket,
+  GENESIS,
   NIGHT_SLOT_COUNT,
   PairPacket,
   SLOT_MINUTES,
@@ -406,6 +422,142 @@ export class PhoneLinkEngine {
       v.chainLine = `Chain #${ledger.lastSeq} ✓`;
     }
     return v;
+  }
+
+  // ---- Watch Link tour: read-only. Nothing below writes a file, the log or an ACK. ----
+
+  // The newest day received from the watch (not a missing placeholder), or -1.
+  latestReceivedSeq(): number {
+    const ledger = this.ledger;
+    if (ledger === null) {
+      return -1;
+    }
+    for (let seq = ledger.lastSeq; seq >= 1; seq--) {
+      if (!ledger.isMissing(seq) && this.packetText(seq) !== null) {
+        return seq;
+      }
+    }
+    return -1;
+  }
+
+  // What the newest received packet carried, for the tour. Null when no day was received yet.
+  latestReceived(): ReceivedPacketInfo | null {
+    const seq = this.latestReceivedSeq();
+    const text = seq < 0 ? null : this.packetText(seq);
+    const p = text === null ? null : DayPacketCodec.fromJson(text).packet;
+    if (text === null || p === null) {
+      return null;
+    }
+    const info = new ReceivedPacketInfo();
+    info.seq = p.seq;
+    info.date = p.date;
+    info.bytes = utf8Length(text);
+    info.firstOfChain = p.prev === GENESIS;
+    info.clock = p.clock;
+    info.wearSource = p.wearSource;
+    info.slots = p.slots;
+    info.breakCount = p.breaks.length;
+    return info;
+  }
+
+  // Runs the real verifier on received days against a copy of the chain. See LinkProbe.ets.
+  async probe(kind: ProbeKind): Promise<ProbeResult> {
+    const out = new ProbeResult(kind);
+    const ledger = this.ledger;
+    const seq = this.latestReceivedSeq();
+    if (ledger === null || seq < 0) {
+      out.reason = PROBE_NEEDS_DAY;
+      return out;
+    }
+    const before = ledger.toJson();
+    const started = this.clock.nowMs();
+    if (kind === 'TAMPER') {
+      await this.probeTamper(ledger, seq, out);
+    } else if (kind === 'REPLAY') {
+      await this.probeReplay(ledger, seq, out);
+    } else {
+      await this.probeLate(ledger, seq, out);
+    }
+    out.elapsedMs = Math.max(0, this.clock.nowMs() - started);
+    out.storedUnchanged = this.ledger !== null && this.ledger.toJson() === before;
+    return out;
+  }
+
+  private async probeTamper(ledger: ChainLedger, seq: number, out: ProbeResult): Promise<void> {
+    const text = this.packetText(seq);
+    const p = text === null ? null : DayPacketCodec.fromJson(text).packet;
+    const copy = ChainLedger.fromJson(ledger.toJson());
+    if (p === null || copy === null) {
+      out.reason = PROBE_LEDGER_UNREADABLE;
+      return;
+    }
+    const from = p.slots.charAt(0);
+    const to = flippedSlot(from);
+    const date = p.date;
+    p.slots = to + p.slots.substring(1);
+    const res = await this.dayVerifier.verify(DayPacketCodec.toJson(p), copy);
+    const step = PhoneLinkEngine.probeStep('CHANGED', date, res, res.status === 'REJECTED' ? NOTE_NOT_TAKEN : '');
+    step.fromSlot = from;
+    step.toSlot = to;
+    out.steps.push(step);
+    out.ran = true;
+  }
+
+  private async probeReplay(ledger: ChainLedger, seq: number, out: ProbeResult): Promise<void> {
+    const text = this.packetText(seq);
+    const copy = ChainLedger.fromJson(ledger.toJson());
+    if (text === null || copy === null) {
+      out.reason = PROBE_LEDGER_UNREADABLE;
+      return;
+    }
+    const countBefore = copy.acceptedCount();
+    const res = await this.dayVerifier.verify(text, copy);
+    out.steps.push(PhoneLinkEngine.probeStep('SENT_AGAIN', PhoneLinkEngine.dateOf(res), res,
+      res.status === 'DUPLICATE' && copy.acceptedCount() === countBefore ? NOTE_COUNTED_ONCE : ''));
+    out.ran = true;
+  }
+
+  // Rebuilds the chain as it stood before day seq-1, then delivers day seq first and day seq-1 late.
+  private async probeLate(ledger: ChainLedger, seq: number, out: ProbeResult): Promise<void> {
+    const later = this.packetText(seq);
+    const held = seq >= 2 && !ledger.isMissing(seq - 1) ? this.packetText(seq - 1) : null;
+    if (later === null || held === null) {
+      out.reason = PROBE_NEEDS_TWO;
+      return;
+    }
+    const rebuilt = new ChainLedger(ledger.kid, ledger.pubB64);
+    for (let s = 1; s <= seq - 2; s++) {
+      const e = ledger.entry(s);
+      if (e !== null) {
+        rebuilt.commit(e.seq, e.prev, e.hash, e.date);
+      }
+    }
+    const first = await this.dayVerifier.verify(later, rebuilt);
+    const second = await this.dayVerifier.verify(held, rebuilt);
+    const ahead = PhoneLinkEngine.probeStep('SENT_AHEAD', PhoneLinkEngine.dateOf(first), first, first.note);
+    ahead.heldDate = PhoneLinkEngine.dateOf(second);
+    out.steps.push(ahead);
+    out.steps.push(PhoneLinkEngine.probeStep('SENT_LATE', PhoneLinkEngine.dateOf(second), second,
+      second.filledMissing ? NOTE_FILLS_GAP : second.note));
+    out.ran = true;
+  }
+
+  private static dateOf(res: VerifyOutcome): string {
+    return res.packet === null ? '' : res.packet.date;
+  }
+
+  private static probeStep(action: ProbeAction, date: string, res: VerifyOutcome, note: string): ProbeStep {
+    const step = new ProbeStep();
+    step.action = action;
+    step.date = date;
+    step.status = res.status;
+    step.message = res.message;
+    step.note = note;
+    return step;
+  }
+
+  private packetText(seq: number): string | null {
+    return this.store.read(`${LINK_DAYS_DIR}/${seq}${JSON_SUFFIX}`);
   }
 
   private writeAck(seq: number, status: AckStatus, reason: string): void {

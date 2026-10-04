@@ -4,6 +4,18 @@ import liveWearTest from './LiveWear.test';
 import entryTargetTest from './EntryTarget.test';
 import cardDigestTest from './CardDigest.test';
 import healthStatusLabelTest from './HealthStatusLabel.test';
+import demoFeedTest from './DemoFeed.test';
+import claimHardeningTest from './ClaimHardening.test';
+import watchDayPresentTest from './WatchDayPresent.test';
+import hesTest from './Hes.test';
+import hesPersonasTest from './HesPersonas.test';
+import hesSessionTest from './HesSession.test';
+import wearMonthTest from './WearMonth.test';
+import reportTest from './Report.test';
+import engineReportsTest from './EngineReports.test';
+import tourContentTest from './TourContent.test';
+import evidenceCalendarTest from './EvidenceCalendar.test';
+import whySectionsTest from './WhySections.test';
 
 export default function testsuite() {
   claimTest();
@@ -12,4 +24,16 @@ export default function testsuite() {
   entryTargetTest();
   cardDigestTest();
   healthStatusLabelTest();
+  demoFeedTest();
+  claimHardeningTest();
+  watchDayPresentTest();
+  hesTest();
+  hesPersonasTest();
+  hesSessionTest();
+  wearMonthTest();
+  reportTest();
+  engineReportsTest();
+  tourContentTest();
+  evidenceCalendarTest();
+  whySectionsTest();
 }

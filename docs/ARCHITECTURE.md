@@ -14,11 +14,11 @@ measures, scores it on the phone, and shares only a signed tier.
 
 ## Modules
 
-| Module   | Device                    | What is in it                                                                                                           |
-| -------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `common` | none (HAR, no UI imports) | Model types, tier claim codec, selective non-wear rule, the health source layer (`health/`), live wear state (`live/`). |
-| `entry`  | phone                     | The add-on screens, the HUAWEI Health adapter stub, device signing (`platform/`).                                       |
-| `watch`  | wearable                  | Live heart rate, steps today and wear state.                                                                            |
+| Module   | Device                    | What is in it                                                                                                                                                                                                                                                               |
+| -------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `common` | none (HAR, no UI imports) | Model types, tier claim codec and verifier (`claim/`), the score (`hes/`), wear month and selective non-wear rule (`wear/`, `rules/`), the report view models (`report/`), Watch Link logic (`watchlink/`), the health source layer (`health/`), live wear state (`live/`). |
+| `entry`  | phone                     | The add-on screens, the HUAWEI Health adapter stub, device signing (`platform/`).                                                                                                                                                                                           |
+| `watch`  | wearable                  | Live heart rate, steps today and wear state.                                                                                                                                                                                                                                |
 
 ## Health source layer (`common/src/main/ets/health/`)
 
@@ -35,14 +35,17 @@ measures, scores it on the phone, and shares only a signed tier.
 
 ## What is real and what is simulated
 
-| Part                                                                  | State                                                                                                                                   |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| HUAWEI Health connection                                              | Stub. Access to sensitive data through Health Service Kit needs Huawei's approval for the app; it was not granted during the hackathon. |
-| HUAWEI Health authorization screen                                    | Not shown. A DEMO placeholder stands in its place; FairWear does not copy Huawei's screen.                                              |
-| Consent logic, status transitions, per-data-type switches             | Real, covered by tests (`common/src/test/Health.test.ets`).                                                                             |
-| Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not in this branch yet. The demo source is empty, so the screens show "—".                                                              |
-| Scoring (HES-Lite), tier, coverage                                    | Not in this branch yet. The tier is shown as "—" with "HES-Lite not connected".                                                         |
-| VO₂max and HRV from HUAWEI Health                                     | Will not be scored without a cited percentile table.                                                                                    |
+| Part                                                                  | State                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HUAWEI Health connection                                              | Stub. Access to sensitive data through Health Service Kit needs Huawei's approval for the app; it was not granted during the hackathon.                                                                                                                                                                                                                                                                              |
+| HUAWEI Health authorization screen                                    | Not shown. A DEMO placeholder stands in its place; FairWear does not copy Huawei's screen.                                                                                                                                                                                                                                                                                                                           |
+| Consent logic, status transitions, per-data-type switches             | Real, covered by tests (`common/src/test/Health.test.ets`).                                                                                                                                                                                                                                                                                                                                                          |
+| Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not built. The demo personas are generated as completed days for the score (`hes/HesPersonas.ets`) and do not pass through the health source layer, whose demo source is empty.                                                                                                                                                                                                                                      |
+| Scoring (HES-Lite), tier, coverage                                    | Real engine, calculated on the phone (`common/src/main/ets/hes/`, `docs/HES.md`), on the synthetic histories of six demo personas. It does not read HUAWEI Health and is not fed by the watch.                                                                                                                                                                                                                       |
+| Wear compliance, breaks, the selective non-wear flag                  | Real rules (`common/src/main/ets/wear/`, `rules/SelectiveNonWear.ets`) on a synthetic 30-day wear record per persona.                                                                                                                                                                                                                                                                                                |
+| Live heart rate and today's steps on the phone                        | Demo values set on the Report screen. Shown, never scored; today's steps enter the history when the day is closed.                                                                                                                                                                                                                                                                                                   |
+| VO₂max and HRV                                                        | Watch measurements HES-Lite uses when present, as percentiles; synthetic in the personas. A missing one lowers coverage, never the score.                                                                                                                                                                                                                                                                            |
+| Watch demo feed                                                       | Simulated. A fixed script of heart rate, steps and charging (night on the charger, worn hours, one break, a walk, a workout) replaces the sensor readings. It runs only on the demo clock, the dial reads "DEMO ×300 · FEED", and the signed day packet carries the clock label `DEMO_X300_FEED`. It goes through the same wear rule and recorder as sensor readings (`common/src/main/ets/watchlink/DemoFeed.ets`). |
 
 ## Permissions
 
@@ -81,10 +84,20 @@ Everything that opens FairWear uses that same ability and one optional parameter
 
 `EntryAbility` passes the want to `routeFromWant` (`entry/src/main/ets/nav/EntryRouter.ets`) in `onCreate`
 and `onNewWant`; the start page opens the screen. The value is untrusted input. `resolveFwTargetFromWant`
-(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `share` and `source`; a missing value, an
+(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `evidence`, `share` and `source`; a missing value, an
 unknown value, a non-string, an oversized string or malformed card parameters open the start page and never
-throw (7 tests in `common/src/test/EntryTarget.test.ets`). `share` is reserved for the share screen, which
-is not in this build, so it opens the start page and there is no shortcut for it yet.
+throw (11 tests in `common/src/test/EntryTarget.test.ets`). After consent the start page is three tabs:
+`dashboard` selects Report, `evidence` Evidence and `share` Share (`fwTargetTab`); `source` opens Settings
+above the Report tab. There is no shortcut for the Share tab yet.
+
+The Share tab signs the claim when it is on screen, never before: `ShareService`
+(`entry/src/main/ets/share/ShareService.ets`) asks the demo partner (`PartnerVerifier`, in the same app) for
+a nonce, signs the seven-key claim with `ProofSigner` and writes the exact token to the ledger
+(`share/ledger.json` in the app sandbox) before the QR code is drawn. A report without a score gets no code
+and no ledger entry. The partner view takes the token inside the app (the emulator has no camera) and shows
+the verifier's own result: the status, the check the run stopped at, the claim only when its signature
+verified. What each screen shows is decided in `common/src/main/ets/claim/ShareFlow.ets` (9 tests in
+`common/src/test/ShareFlow.test.ets`).
 
 Checked on the Phone emulator (API 24): cold start and a second start of the running app with
 `--ps fwTarget source`, with an unknown value and with no parameter; the shortcut; the card tap.

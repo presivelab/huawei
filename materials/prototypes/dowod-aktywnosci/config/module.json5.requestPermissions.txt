@@ -1,0 +1,21 @@
+// Wklej do entry/src/main/module.json5, wewnątrz obiektu "module" (np. zaraz po "abilities": [...]).
+// Nie podmieniaj całego pliku — szablon DevEco ma w nim ikony, strony i skille zależne od wersji SDK.
+
+"requestPermissions": [
+  {
+    "name": "ohos.permission.ACTIVITY_MOTION",
+    "reason": "$string:reason_activity_motion",
+    "usedScene": {
+      "abilities": ["EntryAbility"],
+      "when": "inuse"
+    }
+  },
+  {
+    "name": "ohos.permission.READ_HEALTH_DATA",
+    "reason": "$string:reason_health_data",
+    "usedScene": {
+      "abilities": ["EntryAbility"],
+      "when": "inuse"
+    }
+  }
+]

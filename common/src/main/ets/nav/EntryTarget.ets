@@ -4,15 +4,25 @@
  *
  * The value comes from outside the app, so it is treated as untrusted input:
  * anything that is not exactly one of the known targets opens the dashboard. It never throws.
+ *
+ * After consent the start page is three tabs. 'dashboard' is the Report tab, 'evidence' the Evidence tab,
+ * 'share' the Share tab; 'source' opens Settings (the data-source card) above the Report tab.
  */
 
 export const FW_TARGET_PARAM: string = 'fwTarget';
 
 export class FwTarget {
   static readonly DASHBOARD: string = 'dashboard';
+  static readonly EVIDENCE: string = 'evidence';
   static readonly SHARE: string = 'share';
   static readonly SOURCE: string = 'source';
+  static readonly TOUR: string = 'tour';
 }
+
+/** Indexes of the tabs of the start page, in the order of the tab bar. */
+export const FW_TAB_REPORT: number = 0;
+export const FW_TAB_EVIDENCE: number = 1;
+export const FW_TAB_SHARE: number = 2;
 
 /** A home-screen card delivers its parameters as one JSON string under this key of the want. */
 export const CARD_PARAMS_KEY: string = 'params';
@@ -59,11 +69,33 @@ export function resolveFwTarget(value: Object | null | undefined): string {
     return FwTarget.DASHBOARD;
   }
   const name = raw.trim().toLowerCase();
+  if (name === FwTarget.EVIDENCE) {
+    return FwTarget.EVIDENCE;
+  }
   if (name === FwTarget.SHARE) {
     return FwTarget.SHARE;
   }
   if (name === FwTarget.SOURCE) {
     return FwTarget.SOURCE;
   }
+  if (name === FwTarget.TOUR) {
+    return FwTarget.TOUR;
+  }
   return FwTarget.DASHBOARD;
+}
+
+/** The tab a resolved target shows. Settings ('source') opens above the Report tab. */
+export function fwTargetTab(target: string): number {
+  if (target === FwTarget.EVIDENCE) {
+    return FW_TAB_EVIDENCE;
+  }
+  if (target === FwTarget.SHARE) {
+    return FW_TAB_SHARE;
+  }
+  return FW_TAB_REPORT;
+}
+
+/** True for the one target that opens the Settings page (data source) instead of a tab. */
+export function fwTargetOpensSettings(target: string): boolean {
+  return target === FwTarget.SOURCE;
 }

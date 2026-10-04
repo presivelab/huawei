@@ -86,6 +86,13 @@ export class NodeHasher {
   }
 }
 
+// Random bytes from the Node CSPRNG, for the partner verifier (RandomSource in claim/PartnerVerifier.ets).
+export class NodeRandom {
+  randomBytes(count: number): Promise<Uint8Array> {
+    return Promise.resolve(new Uint8Array(nodeCrypto.randomBytes(count)));
+  }
+}
+
 // Text files under one directory. writeAtomic writes a temporary file and renames it.
 export class FsTextStore {
   private root: string;
@@ -148,4 +155,19 @@ export function removeDir(dir: string): void {
 
 export function utf8ByteLength(text: string): number {
   return Buffer.byteLength(text, "utf8");
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const process: any;
+
+// A file of the repository as text, or null. The runner is started as
+// `node runner.js <typescript dir> <repo root> <module> ...`, so the repository root is argv[3].
+// Lets a test check that text shown in the app (the Watch Link tour's code lines) still exists in the code.
+export function readRepoText(relativePath: string): string | null {
+  const root: string = process.argv[3];
+  try {
+    return nodeFs.readFileSync(nodePath.join(root, relativePath), "utf8");
+  } catch (e) {
+    return null;
+  }
 }

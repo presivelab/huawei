@@ -16,6 +16,7 @@ import {
   sourceLine,
   statusExplanation
 } from '../addon/AddonTexts';
+import { StatusPill } from '../ui/kit/StatusPill';
 import { BODY, BODY_SECONDARY, CAPTION, CARD, statusDotColor, TITLE } from './Styles';
 
 // A status dot and the source line, for example a blue dot and the brand followed by "Demo data".
@@ -46,16 +47,10 @@ export struct SourceStatusLine {
   @StorageProp(KEY_LAST_SYNC) lastSync: string = NO_VALUE;
 
   build() {
-    SourceLineRow({ status: this.status, lastSync: this.lastSync })
-      .padding({
-        left: $r('sys.float.padding_level6'),
-        right: $r('sys.float.padding_level6'),
-        top: $r('sys.float.padding_level3'),
-        bottom: $r('sys.float.padding_level3')
-      })
-      .backgroundColor($r('sys.color.comp_background_tertiary'))
-      .borderRadius($r('sys.float.corner_radius_level8'))
-      .id('fw_source_status')
+    Row() {
+      StatusPill({ text: sourceLine(this.status, this.lastSync), dot: statusDotColor(this.status) })
+    }
+    .id('fw_source_status')
   }
 }
 
