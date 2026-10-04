@@ -3,6 +3,7 @@ import { hilog } from "@kit.PerformanceAnalysisKit";
 import { window } from "@kit.ArkUI";
 import { DeviceKey, ProofSigner } from "../platform/ProofSigner";
 import { routeFromWant } from "../nav/EntryRouter";
+import { attachReportStore } from "../report/ServiceLocator";
 import { WatchLinkService } from "../watchlink/WatchLinkService";
 
 const DOMAIN = 0x0000;
@@ -18,6 +19,8 @@ export default class EntryAbility extends UIAbility {
       hilog.error(DOMAIN, TAG, "signing key unavailable: %{public}s", e.message);
     });
     hilog.info(DOMAIN, TAG, "entry target: %{public}s", routeFromWant(want));
+    // Health Sim data received in an earlier session (after the user's consent) is used again.
+    attachReportStore(this.context.filesDir);
     // Watch Link: restore the pinned watch and its chain; packets are read when the app comes to the front.
     WatchLinkService.shared().init(this.context);
   }
