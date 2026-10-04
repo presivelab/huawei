@@ -186,7 +186,9 @@ export struct WatchLinkCard {
       }
 
       if (!this.state(this.revision).paired) {
-        EmptyState({ symbol: SYMBOL_WATCH, sentence: NOT_LINKED_SENTENCE })
+        if (this.state(this.revision).pendingPairKid.length === 0) {
+          EmptyState({ symbol: SYMBOL_WATCH, sentence: NOT_LINKED_SENTENCE })
+        }
       } else if (this.days(this.revision).length === 0) {
         EmptyState({ symbol: SYMBOL_WATCH, sentence: LINKED_NO_DAYS_SENTENCE })
       } else {

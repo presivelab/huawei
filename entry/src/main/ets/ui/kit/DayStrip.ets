@@ -26,14 +26,17 @@ export interface DayStripParams {
 function dayRing(item: DayStripItem) {
   if (item.missing) {
     // A missing day is a dashed outline, not a ring of zeros.
-    Circle()
-      .width(RING - RING_STROKE)
-      .height(RING - RING_STROKE)
-      .fillOpacity(0)
-      .stroke($r('sys.color.font_tertiary'))
-      .strokeWidth(2)
-      .strokeDashArray([3, 3])
-      .margin(RING_STROKE / 2)
+    Stack() {
+      Circle()
+        .width(RING - 2 * RING_STROKE)
+        .height(RING - 2 * RING_STROKE)
+        .fillOpacity(0)
+        .stroke($r('sys.color.font_tertiary'))
+        .strokeWidth(2)
+        .strokeDashArray([3, 3])
+    }
+    .width(RING)
+    .height(RING)
   } else {
     DataPanel({
       values: [item.worn, item.charging, item.off, item.unobserved],

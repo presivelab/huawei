@@ -30,10 +30,10 @@ export function StatusPill(p: PillParams) {
   }
   .alignItems(VerticalAlign.Center)
   .padding({
-    left: p.compact ? 8 : 12,
-    right: p.compact ? 8 : 12,
-    top: 4,
-    bottom: 4
+    left: p.compact ? 8 : $r('sys.float.padding_level6'),
+    right: p.compact ? 8 : $r('sys.float.padding_level6'),
+    top: p.compact ? 4 : $r('sys.float.padding_level3'),
+    bottom: p.compact ? 4 : $r('sys.float.padding_level3')
   })
   .backgroundColor($r('sys.color.comp_background_tertiary'))
   .borderRadius($r('sys.float.corner_radius_level8'))

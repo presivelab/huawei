@@ -4,9 +4,11 @@ export const BAR_MISSING: number = -1;
 export const METRIC_OFF_TEXT: string = 'Off · missing evidence';
 export const METRIC_EMPTY_TEXT: string = 'No records yet';
 
-const BAR_AREA: number = 32;
-const BAR_MIN: number = 4;
+const BAR_AREA: number = 28;
+const BAR_WIDTH: number = 8;
+const BAR_MIN: number = 8;
 const BAR_ZERO: number = 2;
+const VALUE_AREA: number = 32;
 
 export interface MetricTileParams {
   symbol: Resource;
@@ -37,7 +39,7 @@ function barHeight(value: number, max: number): number {
 }
 
 // One metric: its symbol and name, the value with its unit, and seven small bars for the last seven days.
-// A switched-off data type reads "Off · missing evidence" and draws no bars.
+// A switched-off data type reads "Off · missing evidence"; days without data are dots, never bars.
 @Builder
 export function MetricTile(p: MetricTileParams) {
   Column({ space: 8 }) {
@@ -46,7 +48,8 @@ export function MetricTile(p: MetricTileParams) {
         .fontSize(20)
         .fontColor([p.off ? $r('sys.color.icon_tertiary') : p.tint])
       Text(p.name)
-        .fontSize($r('sys.float.Body_M'))
+        .maxFontSize($r('sys.float.Body_M'))
+        .minFontSize($r('sys.float.Caption_M'))
         .fontWeight(FontWeight.Medium)
         .fontColor($r('sys.color.font_secondary'))
         .maxLines(1)
@@ -56,19 +59,23 @@ export function MetricTile(p: MetricTileParams) {
     .width('100%')
     .alignItems(VerticalAlign.Center)
 
-    if (p.off) {
-      Text(METRIC_OFF_TEXT)
-        .fontSize($r('sys.float.Body_M'))
-        .fontColor($r('sys.color.font_secondary'))
-    } else if (p.value.length === 0) {
-      Text(METRIC_EMPTY_TEXT)
-        .fontSize($r('sys.float.Body_M'))
-        .fontColor($r('sys.color.font_secondary'))
-    } else {
-      ValueWithUnit({ value: p.value, unit: p.unit, level: VALUE_LARGE })
+    // The same height in every state, so tiles in one row line up.
+    Row() {
+      if (p.off || p.value.length === 0) {
+        Text(p.off ? METRIC_OFF_TEXT : METRIC_EMPTY_TEXT)
+          .maxFontSize($r('sys.float.Body_M'))
+          .minFontSize($r('sys.float.Caption_M'))
+          .maxLines(1)
+          .fontColor($r('sys.color.font_secondary'))
+      } else {
+        ValueWithUnit({ value: p.value, unit: p.unit, level: VALUE_LARGE })
+      }
     }
+    .width('100%')
+    .height(VALUE_AREA)
+    .alignItems(VerticalAlign.Center)
 
-    Row({ space: 4 }) {
+    Row() {
       ForEach(p.bars, (value: number) => {
         Column() {
           if (p.off || value < 0) {
@@ -78,9 +85,9 @@ export function MetricTile(p: MetricTileParams) {
               .fill($r('sys.color.font_fourth'))
           } else {
             Rect()
-              .width('100%')
+              .width(BAR_WIDTH)
               .height(barHeight(value, barsMax(p.bars)))
-              .radius(2)
+              .radius(BAR_WIDTH / 2)
               .fill(p.tint)
           }
         }
