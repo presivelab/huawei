@@ -75,6 +75,15 @@ export struct WhyPage {
     return scoreEvidence(this.report);
   }
 
+  // The sections read the report on screen themselves, so they follow a closed day or another persona.
+  private scoredRows(improve: boolean): ComponentRow[] {
+    return improve ? this.sections().improvement : this.sections().strongest;
+  }
+
+  private missingRows(): ComponentRow[] {
+    return hasScore(this.report) ? this.sections().missing : this.evidence().notMeasured;
+  }
+
   @Builder
   headerCard() {
     Row({ space: 14 }) {
@@ -160,12 +169,12 @@ export struct WhyPage {
   }
 
   @Builder
-  scoredSection(title: string, rows: ComponentRow[], sectionId: string) {
-    if (rows.length > 0) {
+  scoredSection(title: string, improve: boolean, sectionId: string) {
+    if (this.scoredRows(improve).length > 0) {
       Column({ space: 14 }) {
         Text(title)
           .attributeModifier(HEADING)
-        ForEach(rows, (row: ComponentRow) => {
+        ForEach(this.scoredRows(improve), (row: ComponentRow) => {
           this.scoredRow(row)
         }, (row: ComponentRow) => `${this.report.id}|${title}|${row.id}|${row.score}|${row.raw}`)
       }
@@ -227,12 +236,12 @@ export struct WhyPage {
   }
 
   @Builder
-  missingSection(rows: ComponentRow[]) {
-    if (rows.length > 0) {
+  missingSection() {
+    if (this.missingRows().length > 0) {
       Column({ space: 10 }) {
         Text(WHY_MISSING)
           .attributeModifier(HEADING)
-        ForEach(rows, (row: ComponentRow) => {
+        ForEach(this.missingRows(), (row: ComponentRow) => {
           this.plainRow(row, WHY_NOT_MEASURED)
         }, (row: ComponentRow) => `${this.report.id}|missing|${row.id}`)
         Text(WHY_MISSING_NOTE)
@@ -311,7 +320,7 @@ export struct WhyPage {
       .attributeModifier(CARD_LARGE)
       .id('fw_why_needed')
     }
-    this.missingSection(this.evidence().notMeasured)
+    this.missingSection()
   }
 
   @Builder
@@ -373,10 +382,10 @@ export struct WhyPage {
         Column({ space: CARD_GAP }) {
           if (hasScore(this.report)) {
             this.headerCard()
-            this.scoredSection(WHY_STRONGEST, this.sections().strongest, 'fw_why_strongest')
-            this.scoredSection(WHY_IMPROVE, this.sections().improvement, 'fw_why_improve')
+            this.scoredSection(WHY_STRONGEST, false, 'fw_why_strongest')
+            this.scoredSection(WHY_IMPROVE, true, 'fw_why_improve')
             this.whatIfCard()
-            this.missingSection(this.sections().missing)
+            this.missingSection()
           } else {
             this.noScoreHeader()
             this.noScoreSections()

@@ -67,6 +67,13 @@ const CELL_HEIGHT: number = 52;
 const DAY_MIN: number = 1440;
 const SEGMENT_CALENDAR: number = 0;
 
+// A number with its label: one of the three figures of the month, or of a day.
+interface StatItem {
+  value: string;
+  label: string;
+  strong: boolean;
+}
+
 // The weeks of the calendar: seven cells each.
 function weeksOf(cells: CalendarCell[]): CalendarCell[][] {
   const out: CalendarCell[][] = [];
@@ -136,27 +143,27 @@ export struct EvidenceView {
     return isAppealed(this.appeals, this.report.id, date);
   }
 
+  // The three numbers of the month. A list with keys, so they follow the report on screen.
+  private summaryStats(): StatItem[] {
+    const wear = this.report.wear;
+    return [
+      { value: `${wear.compliantDays} of ${wear.totalDays}`, label: DAYS_LABEL, strong: false },
+      { value: `${wear.nightsWorn} of ${wear.totalDays}`, label: NIGHTS_LABEL, strong: false },
+      { value: `${wear.suspicious}`, label: BREAKS_LABEL, strong: wear.suspicious > 0 }
+    ];
+  }
+
+  private dayFactItems(): StatItem[] {
+    return [
+      { value: minutesText(this.day.wornMin), label: DAY_WORN, strong: false },
+      { value: minutesText(this.day.chargingMin), label: DAY_CHARGING, strong: false },
+      { value: this.day.nightWorn ? DAY_NIGHT_YES : DAY_NIGHT_NO, label: DAY_NIGHT, strong: false }
+    ];
+  }
+
   private openDay(n: number): void {
     this.day = evidenceDay(this.report, n);
     this.sheetOpen = true;
-  }
-
-  @Builder
-  stat(value: string, label: string, strong: boolean) {
-    Column({ space: 2 }) {
-      Text(value)
-        .fontSize($r('sys.float.Subtitle_L'))
-        .fontWeight(FontWeight.Bold)
-        .fontColor(strong ? COLOR_FLAG_TEXT : $r('sys.color.font_primary'))
-        .maxLines(1)
-      Text(label)
-        .attributeModifier(CAPTION)
-        .maxLines(2)
-    }
-    .alignItems(HorizontalAlign.Start)
-    .layoutWeight(1)
-    .accessibilityGroup(true)
-    .accessibilityText(`${label}, ${value}`)
   }
 
   @Builder
@@ -179,9 +186,22 @@ export struct EvidenceView {
       .alignItems(VerticalAlign.Center)
 
       Row({ space: 12 }) {
-        this.stat(`${this.report.wear.compliantDays} of ${this.report.wear.totalDays}`, DAYS_LABEL, false)
-        this.stat(`${this.report.wear.nightsWorn} of ${this.report.wear.totalDays}`, NIGHTS_LABEL, false)
-        this.stat(`${this.report.wear.suspicious}`, BREAKS_LABEL, this.report.wear.suspicious > 0)
+        ForEach(this.summaryStats(), (item: StatItem) => {
+          Column({ space: 2 }) {
+            Text(item.value)
+              .fontSize($r('sys.float.Subtitle_L'))
+              .fontWeight(FontWeight.Bold)
+              .fontColor(item.strong ? COLOR_FLAG_TEXT : $r('sys.color.font_primary'))
+              .maxLines(1)
+            Text(item.label)
+              .attributeModifier(CAPTION)
+              .maxLines(2)
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+          .accessibilityGroup(true)
+          .accessibilityText(`${item.label}, ${item.value}`)
+        }, (item: StatItem) => `${item.label}|${item.value}|${item.strong}`)
       }
       .width('100%')
       .alignItems(VerticalAlign.Top)
@@ -299,23 +319,6 @@ export struct EvidenceView {
   }
 
   @Builder
-  fact(value: string, label: string) {
-    Column({ space: 2 }) {
-      Text(value)
-        .fontSize($r('sys.float.Subtitle_M'))
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('sys.color.font_primary'))
-        .maxLines(1)
-      Text(label)
-        .attributeModifier(CAPTION)
-    }
-    .alignItems(HorizontalAlign.Start)
-    .layoutWeight(1)
-    .accessibilityGroup(true)
-    .accessibilityText(`${value} ${label}`)
-  }
-
-  @Builder
   dayFacts() {
     Column({ space: 12 }) {
       WearBar({
@@ -325,9 +328,21 @@ export struct EvidenceView {
         unobserved: 0
       })
       Row({ space: 12 }) {
-        this.fact(minutesText(this.day.wornMin), DAY_WORN)
-        this.fact(minutesText(this.day.chargingMin), DAY_CHARGING)
-        this.fact(this.day.nightWorn ? DAY_NIGHT_YES : DAY_NIGHT_NO, DAY_NIGHT)
+        ForEach(this.dayFactItems(), (item: StatItem) => {
+          Column({ space: 2 }) {
+            Text(item.value)
+              .fontSize($r('sys.float.Subtitle_M'))
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('sys.color.font_primary'))
+              .maxLines(1)
+            Text(item.label)
+              .attributeModifier(CAPTION)
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+          .accessibilityGroup(true)
+          .accessibilityText(`${item.value} ${item.label}`)
+        }, (item: StatItem) => `${this.day.date}|${item.label}|${item.value}`)
       }
       .width('100%')
       .alignItems(VerticalAlign.Top)
