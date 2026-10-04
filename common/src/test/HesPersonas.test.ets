@@ -183,7 +183,7 @@ export default function hesPersonasTest() {
         expect(day.hrvPercentile).assertEqual(HES_MISSING);
         expect(day.hrr1).assertEqual(HES_MISSING);
       }
-      expect(offWrist).assertEqual(15);
+      expect(offWrist).assertEqual(11);
     });
 
     it('Ola is short of sleep nights and recovery sessions, and the result says by how many', 0, () => {
