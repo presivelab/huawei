@@ -1,0 +1,722 @@
+{
+  "ania": {
+    "HEALTH_WELLNESS": {
+      "status": "OK",
+      "hes": 92,
+      "observed": 92.115,
+      "tier": "A",
+      "coveragePm": 1000,
+      "confidence": "HIGH",
+      "ci": 1,
+      "components": {
+        "crf": {
+          "raw": 77,
+          "valid": 2,
+          "score": 89.2,
+          "effectiveWeight": 0.125
+        },
+        "rhr": {
+          "raw": 58,
+          "valid": 28,
+          "score": 97,
+          "effectiveWeight": 0.125
+        },
+        "mvpa": {
+          "raw": 238,
+          "valid": 28,
+          "score": 93.2,
+          "effectiveWeight": 0.2
+        },
+        "steps": {
+          "raw": 8800,
+          "valid": 28,
+          "score": 97,
+          "effectiveWeight": 0.15
+        },
+        "sleepRegularity": {
+          "raw": 45,
+          "valid": 28,
+          "score": 90,
+          "effectiveWeight": 0.15
+        },
+        "sleepDuration": {
+          "raw": 7.4,
+          "valid": 28,
+          "score": 99,
+          "effectiveWeight": 0.125
+        },
+        "hrv": {
+          "raw": 60,
+          "valid": 14,
+          "score": 81,
+          "effectiveWeight": 0.075
+        },
+        "hrr": {
+          "raw": 32,
+          "valid": 3,
+          "score": 74,
+          "effectiveWeight": 0.05
+        }
+      }
+    },
+    "LONGEVITY_WELLNESS": {
+      "status": "OK",
+      "hes": 92,
+      "observed": 91.775,
+      "tier": "A",
+      "coveragePm": 1000,
+      "confidence": "HIGH",
+      "ci": 1,
+      "components": {
+        "crf": {
+          "raw": 77,
+          "valid": 2,
+          "score": 89.2,
+          "effectiveWeight": 0.225
+        },
+        "rhr": {
+          "raw": 58,
+          "valid": 28,
+          "score": 97,
+          "effectiveWeight": 0.15
+        },
+        "mvpa": {
+          "raw": 238,
+          "valid": 28,
+          "score": 93.2,
+          "effectiveWeight": 0.15
+        },
+        "steps": {
+          "raw": 8800,
+          "valid": 28,
+          "score": 97,
+          "effectiveWeight": 0.175
+        },
+        "sleepRegularity": {
+          "raw": 45,
+          "valid": 28,
+          "score": 90,
+          "effectiveWeight": 0.1
+        },
+        "sleepDuration": {
+          "raw": 7.4,
+          "valid": 28,
+          "score": 99,
+          "effectiveWeight": 0.075
+        },
+        "hrv": {
+          "raw": 60,
+          "valid": 14,
+          "score": 81,
+          "effectiveWeight": 0.075
+        },
+        "hrr": {
+          "raw": 32,
+          "valid": 3,
+          "score": 74,
+          "effectiveWeight": 0.05
+        }
+      }
+    }
+  },
+  "marek": {
+    "HEALTH_WELLNESS": {
+      "status": "OK",
+      "hes": 75,
+      "observed": 75.22285714285714,
+      "tier": "B",
+      "coveragePm": 875,
+      "confidence": "HIGH",
+      "ci": 0.875,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 68,
+          "valid": 28,
+          "score": 86.4,
+          "effectiveWeight": 0.14285714285714285
+        },
+        "mvpa": {
+          "raw": 119,
+          "valid": 28,
+          "score": 67.6,
+          "effectiveWeight": 0.22857142857142856
+        },
+        "steps": {
+          "raw": 6200,
+          "valid": 28,
+          "score": 82,
+          "effectiveWeight": 0.17142857142857143
+        },
+        "sleepRegularity": {
+          "raw": 70,
+          "valid": 28,
+          "score": 73.33333333333333,
+          "effectiveWeight": 0.17142857142857143
+        },
+        "sleepDuration": {
+          "raw": 6.6,
+          "valid": 28,
+          "score": 84.6,
+          "effectiveWeight": 0.14285714285714285
+        },
+        "hrv": {
+          "raw": 40,
+          "valid": 14,
+          "score": 65,
+          "effectiveWeight": 0.08571428571428572
+        },
+        "hrr": {
+          "raw": 24,
+          "valid": 3,
+          "score": 55,
+          "effectiveWeight": 0.05714285714285714
+        }
+      }
+    },
+    "LONGEVITY_WELLNESS": {
+      "status": "OK",
+      "hes": 76,
+      "observed": 75.81075268817204,
+      "tier": "B",
+      "coveragePm": 775,
+      "confidence": "MEDIUM",
+      "ci": 0.775,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 68,
+          "valid": 28,
+          "score": 86.4,
+          "effectiveWeight": 0.1935483870967742
+        },
+        "mvpa": {
+          "raw": 119,
+          "valid": 28,
+          "score": 67.6,
+          "effectiveWeight": 0.1935483870967742
+        },
+        "steps": {
+          "raw": 6200,
+          "valid": 28,
+          "score": 82,
+          "effectiveWeight": 0.22580645161290322
+        },
+        "sleepRegularity": {
+          "raw": 70,
+          "valid": 28,
+          "score": 73.33333333333333,
+          "effectiveWeight": 0.12903225806451613
+        },
+        "sleepDuration": {
+          "raw": 6.6,
+          "valid": 28,
+          "score": 84.6,
+          "effectiveWeight": 0.0967741935483871
+        },
+        "hrv": {
+          "raw": 40,
+          "valid": 14,
+          "score": 65,
+          "effectiveWeight": 0.0967741935483871
+        },
+        "hrr": {
+          "raw": 24,
+          "valid": 3,
+          "score": 55,
+          "effectiveWeight": 0.06451612903225806
+        }
+      }
+    }
+  },
+  "kasia": {
+    "HEALTH_WELLNESS": {
+      "status": "OK",
+      "hes": 73,
+      "observed": 72.96666666666667,
+      "tier": "B",
+      "coveragePm": 750,
+      "confidence": "MEDIUM",
+      "ci": 0.6678571428571429,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 72,
+          "valid": 18,
+          "score": 80.8,
+          "effectiveWeight": 0.16666666666666666
+        },
+        "mvpa": {
+          "raw": 98,
+          "valid": 20,
+          "score": 59,
+          "effectiveWeight": 0.26666666666666666
+        },
+        "steps": {
+          "raw": 6000,
+          "valid": 20,
+          "score": 80,
+          "effectiveWeight": 0.2
+        },
+        "sleepRegularity": {
+          "raw": 70,
+          "valid": 16,
+          "score": 73.33333333333333,
+          "effectiveWeight": 0.2
+        },
+        "sleepDuration": {
+          "raw": 6.4,
+          "valid": 16,
+          "score": 78.60000000000001,
+          "effectiveWeight": 0.16666666666666666
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 4,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        }
+      }
+    },
+    "LONGEVITY_WELLNESS": {
+      "status": "OK",
+      "hes": 74,
+      "observed": 74.15128205128205,
+      "tier": "B",
+      "coveragePm": 650,
+      "confidence": "LOW",
+      "ci": 0.5928571428571427,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 72,
+          "valid": 18,
+          "score": 80.8,
+          "effectiveWeight": 0.23076923076923078
+        },
+        "mvpa": {
+          "raw": 98,
+          "valid": 20,
+          "score": 59,
+          "effectiveWeight": 0.23076923076923078
+        },
+        "steps": {
+          "raw": 6000,
+          "valid": 20,
+          "score": 80,
+          "effectiveWeight": 0.2692307692307692
+        },
+        "sleepRegularity": {
+          "raw": 70,
+          "valid": 16,
+          "score": 73.33333333333333,
+          "effectiveWeight": 0.15384615384615385
+        },
+        "sleepDuration": {
+          "raw": 6.4,
+          "valid": 16,
+          "score": 78.60000000000001,
+          "effectiveWeight": 0.11538461538461539
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 4,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        }
+      }
+    }
+  },
+  "tomek": {
+    "HEALTH_WELLNESS": {
+      "status": "OK",
+      "hes": 79,
+      "observed": 78.92972972972973,
+      "tier": "B",
+      "coveragePm": 925,
+      "confidence": "HIGH",
+      "ci": 0.925,
+      "components": {
+        "crf": {
+          "raw": 50,
+          "valid": 2,
+          "score": 70,
+          "effectiveWeight": 0.13513513513513514
+        },
+        "rhr": {
+          "raw": 62,
+          "valid": 28,
+          "score": 93,
+          "effectiveWeight": 0.13513513513513514
+        },
+        "mvpa": {
+          "raw": 147,
+          "valid": 28,
+          "score": 78.8,
+          "effectiveWeight": 0.21621621621621623
+        },
+        "steps": {
+          "raw": 7000,
+          "valid": 28,
+          "score": 90,
+          "effectiveWeight": 0.16216216216216217
+        },
+        "sleepRegularity": {
+          "raw": 80,
+          "valid": 28,
+          "score": 66.66666666666667,
+          "effectiveWeight": 0.16216216216216217
+        },
+        "sleepDuration": {
+          "raw": 6.5,
+          "valid": 28,
+          "score": 82,
+          "effectiveWeight": 0.13513513513513514
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": 27,
+          "valid": 3,
+          "score": 62.5,
+          "effectiveWeight": 0.05405405405405406
+        }
+      }
+    },
+    "LONGEVITY_WELLNESS": {
+      "status": "OK",
+      "hes": 79,
+      "observed": 79.14774774774774,
+      "tier": "B",
+      "coveragePm": 925,
+      "confidence": "HIGH",
+      "ci": 0.925,
+      "components": {
+        "crf": {
+          "raw": 50,
+          "valid": 2,
+          "score": 70,
+          "effectiveWeight": 0.24324324324324326
+        },
+        "rhr": {
+          "raw": 62,
+          "valid": 28,
+          "score": 93,
+          "effectiveWeight": 0.16216216216216217
+        },
+        "mvpa": {
+          "raw": 147,
+          "valid": 28,
+          "score": 78.8,
+          "effectiveWeight": 0.16216216216216217
+        },
+        "steps": {
+          "raw": 7000,
+          "valid": 28,
+          "score": 90,
+          "effectiveWeight": 0.1891891891891892
+        },
+        "sleepRegularity": {
+          "raw": 80,
+          "valid": 28,
+          "score": 66.66666666666667,
+          "effectiveWeight": 0.10810810810810811
+        },
+        "sleepDuration": {
+          "raw": 6.5,
+          "valid": 28,
+          "score": 82,
+          "effectiveWeight": 0.08108108108108109
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": 27,
+          "valid": 3,
+          "score": 62.5,
+          "effectiveWeight": 0.05405405405405406
+        }
+      }
+    }
+  },
+  "ewa": {
+    "HEALTH_WELLNESS": {
+      "status": "OK",
+      "hes": 59,
+      "observed": 58.80208333333333,
+      "tier": "C",
+      "coveragePm": 800,
+      "confidence": "MEDIUM",
+      "ci": 0.7011904761904763,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 76,
+          "valid": 20,
+          "score": 74,
+          "effectiveWeight": 0.15625
+        },
+        "mvpa": {
+          "raw": 70,
+          "valid": 20,
+          "score": 45,
+          "effectiveWeight": 0.25
+        },
+        "steps": {
+          "raw": 4400,
+          "valid": 20,
+          "score": 56,
+          "effectiveWeight": 0.1875
+        },
+        "sleepRegularity": {
+          "raw": 85,
+          "valid": 16,
+          "score": 63.33333333333333,
+          "effectiveWeight": 0.1875
+        },
+        "sleepDuration": {
+          "raw": 6.2,
+          "valid": 16,
+          "score": 71.80000000000001,
+          "effectiveWeight": 0.15625
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 3,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": 20,
+          "valid": 2,
+          "score": 38.33333333333333,
+          "effectiveWeight": 0.0625
+        }
+      }
+    },
+    "LONGEVITY_WELLNESS": {
+      "status": "OK",
+      "hes": 59,
+      "observed": 58.97857142857143,
+      "tier": "C",
+      "coveragePm": 700,
+      "confidence": "MEDIUM",
+      "ci": 0.6261904761904762,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 76,
+          "valid": 20,
+          "score": 74,
+          "effectiveWeight": 0.21428571428571427
+        },
+        "mvpa": {
+          "raw": 70,
+          "valid": 20,
+          "score": 45,
+          "effectiveWeight": 0.21428571428571427
+        },
+        "steps": {
+          "raw": 4400,
+          "valid": 20,
+          "score": 56,
+          "effectiveWeight": 0.25
+        },
+        "sleepRegularity": {
+          "raw": 85,
+          "valid": 16,
+          "score": 63.33333333333333,
+          "effectiveWeight": 0.14285714285714285
+        },
+        "sleepDuration": {
+          "raw": 6.2,
+          "valid": 16,
+          "score": 71.80000000000001,
+          "effectiveWeight": 0.10714285714285714
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 3,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": 20,
+          "valid": 2,
+          "score": 38.33333333333333,
+          "effectiveWeight": 0.07142857142857142
+        }
+      }
+    }
+  },
+  "ola": {
+    "HEALTH_WELLNESS": {
+      "status": "INSUFFICIENT_DATA",
+      "hes": null,
+      "observed": null,
+      "tier": "NONE",
+      "coveragePm": 475,
+      "confidence": "NOT_ENOUGH_DATA",
+      "ci": null,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 68,
+          "valid": 16,
+          "score": 86.4,
+          "effectiveWeight": null
+        },
+        "mvpa": {
+          "raw": 112,
+          "valid": 16,
+          "score": 64.8,
+          "effectiveWeight": null
+        },
+        "steps": {
+          "raw": 6800,
+          "valid": 16,
+          "score": 88,
+          "effectiveWeight": null
+        },
+        "sleepRegularity": {
+          "raw": null,
+          "valid": 6,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "sleepDuration": {
+          "raw": null,
+          "valid": 6,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 6,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        }
+      }
+    },
+    "LONGEVITY_WELLNESS": {
+      "status": "INSUFFICIENT_DATA",
+      "hes": null,
+      "observed": null,
+      "tier": "NONE",
+      "coveragePm": 475,
+      "confidence": "NOT_ENOUGH_DATA",
+      "ci": null,
+      "components": {
+        "crf": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "rhr": {
+          "raw": 68,
+          "valid": 16,
+          "score": 86.4,
+          "effectiveWeight": null
+        },
+        "mvpa": {
+          "raw": 112,
+          "valid": 16,
+          "score": 64.8,
+          "effectiveWeight": null
+        },
+        "steps": {
+          "raw": 6800,
+          "valid": 16,
+          "score": 88,
+          "effectiveWeight": null
+        },
+        "sleepRegularity": {
+          "raw": null,
+          "valid": 6,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "sleepDuration": {
+          "raw": null,
+          "valid": 6,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrv": {
+          "raw": null,
+          "valid": 6,
+          "score": null,
+          "effectiveWeight": null
+        },
+        "hrr": {
+          "raw": null,
+          "valid": 0,
+          "score": null,
+          "effectiveWeight": null
+        }
+      }
+    }
+  }
+}
