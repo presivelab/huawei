@@ -542,3 +542,113 @@ export {
   sleepArcs,
   wearArcs
 } from './src/main/ets/present/DayDialModel';
+export {
+  ADHERENCE_NONE,
+  ADHERENCE_ON_TIME,
+  ADHERENCE_VALUES,
+  addDays,
+  Adherence,
+  daysBetween,
+  isIsoDate,
+  isServiceType,
+  isShareableServiceType,
+  MedicalReceipt,
+  NoteItem,
+  NoteKind,
+  ReceiptStatus,
+  SERVICE_TYPES,
+  ServiceType,
+  serviceTypeLabel,
+  SHAREABLE_SERVICE_TYPES,
+  Speaker,
+  TranscriptSegment,
+  Visit,
+  visitDateText
+} from './src/main/ets/visits/VisitTypes';
+export { parseReceipt, RECEIPT_QR_PREFIX, serializeReceipt } from './src/main/ets/visits/ReceiptCodec';
+export {
+  checkReceiptText,
+  MockReceiptVerifier,
+  RECEIPT_MAX_AGE_DAYS,
+  ReceiptCheck,
+  receiptStatusMessage,
+  ReceiptVerifier
+} from './src/main/ets/visits/ReceiptVerifier';
+export {
+  DEMO_FOLLOW_UP_DAYS,
+  DEMO_ISSUER_ID,
+  DEMO_ISSUER_NAME,
+  DEMO_R1,
+  DEMO_R2,
+  DEMO_R3,
+  DEMO_R4,
+  DEMO_R5,
+  DEMO_RECEIPT_IDS,
+  demoReceiptHint,
+  demoReceiptLabel,
+  demoTranscriptT1,
+  DemoVisits,
+  emptyVisit,
+  VISITS_PERSONA_ID
+} from './src/main/ets/visits/DemoVisits';
+export {
+  followUpDays,
+  followUpDueDateOf,
+  NotesExtractor,
+  notesOfKind,
+  RuleBasedNotesExtractor,
+  segmentById,
+  sentencesOf,
+  sourceQuote,
+  transcriptTimeText
+} from './src/main/ets/visits/NotesExtractor';
+export {
+  adherence,
+  followUpDoneOnTime,
+  followUpVisitOf,
+  visitAdherence,
+  visitById,
+  visitDateOf
+} from './src/main/ets/visits/FollowUp';
+export {
+  adherenceLabel,
+  buildVisitClaim,
+  ClaimLine,
+  decodeVisitClaim,
+  decodeVisitToken,
+  encodeVisitClaim,
+  encodeVisitToken,
+  mintVisitToken,
+  receiptRef,
+  tamperedVisitDateToken,
+  validateVisitClaimJson,
+  VISIT_CLAIM_KEYS,
+  VISIT_CLAIM_TYPE,
+  VISIT_CLAIM_VERSION,
+  VISIT_NEVER_SHARED,
+  VISIT_NOT_VERIFIED,
+  VISIT_TOKEN_MARKER,
+  VISIT_TYPE_NEVER_SHARED,
+  VisitClaim,
+  visitClaimLine,
+  visitClaimLines,
+  visitShareBlock,
+  visitTokenClaim
+} from './src/main/ets/visits/VisitClaim';
+export {
+  VISIT_CHECK_LABELS,
+  VISIT_STATUS_ALREADY_USED,
+  VISIT_STATUS_INVALID_FORMAT,
+  VISIT_STATUS_INVALID_SIGNATURE,
+  VISIT_STATUS_NONCE_MISMATCH,
+  VISIT_STATUS_RECEIPT_CLAIMED,
+  VISIT_STATUS_UNKNOWN_KEY,
+  VISIT_STATUS_VALID,
+  VISIT_STATUS_WRONG_TYPE,
+  VISIT_VERIFY_STEPS,
+  visitCheckRows,
+  visitVerdictLine,
+  VisitVerifier,
+  VisitVerifyResult
+} from './src/main/ets/visits/VisitVerifier';
+export { AddReceiptResult, VisitBook } from './src/main/ets/visits/VisitBook';
