@@ -4,9 +4,10 @@ FairWear is an add-on for HUAWEI Health users: with their permission it reads wh
 measures, scores it on the phone, and shares only a signed tier.
 
 HackYeah 2026, Huawei task. Native ArkTS/ArkUI, minimum API 20. Modules: `entry` (phone), `watch`
-(wearable), `common` (shared logic, no UI).
+(wearable), `common` (shared logic, no UI). A second DevEco project, `healthsim/`, holds the optional simulator
+app Health Sim (phone and watch).
 
-**Who it is for.** People in a wellbeing or insurance programme that rewards healthy habits, and the partner
+**Who it is for.** People in a wellbeing or insurance programme that rewards regular activity and sleep, and the partner
 that runs it. Such programmes take raw wearable data and can be gamed by taking the watch off on bad days.
 FairWear keeps raw data on the phone, judges wear with open rules (including selective non-wear: breaks that
 follow a raised resting heart rate and fewer steps), lets the user see and appeal each day, and gives the
@@ -28,7 +29,7 @@ technology, digital wellbeing).
 | --- | --- |
 | Originality | Selective non-wear: Marek and Kasia wear the watch on the same 26 of 30 days, but only Marek's breaks follow a raised resting heart rate and fewer steps, so only he is flagged. The partner gets a signed, single-use A/B/C tier and nothing else. `common/src/main/ets/wear/`, `docs/screenshots/final/a2-evidence-marek-*` |
 | Usefulness | For people in a programme that rewards activity and sleep habits, and for the partner that runs it: a benefit without handing over raw health data, a reason for every day and an appeal. Benefits only, never a penalty. "Who it is for" above, `docs/DEMO_SCRIPT.md` |
-| Technical execution | 380 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
+| Technical execution | 380 logic tests in `common` and 6 in `watch` <!-- A3-TODO after merge: test counts --> (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
 | Platform capabilities | Sensor Service Kit on the watch, HUKS keys on the phone and the watch, Crypto Architecture Kit, Ability Kit between two apps (Health Sim), Form Kit card, icon shortcut, phone and wearable built from one `common` module. Table "Platform capabilities" below |
 | Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
 | Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
@@ -46,7 +47,9 @@ placeholder, and every screen states the source in words: "HUAWEI Health · Demo
 "· Unavailable in this build". The connection
 can be ended in FairWear ("Disconnect HUAWEI Health") or in HUAWEI Health privacy settings.
 
-**How to install.** Two HAPs, one per device: `entry` on a phone emulator, `watch` on a wearable emulator.
+**How to install.** Two DevEco projects, four HAPs. FairWear (repository root): `entry` on a phone emulator and
+`watch` on a wearable emulator. Health Sim (`healthsim/`, optional for the full demo): its own `entry` and
+`watch`, see "Health Sim" below. The steps in this list build and install the two FairWear HAPs.
 
 | Tool | Version |
 | --- | --- |
@@ -152,12 +155,23 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 | Score (HES-Lite), tier, coverage  | **Real** engine, calculated on the phone. The history it runs on is **synthetic**: six demo personas generated from a seed.                                                                                  |
 | Wear compliance and the flag      | **Real** rules, on a **synthetic** 30-day wear record per persona.                                                                                                                                           |
 | Live heart rate and today's steps | Shown, **never scored**. The score uses completed days only; today's steps enter the history when the day is closed, the live heart rate is never stored.                                                    |
-| VO₂max and HRV                    | Watch measurements that HES-Lite uses when they are present, as percentiles. In the personas they are **synthetic**. A missing one lowers coverage and never the score.                                      |
+| VO₂max and HRV                    | HES-Lite uses both (as percentiles, `common/src/main/ets/hes/`) when they are present. In a real product they are watch measurements read from HUAWEI Health; in this demo they come from Health Sim and are **simulated** (synthetic in the built-in personas). A missing one lowers coverage and never the score.                                      |
 | HUAWEI Health connection          | **Health Sim**, our own simulator app (`healthsim/`, bundle `com.fairwear.healthsim`), stands in for HUAWEI Health on the emulators; FairWear asks it for data with `startAbilityForResult` after its consent; without it, built-in demo data. The adapter for the real Health Service Kit stays a **stub** until Huawei grants the app access; FairWear does not copy Huawei's screen.                        |
 | Watch to phone                    | Signed day packets carried by a development relay over `hdc` (`tools/watch-phone-relay.mjs`). The Wear Engine code path exists and was not run: it needs paired devices and Wear Engine approval.            |
 | Watch days                        | **Real** recording and signing on the watch while the app is open; on the emulator the recorded days came from the labelled demo feed (the emulator sends heart rate 0). Verified watch days are shown, **not scored**. |
-| Claim signature                   | **Real** ECDSA P-256; the key is in HUKS. A software-key fallback, labelled in the UI, exists for devices without HUKS; HUKS worked on both emulators, so it was not exercised.                    |
+| Claim signature                   | **Real** ECDSA P-256; the key is in HUKS. The last field of the token (`HUKS` or `SOFTWARE`) is not signed and is informational: the partner shows the key source from its own registry (`common/src/main/ets/claim/SignedClaimToken.ets`). A software-key fallback, labelled in the UI, exists for devices without HUKS; HUKS worked on both emulators, so it was not exercised.                    |
 | Partner                           | A screen in the same app, not a separate system.                                                                                                                                                             |
+
+**Health Sim is not a HUAWEI app.** Its layout stays close to HUAWEI Health's so the demo reads naturally:
+bottom tabs "Health" and "Me", an "Activity records" card with Steps and Exercise rings, metric cards and a metric
+detail page with 30 days. Every screen says "SIMULATED DATA". The FairWear card under "Me → Connected apps" is a
+simulated integration point: real HUAWEI Health has no such card; sharing with other apps is set in its privacy
+settings.
+
+**The consent switches are real on both paths.** A data type switched off in FairWear's own consent is missing in
+the history the score is calculated from and in every day "Close the day" adds, whether the days come from
+Health Sim or from the built-in demo histories. With HRV off, Ania reads A / 93 with 90% coverage on both paths,
+and the coverage stays at 90% however many days are closed.
 
 More detail per part: `docs/ARCHITECTURE.md`, `docs/HES.md`, `docs/WATCH_LINK.md`.
 
@@ -209,8 +223,20 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 ## Security & privacy
 
 - **Phone.** The phone app declares no permissions and has no network code: health history and the score
-  never leave the phone. The only output meant for a partner is the signed tier claim. The Watch Link code
+  never leave the phone. The only output meant for a partner is the signed tier claim. The code is a bearer
+  token: whoever holds an unused code can present it once, and the single-use nonce and the expiry limit that. Its
+  key id (`kid`) is 8 hex characters, 32 bits, and only selects the key from the partner's registry; the
+  signature and the registry decide, not the id. The Watch Link code
   also answers the paired watch with ACK packets (sequence number, status, reason; no health values).
+- **Consent.** The consented data types are stored in the app sandbox (`healthsim/scopes.json`) next to the
+  data Health Sim sent, and both are removed on Disconnect. A stored consent that does not read as a list of
+  known data types counts as every type being allowed only until the next consent screen; the app never guesses
+  a narrower consent. The wear check is not filtered by the consent switches: it always uses when the watch was
+  on the wrist and, around each break, the resting heart rate and steps of the 24 h before it. It decides
+  eligibility, not the score. The consent screen says so.
+- **Partner (demo).** The demo partner keeps used codes apart from the codes still waiting, so a code shown twice
+  reads "Already used" however many new codes were issued in between. A key id is never taken over: a different
+  public key under a registered key id is refused, and no code is made.
 - **Watch.** Two permissions, `READ_HEALTH_DATA` (heart rate) and `ACTIVITY_MOTION` (steps), each with a
   stated reason and used only while the app is open. A refused permission shows "unavailable" and the wear
   state "no data", never a made-up value (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg` shows

@@ -88,10 +88,16 @@ two disagree.
 **What is in the repository**
 
 - Modules: `entry` (phone), `watch` (wearable), `common` (HAR, shared logic). Minimum API 20, target API 24.
+  A second DevEco project, `healthsim/` (bundle `com.fairwear.healthsim`, modules `entry` for the phone and
+  `watch`), builds Health Sim; the root project does not include it.
 - Phone: the add-on flow (connect, two-step consent, disconnect), the home-screen card, one entry through
   `fwTarget`, device signing with HUKS and a software fallback.
 - Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
   over `hdc`.
+- Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place that chooses
+  where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per persona), with
+  `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed
+  preview (`PreviewReportService`) is still in the code and not in use.
 - Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`). Built: the
   Report screen with the Live card and the demo controls, "Why this tier", the Evidence calendar with the
   day sheet and "Appeal this day", and "What left this phone" (`view/LedgerPage.ets`, linked from Share).
@@ -118,15 +124,12 @@ two disagree.
   built-in demo data and says so. `common/src/test/HealthSimCopies.test.ets` keeps the copies under
   `healthsim/*/src/main/ets/fw/` identical to `common`. Build and install: `healthsim/README.md`.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
-  `tools/shot.sh`. Results: `docs/test-results.txt`.
+  `tools/shot.sh`, `tools/watch-phone-relay.mjs` (the development relay that carries signed day packets between
+  the two emulators over `hdc`). Results: `docs/test-results.txt`.
 
 **What is NOT in the repository yet**
 
 - Export and deletion of the data.
-- Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place that chooses
-  where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per persona), with
-  `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed
-  preview (`PreviewReportService`) is still in the code and not in use.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
   histories (from Health Sim when it is connected, otherwise the built-in ones). The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
   this repository; check `docs/HES.md` and the code.
@@ -135,7 +138,7 @@ two disagree.
 brief; its copy is `docs/prompts/00-FAIRWEAR_PLAN.md`, next to the other briefs, indexed in `docs/prompts/README.md`)
 
 - The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
-- One wear rule on the watch: `WearStateMachine`. A reading of 0 bpm or less is no reading.
+- One wear rule on the watch: `WearStateMachine`. A reading of 0 or outside 25–230 bpm is no reading (`common/src/main/ets/watchlink/WatchLinkTypes.ets`).
 - Verified watch days are shown, not scored. Never write that the watch feeds the score.
 - Rules and the score are deterministic and are never called AI.
 - Logs carry counters only, never heart-rate or step values in public fields.
