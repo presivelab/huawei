@@ -1,6 +1,6 @@
 import { TierClaim } from '../model/types';
 import { b64urlEncode } from '../platform/Bytes';
-import { Clock, SigVerifier } from '../watchlink/WatchLinkPorts';
+import { Clock, Hasher, SigVerifier } from '../watchlink/WatchLinkPorts';
 import { validateSignedClaim } from './ClaimValidation';
 import { decodeSignedClaimToken } from './SignedClaimToken';
 
@@ -71,6 +71,18 @@ class IssuedNonce {
   }
 }
 
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export class PartnerVerifier {
   private random: RandomSource;
   private clock: Clock;
@@ -84,9 +96,28 @@ export class PartnerVerifier {
     this.sigVerifier = sigVerifier;
   }
 
-  /** Registers a key (or replaces the key with the same kid). Call it when the user agrees to share. */
-  registerKey(kid: string, publicKeyDer: Uint8Array, source: string): void {
+  /**
+   * Registers a key under its kid. The same key again is fine (its source label is updated); a different key
+   * under a kid that is already taken is refused and the registered key stays: a kid is only 32 bits, so a
+   * second key with the same kid must never silently replace the first. Returns false when refused.
+   */
+  registerKey(kid: string, publicKeyDer: Uint8Array, source: string): boolean {
+    const have = this.keys.get(kid);
+    if (have !== undefined && !sameBytes(have.publicKeyDer, publicKeyDer)) {
+      return false;
+    }
     this.keys.set(kid, new PartnerKey(kid, publicKeyDer, source));
+    return true;
+  }
+
+  /**
+   * Enrols a key the way a partner should: the kid is worked out from the key itself (first 4 bytes of
+   * SHA-256 over the DER), never taken from the device. Returns the kid, or '' when that kid already
+   * belongs to another key. Call it when the user agrees to share.
+   */
+  async enrolKey(publicKeyDer: Uint8Array, source: string, hasher: Hasher): Promise<string> {
+    const kid = await hasher.keyId(b64urlEncode(publicKeyDer));
+    return this.registerKey(kid, publicKeyDer, source) ? kid : '';
   }
 
   /** Empties the registry; the software key changes on every app start, so it is rebuilt each session. */

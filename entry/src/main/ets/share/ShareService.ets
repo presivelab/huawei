@@ -1,5 +1,6 @@
 import {
   claimLedgerEntry,
+  DeviceHasher,
   DeviceRandom,
   DeviceSigVerifier,
   FileTextStore,
@@ -140,8 +141,12 @@ export class ShareService {
     }
     const key = await ProofSigner.shared().ensureKey();
     const keySource = key.source === KeySource.HUKS ? KEY_SOURCE_HUKS : KEY_SOURCE_SOFTWARE;
-    // The demo partner learns the public key here; a real partner gets it once, when the user enrols.
-    this.partner.registerKey(key.kid, key.publicKeyDer, keySource);
+    // The demo partner learns the public key here; a real partner gets it once, when the user enrols. The
+    // partner works the kid out from the key and refuses a kid that already belongs to another key.
+    const enrolled = await this.partner.enrolKey(key.publicKeyDer, keySource, new DeviceHasher());
+    if (enrolled !== key.kid) {
+      throw new Error('The partner already has another key with this key id');
+    }
     const signer = await KeySigner.create(ProofSigner.ALIAS);
     const nonce = await this.partner.issueNonce();
     const token = await mintClaimToken(signer, keySource, offer, nonce, now);
