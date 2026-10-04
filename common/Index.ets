@@ -471,3 +471,5 @@ export {
   tokenLengthLine,
   verdictLine
 } from './src/main/ets/claim/ShareFlow';
+// The days of the wear month in detail: worn time, breaks and the reason of each day as text.
+export { DayBreak, DayDetail, dayDetailOf, engineDayDetails } from './src/main/ets/report/EngineReports';
