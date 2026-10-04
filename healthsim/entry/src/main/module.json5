@@ -41,23 +41,7 @@
         "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
-        "removeMissionAfterTerminate": true,
-        "skills": [
-          {
-            "entities": [
-              "entity.system.browsable"
-            ],
-            "actions": [
-              "ohos.want.action.viewData"
-            ],
-            "uris": [
-              {
-                "scheme": "healthsim",
-                "host": "authorize"
-              }
-            ]
-          }
-        ]
+        "removeMissionAfterTerminate": true
       }
     ]
   }
