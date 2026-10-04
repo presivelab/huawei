@@ -25,7 +25,7 @@ All weights, curves, thresholds and minimum counts are prototype product assumpt
 | `HesTier.ets`                     | 9                | A from 80, B from 60 to 79, C below 60; labels; points to the next tier                                                              |
 | `HesWhy.ets`                      | 11               | strongest factors, improvement opportunities, missing evidence                                                                       |
 | `HesEngine.ets`                   | 14               | `computeHes(history)`: the whole flow                                                                                                |
-| `HesSession.ets`                  | 10               | live heart rate (never stored), today's steps (stored when the day closes), close the day, reset                                                          |
+| `HesSession.ets`                  | 10               | live heart rate (never stored), today's steps (stored when the day closes), close the day, reset                                     |
 | `HesPrng.ets`, `HesPersonas.ets`  | 16               | the seeded generator and the six personas                                                                                            |
 
 The wear month is next to it, in `common/src/main/ets/wear/`: `WearMonth.ets` (the rules) and `WearPersonas.ets`
@@ -201,6 +201,10 @@ implementation of the same interface; it is not in use.
     does not touch another. One closed day moves Ewa from C / 59 to B / 64; reset gives C / 59 again. The live
     heart rate never changes a score and is never stored. Today's step count changes nothing until the day is
     closed; closing the day stores it as that day's steps (decision 18), so a closed day can move the score.
+36. **With data from Health Sim the history and the wear month come from Health Sim; the day that "Close the
+    day" adds still comes from the persona generator in FairWear** (`HesPersonas`), because Health Sim sends
+    completed days only. The report built from the Health Sim data equals the built-in one for all six
+    personas (`HealthSimPayload.test.ets`); only the source line differs: "Health Sim · Simulated data".
 
 ## What this is not
 
