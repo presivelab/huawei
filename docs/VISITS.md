@@ -31,8 +31,7 @@ and the text in the middle.
 - Without a day from the watch the card says "Wear segments appear when the watch sends a day".
 - The marker and the arcs are shown and never scored. The card is labelled "Before launch: demo data".
 
-Limit: the dial reads the persona's starting history. A day closed with "Close day" in the demo controls
-moves the score, not the dial.
+The dial shows the newest completed day of the session the score uses.
 
 ## Visits: the two flows
 

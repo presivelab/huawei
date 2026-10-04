@@ -1,4 +1,4 @@
-import { DayDetail, LiveNow, PersonaRef, PersonaReport, previewPersonas, previewReport } from 'common';
+import { DayDetail, engineSession, HesDay, LiveNow, PersonaRef, PersonaReport, previewPersonas, previewReport } from 'common';
 
 /*
  * Where the phone screens get the monthly report from. Two implementations: the scoring engine
@@ -29,6 +29,9 @@ export interface ReportService {
 
   /** True while the values are fixed preview values and not calculated: the screens then say so. */
   isPreview(): boolean;
+
+  /** The completed days of the persona's session as it stands now (closed days, Health Sim data and consent included), oldest first. */
+  dayHistory(id: string): HesDay[];
 }
 
 /** Fixed preview reports from `common` (PreviewReports). Nothing is calculated here. */
@@ -84,5 +87,10 @@ export class PreviewReportService implements ReportService {
 
   isPreview(): boolean {
     return true;
+  }
+
+  // The preview has no session of its own: the persona's starting history.
+  dayHistory(id: string): HesDay[] {
+    return engineSession(id).history();
   }
 }

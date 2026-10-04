@@ -83,8 +83,8 @@ logic). On the phone: `entry/src/main/ets/visits/VisitService.ets` (state in mem
 **Day dial (`common/src/main/ets/present/DayDialModel.ets`)** — pure geometry: the newest completed day
 (`HesDay`), the slot runs of the newest watch day and the local minute become arcs in degrees, the angle of
 the "now" marker and the centre text. `entry/src/main/ets/view/DayDialCard.ets` draws it on the Report tab.
-It reads the persona's starting history (`engineSession(id).history()`), not the running session, so "Close
-the day" and Health Sim data do not move it. Shown, never scored.
+It reads the session the score uses (`reportService().dayHistory(id)`), so "Close the day", "Reset demo",
+Health Sim data and the consent move it. Shown, never scored.
 
 ## Health source layer (`common/src/main/ets/health/`)
 
