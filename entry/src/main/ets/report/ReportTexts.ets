@@ -88,9 +88,16 @@ export function tileName(id: string): string {
   return 'Recovery (HRR1)';
 }
 
-// Evidence for sleep is counted in nights, everything else in days.
+// Evidence for sleep is counted in nights, recovery in workouts (one reading per workout), VO₂max in
+// estimates (one per estimate the watch made), everything else in days.
 export function countUnit(id: string): string {
-  return id === ComponentId.SLEEP || id === ComponentId.SLEEP_REGULARITY ? 'nights' : 'days';
+  if (id === ComponentId.SLEEP || id === ComponentId.SLEEP_REGULARITY) {
+    return 'nights';
+  }
+  if (id === ComponentId.HR_RECOVERY) {
+    return 'workouts';
+  }
+  return id === ComponentId.VO2MAX ? 'estimates' : 'days';
 }
 
 // The line next to the tier letter: what the tier means, or how far the next one is.
