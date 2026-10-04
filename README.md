@@ -58,6 +58,18 @@ opens Health Sim, which asks for its own consent and hands FairWear the simulate
 on the watch, **Get today from Health Sim** fetches the script of the demo day. Without it FairWear uses its
 built-in demo data and says so.
 
+The watch module of Health Sim is built and installed the same way (`healthsim/README.md` describes the phone
+module):
+
+```
+cd healthsim && source ../tools/env.sh && ohpm.bat install --all
+hvigorw.bat assembleHap --mode module -p module=watch@default -p product=default -p buildMode=debug --no-daemon
+hdc -t <watch> install -r watch/build/default/outputs/default/watch-default-unsigned.hap
+```
+
+Health Sim on the watch does not have to be opened first: FairWear on the watch starts its export ability when
+**Get today from Health Sim** is tapped.
+
 **How to check it.** Follow `docs/DEMO_SCRIPT.md`: the whole product in about four minutes (Report, Why,
 Evidence with an appeal, Share, the partner check with a replay and a changed tier, the watch and its signed
 days), and the connect / consent / disconnect / consent-again path that Huawei asks to see when it verifies an
