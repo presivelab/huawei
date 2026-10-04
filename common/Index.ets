@@ -259,6 +259,7 @@ export {
   feedScriptSource,
   FeedStretch,
   HEALTH_SIM_WATCH_PARAM,
+  MINUTES_PER_DAY as FEED_MINUTES_PER_DAY,
   setFeedScript
 } from './src/main/ets/watchlink/DemoFeed';
 
@@ -299,80 +300,113 @@ export {
   VerifyResult
 } from './src/main/ets/claim/PartnerVerifier';
 export { DeviceRandom } from './src/main/ets/platform/DeviceRandom';
-// HES-Lite v1.0: the scoring engine, rebuilt from the specification. Pure logic. See docs/HES.md.
+// HES vNext: the scoring engine. Deterministic rules and curves, pure logic. See docs/HES.md.
+// The names of the report's own ids (ComponentId in ReportModels) are kept; the engine's are prefixed.
 export {
-  copyHesDay,
-  emptyHesDay,
-  HesComponentDefinition,
-  HesComponentId,
-  HesComponentResult,
+  ComponentId as HesComponentId,
+  ComponentResult as HesComponentResult,
   HesConfidence,
-  HesDay,
-  HesPoint,
+  HesCrfEstimate,
+  HesDayRecord,
+  HesHistory,
+  HesHrrSession,
+  HesHrvNight,
+  HesProfile,
   HesResult,
+  HesSleep,
   HesStatus,
-  HesWhy,
-  HES_MISSING
+  HesTier
 } from './src/main/ets/hes/HesTypes';
-export { piecewiseScore } from './src/main/ets/hes/HesPiecewise';
 export {
-  hesDefinition,
   HES_COMPONENTS,
   HES_CONFIDENCE_HIGH_MIN,
   HES_CONFIDENCE_MEDIUM_MIN,
+  HES_CRF_WINDOW_DAYS,
   HES_HRR_WINDOW_DAYS,
+  HES_HRV_WINDOW_DAYS,
+  HES_MODEL_VERSION,
+  HES_PROFILES,
   HES_TIER_A_MIN,
   HES_TIER_B_MIN,
-  HES_VO2MAX_WINDOW_DAYS,
-  HES_WINDOW_DAYS
-} from './src/main/ets/hes/HesCurves';
+  HES_WINDOW_DAYS,
+  hesComponentDefinition,
+  HesComponentDefinition,
+  hesComponentIndex,
+  hesProfileLabel,
+  hesWeightPermille,
+  HesPoint,
+  HRV_PROTOCOL
+} from './src/main/ets/hes/HesModel';
+export { piecewise as hesPiecewise } from './src/main/ets/hes/HesCurves';
 export {
+  aggregate as hesAggregate,
+  aggregateOf as hesAggregateOf,
+  equivalentMvpa,
+  HesAggregates,
+  HesAggregateValue,
+  hesIsScoredHrv,
+  hesIsValidNight,
+  hesIsValidValue,
   hesMean,
   hesMedian,
-  hesRound,
-  hesSampleSd,
+  hesPopulationSd,
   sleepRelativeMinutes,
   sleepTimingSd
-} from './src/main/ets/hes/HesMath';
+} from './src/main/ets/hes/HesAggregate';
 export {
-  isSufficient as hesIsSufficient,
-  isValidFor as hesIsValidFor,
-  quality as hesQuality,
-  validDays as hesValidDays
-} from './src/main/ets/hes/HesSufficiency';
-export {
-  componentScore as hesComponentScore,
-  equivalentMvpa,
-  evaluateComponent as hesEvaluateComponent,
-  evaluateComponents as hesEvaluateComponents
-} from './src/main/ets/hes/HesComponents';
-export {
-  calculateObservedHes,
-  coverage as hesCoverage,
-  isCoreComplete as hesIsCoreComplete,
-  observedHes
-} from './src/main/ets/hes/HesComposite';
-export {
-  calculateConfidence as hesCalculateConfidence,
+  composeComponents as hesComposeComponents,
+  composeHes,
+  computeHes,
   confidenceFromIndex as hesConfidenceFromIndex,
-  confidenceIndex as hesConfidenceIndex,
-  weightedQuality as hesWeightedQuality
-} from './src/main/ets/hes/HesConfidence';
+  evaluateComponents as hesEvaluateComponents,
+  hesRound,
+  tierFromHes
+} from './src/main/ets/hes/HesEngine';
 export {
+  explainHes,
+  HesExplanation,
+  missingCore as hesMissingCore,
+  missingOptional as hesMissingOptional,
+  nextTier as hesNextTier,
   pointsToNextTier as hesPointsToNextTier,
-  tierFromHes,
-  tierLabel as hesTierLabel
-} from './src/main/ets/hes/HesTier';
-export { whyThisTier } from './src/main/ets/hes/HesWhy';
-export { composeHes, computeHes } from './src/main/ets/hes/HesEngine';
-export { HesPrng } from './src/main/ets/hes/HesPrng';
-export { HesDaySource, HesSession } from './src/main/ets/hes/HesSession';
+  strongest as hesStrongest,
+  toImprove as hesToImprove
+} from './src/main/ets/hes/HesExplain';
 export {
-  generatePersonaDay,
+  hesConfidenceLabel,
+  hesCountText,
+  hesCountUnit,
+  hesCoverageText,
+  hesHoursText,
+  hesOneDecimal,
+  hesOrdinal,
+  hesPartnerProfileText,
+  hesRawText,
+  hesSummaryText,
+  hesThousands,
+  hesWeightPct,
+  hesWeightText
+} from './src/main/ets/hes/HesFormat';
+// The seeded generator of the wear calendar. It is for demo data only; the score's personas use no random numbers.
+export { HesPrng } from './src/main/ets/hes/HesPrng';
+export {
+  copyHesDayRecord,
+  copyHesHistory,
+  copyHesSnapshot,
+  emptyHesSnapshot,
+  HesSession,
+  HesSnapshot
+} from './src/main/ets/hes/HesSession';
+export {
   generatePersonaHistory,
+  generatePersonaToday,
   HesPersonas,
   HesPersonaSpec,
-  HES_PERSONA_END_DATE
+  HES_PERSONA_END_DATE,
+  HES_PERSONA_TODAY,
+  PersonaCrf,
+  PersonaHrr,
+  personaPattern
 } from './src/main/ets/hes/HesPersonas';
 // Wear month of the demo personas: compliance, breaks and the selective non-wear flag. Pure logic.
 export {
@@ -393,6 +427,7 @@ export {
   generateWearMonth,
   WearEvent,
   WearPersonas,
+  WearPersonaSpec,
   WEAR_MONTH_DAYS
 } from './src/main/ets/wear/WearPersonas';
 // The monthly report on the phone: view models, the benefit rule and the fixed preview of the six personas.
@@ -405,6 +440,7 @@ export {
   DayState,
   hasScore,
   HES_NONE,
+  LIVE_NONE,
   LiveNow,
   PersonaRef,
   PersonaReport,
@@ -439,6 +475,8 @@ export {
 } from './src/main/ets/nav/EntryTarget';
 export { dayStateLabel, metricSpoken, scoreSpoken, wearSpoken } from './src/main/ets/report/ReportSpeech';
 export { periodDayIso, periodDaySpoken } from './src/main/ets/report/ReportDates';
+// The demo partner's weight profile: what is shared, eligibility and the benefit are always in it.
+export { PARTNER_HES_PROFILE, PARTNER_PROFILE_LINE } from './src/main/ets/report/PartnerProgram';
 // The same report built from the scoring engine, the persona history and the wear month.
 export {
   ENGINE_DEFAULT_ID,
@@ -460,20 +498,38 @@ export {
   wearMonthFrom
 } from './src/main/ets/report/EngineReports';
 // Health Sim: the simulator app that stands in for HUAWEI Health hands its data over in this format.
-export { dayWithScopes } from './src/main/ets/health/HealthSimPayload';
+export { dayWithScopes, snapshotWithScopes } from './src/main/ets/health/HealthSimPayload';
 export {
   decodeHealthSimPayload,
   encodeHealthSimPayload,
   HEALTH_SIM_MAX_CHARS,
+  HEALTH_SIM_OUTDATED_TEXT,
   HEALTH_SIM_PARAM,
+  HEALTH_SIM_SCHEMA,
   HEALTH_SIM_SOURCE,
   HEALTH_SIM_VERSION,
   healthSimPayloadFromPersonas,
   healthSimPerson,
+  healthSimSnapshot,
   HealthSimPayload,
   HealthSimPerson,
+  HealthSimRead,
+  HealthSimReadStatus,
+  readHealthSimPayload,
   withScopes
 } from './src/main/ets/health/HealthSimPayload';
+// "FairWear readiness": what Health Sim's Scenario tool shows, calculated by the same engine.
+export {
+  healthSimReadiness,
+  HealthSimReadiness,
+  READINESS_CORE,
+  READINESS_NO_SCORE,
+  READINESS_NOTE,
+  READINESS_OPTIONAL,
+  READINESS_TITLE,
+  ReadinessPreview,
+  ReadinessRow
+} from './src/main/ets/health/HealthSimReadiness';
 // The Evidence calendar and the "Why this tier" sections, from the rows of a report.
 export {
   appealKey,

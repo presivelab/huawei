@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@ohos/hypium';
 import { HesPersonas } from '../main/ets/hes/HesPersonas';
-import { emptyHesDay, HesDay } from '../main/ets/hes/HesTypes';
+import { HesDayRecord } from '../main/ets/hes/HesTypes';
 import {
   dayDial,
   DIAL_CHARGING,
@@ -20,13 +20,12 @@ import {
 } from '../main/ets/present/DayDialModel';
 import { slotRuns } from '../main/ets/present/TourContent';
 
-function night(startMin: number, endMin: number, minutes: number, steps: number): HesDay {
-  const day = emptyHesDay('2026-10-03');
-  day.sleepStartMin = startMin;
-  day.sleepEndMin = endMin;
-  day.sleepMinutes = minutes;
-  day.steps = steps;
-  return day;
+function night(startMin: number, endMin: number, minutes: number, steps: number): HesDayRecord {
+  return {
+    date: '2026-10-03',
+    steps: steps,
+    sleep: { bedMin: startMin, wakeMin: endMin, totalSleepMin: minutes }
+  };
 }
 
 export default function dayDialTest() {
@@ -59,8 +58,7 @@ export default function dayDialTest() {
     });
 
     it('a day without sleep has no sleep arc and says so', 0, () => {
-      const day = emptyHesDay('2026-10-03');
-      day.steps = 3120;
+      const day: HesDayRecord = { date: '2026-10-03', steps: 3120 };
       const dial = dayDial(day, [], 600);
       expect(dial.sleepArcs.length).assertEqual(0);
       expect(dial.sleepNote).assertEqual(DIAL_SLEEP_NOT_MEASURED);
@@ -69,12 +67,12 @@ export default function dayDialTest() {
     });
 
     it('Ola: every day without a measured night gives no arc', 0, () => {
-      const history = HesPersonas.session('ola').history();
-      expect(history.length > 0).assertTrue();
+      const days = HesPersonas.session('ola').history().days;
+      expect(days.length > 0).assertTrue();
       let unmeasured = 0;
-      for (let i = 0; i < history.length; i++) {
-        const dial = dayDial(history[i], [], 600);
-        if (history[i].sleepMinutes < 0) {
+      for (let i = 0; i < days.length; i++) {
+        const dial = dayDial(days[i], [], 600);
+        if (days[i].sleep === undefined) {
           unmeasured++;
           expect(dial.sleepArcs.length).assertEqual(0);
           expect(dial.sleepNote).assertEqual(DIAL_SLEEP_NOT_MEASURED);
@@ -82,7 +80,19 @@ export default function dayDialTest() {
           expect(dial.sleepArcs.length).assertEqual(1);
         }
       }
-      expect(unmeasured > 0).assertTrue();
+      // Ola has 16 days and six nights with the watch on: the older ten days have no night.
+      expect(days.length).assertEqual(16);
+      expect(unmeasured).assertEqual(10);
+    });
+
+    it('a day without a steps reading says so; zero steps is a reading', 0, () => {
+      const noSteps: HesDayRecord = { date: '2026-10-03', sleep: { bedMin: 1410, wakeMin: 430, totalSleepMin: 430 } };
+      const dial = dayDial(noSteps, [], 600);
+      expect(dial.centerValue).assertEqual(DIAL_NO_VALUE);
+      expect(dial.centerText).assertEqual(DIAL_STEPS_NOT_MEASURED);
+      expect(dial.sleepArcs.length).assertEqual(1);
+      const zero = dayDial({ date: '2026-10-03', steps: 0 }, [], 600);
+      expect(zero.centerText).assertEqual('0 steps');
     });
 
     it('no day at all: nothing is drawn and nothing is invented', 0, () => {

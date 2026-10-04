@@ -98,5 +98,6 @@ function normaliseCoverage(value: number): number {
   if (value > 100) {
     return 100;
   }
-  return Math.round(value);
+  // One decimal, as the report writes coverage: 87.5 stays 87.5.
+  return Math.round(value * 10) / 10;
 }

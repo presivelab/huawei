@@ -1,10 +1,14 @@
 /*
  * The monthly report built from the scoring engine: the same `PersonaReport` the fixed preview fills, with
- * every value taken from HES-Lite (`hes/`), the persona's history and the wear month (`wear/`).
+ * every value taken from HES vNext (`hes/`), the person's history and the wear month (`wear/`).
  * Pure logic: no UI and no platform imports.
  *
  * What comes from where:
- *   - score, tier, coverage, confidence, component scores and weights: the engine result;
+ *   - score, tier, coverage, confidence, component scores and weights: the engine result in the profile the
+ *     report is asked for;
+ *   - eligible, benefit and its reason: always the engine result in the partner's profile
+ *     (`PARTNER_HES_PROFILE`), whichever profile the report shows. The profile switch on a screen explains;
+ *     it never changes what is shared or what the benefit is;
  *   - raw values with units and the seven-day bars: the completed days of the history;
  *   - compliant days, nights, suspicious breaks, the flag and the 30 day cells: the wear month;
  *   - eligible = the wear month is eligible and there is a score; benefit and its reason: `Benefit.ets`;
@@ -15,14 +19,14 @@
  * Decisions:
  *   - a value that does not exist stays missing: HES_NONE, POINTS_UNKNOWN, BAR_NO_DATA, an empty text.
  *     Zero is written only for a reading of zero;
- *   - `weightPct` has one decimal (16.7), so equal weights read the same and the sum stays at 100. It is 0
- *     for every component when there is no score, because there is nothing to weigh;
+ *   - `weightPct` is the effective weight with one decimal (16.7). It is 0 for every component when there is
+ *     no score, because there is nothing to weigh;
  *   - `minCount` is the engine's minimum for a Core component and 0 for the three components the score
- *     does not require, as `ReportModels` defines it;
- *   - VO2max and HRV are percentiles in the persona history, so they are shown as percentiles;
+ *     does not require, as `ReportModels` defines it; `needCount` is the engine's minimum for all eight;
+ *   - VO2max and HRV are percentiles the source supplies, so they are shown as percentiles;
  *   - a bar is the reading of that one day on the component's curve. Sleep timing regularity has no value
  *     for a single night; its bar is how far that night's bedtime and wake time were from the person's
- *     own average, on the same curve;
+ *     own average, on the same curve. VO2max and recovery have a bar on a day with an estimate or a session;
  *   - the wear month is the persona's fixed month. Closing a day in a session changes the score, the
  *     components and the bars; the period and the day cells stay as they are;
  *   - the points to the next tier are to B for tier C and to A for tier B (`nextTierOf`);
@@ -33,38 +37,68 @@
 import { TIER_A, TIER_B, TIER_C } from '../claim/ClaimValidation';
 import { ALL_HEALTH_SCOPES, HealthScope } from '../health/HealthConnection';
 import { HealthStatus } from '../health/HealthRecords';
-import { dayWithScopes, HealthSimPerson } from '../health/HealthSimPayload';
+import { healthSimSnapshot, HealthSimPerson, snapshotWithScopes } from '../health/HealthSimPayload';
 import { healthSourceLabel } from '../health/HealthStatusLabel';
-import { componentScore, equivalentMvpa } from '../hes/HesComponents';
-import { hesDefinition, HES_DAYS_PER_WEEK, HES_TIER_A_MIN, HES_TIER_B_MIN } from '../hes/HesCurves';
-import { composeHes, computeHes } from '../hes/HesEngine';
-import { hesMean, hesRound, sleepRelativeMinutes, sleepTimingSd } from '../hes/HesMath';
-import { generatePersonaDay, generatePersonaHistory, HesPersonas, HesPersonaSpec } from '../hes/HesPersonas';
-import { HesDaySource, HesSession } from '../hes/HesSession';
-import { isValidFor, validDays } from '../hes/HesSufficiency';
-import { pointsToNextTier } from '../hes/HesTier';
 import {
+  equivalentMvpa,
+  hesIsScoredHrv,
+  hesIsValidNight,
+  hesIsValidValue,
+  hesMean,
+  sleepRelativeMinutes,
+  sleepTimingSd
+} from '../hes/HesAggregate';
+import { piecewise } from '../hes/HesCurves';
+import { composeComponents, hesRound } from '../hes/HesEngine';
+import { pointsToNextTier } from '../hes/HesExplain';
+import {
+  hesConfidenceLabel,
+  hesCountText,
+  hesCoverageText,
+  hesHoursText,
+  hesOrdinal,
+  hesRawText,
+  hesThousands,
+  hesWeightPct,
+  hesWeightText
+} from '../hes/HesFormat';
+import {
+  HES_DAYS_PER_WEEK,
+  HES_MINUTES_PER_DAY,
+  HES_MINUTES_PER_HOUR,
+  HES_TIER_A_MIN,
+  HES_TIER_B_MIN,
+  HES_WINDOW_DAYS,
+  hesComponentDefinition,
   HesComponentDefinition,
-  HesComponentId,
-  HesComponentResult,
+  hesProfileLabel,
+  HesPoint
+} from '../hes/HesModel';
+import { HesPersonas } from '../hes/HesPersonas';
+import { HesSession } from '../hes/HesSession';
+import {
+  ComponentId as HesComponentId,
+  ComponentResult,
   HesConfidence,
-  HesDay,
-  HesPoint,
+  HesDayRecord,
+  HesHistory,
+  HesProfile,
   HesResult,
-  HesStatus,
-  HES_MISSING
+  HesStatus
 } from '../hes/HesTypes';
 import { DEFAULT_THRESHOLDS } from '../model/defaults';
 import { Thresholds } from '../model/types';
 import { buildWearMonth, WearBreakResult, WearDayResult, WearDayState, WearMonthResult } from '../wear/WearMonth';
 import { WearPersonas } from '../wear/WearPersonas';
 import { benefitLevel, benefitReason } from './Benefit';
+import { PARTNER_HES_PROFILE } from './PartnerProgram';
 import {
   BAR_NO_DATA,
   ComponentId,
   ComponentRow,
   DayCell,
   HES_NONE,
+  LIVE_NONE,
   LiveNow,
   PersonaRef,
   PersonaReport,
@@ -81,10 +115,10 @@ export const ENGINE_SOURCE: string = healthSourceLabel(HealthStatus.DEMO);
 export const HEALTH_SIM_LABEL: string = 'Health Sim · Simulated data';
 
 const BAR_DAYS: number = 7;
-const MINUTES_PER_HOUR: number = 60;
-const MINUTES_PER_DAY: number = 1440;
+const MINUTES_PER_HOUR: number = HES_MINUTES_PER_HOUR;
+const MINUTES_PER_DAY: number = HES_MINUTES_PER_DAY;
 const PERCENT: number = 100;
-const TENTHS: number = 10;
+const FULL_COVERAGE_PERMILLE: number = 1000;
 const MONTHS: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // The order the report lists the components in (ComponentId).
@@ -136,51 +170,6 @@ export function nextTierOf(tier: string): string {
 // Numbers as text
 // ---------------------------------------------------------------------------------------------------------
 
-// 9412.4 -> "9,412".
-function thousands(value: number): string {
-  const digits = `${hesRound(value)}`;
-  let out = '';
-  for (let i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 === 0) {
-      out += ',';
-    }
-    out += digits.charAt(i);
-  }
-  return out;
-}
-
-// 82 -> "82nd", 11 -> "11th".
-function ordinal(value: number): string {
-  const n = hesRound(value);
-  const lastTwo = n % 100;
-  const last = n % 10;
-  if (lastTwo >= 11 && lastTwo <= 13) {
-    return `${n}th`;
-  }
-  if (last === 1) {
-    return `${n}st`;
-  }
-  if (last === 2) {
-    return `${n}nd`;
-  }
-  if (last === 3) {
-    return `${n}rd`;
-  }
-  return `${n}th`;
-}
-
-// 6.5 -> "6 h 30 min", 7 -> "7 h".
-function hoursText(hours: number): string {
-  const total = hesRound(hours * MINUTES_PER_HOUR);
-  const h = Math.floor(total / MINUTES_PER_HOUR);
-  const m = total % MINUTES_PER_HOUR;
-  return m === 0 ? `${h} h` : `${h} h ${m} min`;
-}
-
-function roundToTenth(value: number): number {
-  return Math.round(value * TENTHS) / TENTHS;
-}
-
 // "2026-09-04" -> "4 Sep". Text that is not a date is returned as it is.
 function shortDate(date: string): string {
   if (date.length !== 10) {
@@ -207,13 +196,13 @@ function periodText(periodIso: string): string {
 // day is added: "4 Sep – 3 Oct · score to 5 Oct". The claim keeps the wear month (periodIso).
 export const SCORE_TO: string = ' · score to ';
 
-function periodLine(periodIso: string, history: HesDay[]): string {
+function periodLine(periodIso: string, days: HesDayRecord[]): string {
   const text = periodText(periodIso);
   const cut = periodIso.indexOf('..');
-  if (cut < 0 || history.length === 0) {
+  if (cut < 0 || days.length === 0) {
     return text;
   }
-  const last: string = history[history.length - 1].date;
+  const last: string = days[days.length - 1].date;
   return last > periodIso.substring(cut + 2) ? `${text}${SCORE_TO}${shortDate(last)}` : text;
 }
 
@@ -231,7 +220,7 @@ class RawText {
 function rawText(id: HesComponentId, value: number): RawText {
   switch (id) {
     case HesComponentId.STEPS:
-      return new RawText(thousands(value), '/day');
+      return new RawText(hesThousands(value), '/day');
     case HesComponentId.MVPA:
       return new RawText(`${hesRound(value)}`, 'min/week');
     case HesComponentId.RHR:
@@ -246,7 +235,7 @@ function rawText(id: HesComponentId, value: number): RawText {
       return new RawText(`±${hesRound(value)}`, 'min');
     case HesComponentId.CRF:
     case HesComponentId.HRV:
-      return new RawText(ordinal(value), 'percentile');
+      return new RawText(hesOrdinal(value), 'percentile');
     default:
       return new RawText(`${hesRound(value)}`, 'bpm in 60 s');
   }
@@ -256,34 +245,76 @@ function rawText(id: HesComponentId, value: number): RawText {
 // Seven-day bars
 // ---------------------------------------------------------------------------------------------------------
 
-function meanClock(nights: HesDay[], bedtime: boolean): number {
+const NO_READING: number = -1;
+
+// The mean bedtime or wake time, in minutes since 18:00, of the valid nights among the last 28 days; 0 when
+// there is none.
+function meanClock(days: HesDayRecord[], bedtime: boolean): number {
   const values: number[] = [];
-  for (let i = 0; i < nights.length; i++) {
-    values.push(sleepRelativeMinutes(bedtime ? nights[i].sleepStartMin : nights[i].sleepEndMin));
+  for (let i = Math.max(0, days.length - HES_WINDOW_DAYS); i < days.length; i++) {
+    const sleep = days[i].sleep;
+    if (sleep !== undefined && hesIsValidNight(sleep)) {
+      values.push(sleepRelativeMinutes(bedtime ? sleep.bedMin : sleep.wakeMin));
+    }
   }
-  return hesMean(values);
+  const mean = hesMean(values);
+  return mean === undefined ? 0 : mean;
 }
 
-// The reading of one day in the unit of the component's curve. Call only for a day that is valid for it.
-function dayValue(id: HesComponentId, day: HesDay, meanBedtime: number, meanWake: number): number {
+// The reading of one day in the unit of the component's curve; NO_READING when the day has none.
+function dayValue(id: HesComponentId, history: HesHistory, day: HesDayRecord, meanBedtime: number,
+  meanWake: number): number {
   switch (id) {
-    case HesComponentId.STEPS:
-      return day.steps;
-    case HesComponentId.MVPA:
-      return equivalentMvpa(day.moderateMinutes, day.vigorousMinutes) * HES_DAYS_PER_WEEK;
-    case HesComponentId.RHR:
-      return day.restingHeartRate;
-    case HesComponentId.SLEEP_DURATION:
-      return day.sleepMinutes / MINUTES_PER_HOUR;
-    case HesComponentId.SLEEP_REGULARITY:
-      return sleepTimingSd(Math.abs(sleepRelativeMinutes(day.sleepStartMin) - meanBedtime),
-        Math.abs(sleepRelativeMinutes(day.sleepEndMin) - meanWake));
-    case HesComponentId.CRF:
-      return day.vo2maxPercentile;
-    case HesComponentId.HRV:
-      return day.hrvPercentile;
-    default:
-      return day.hrr1;
+    case HesComponentId.STEPS: {
+      const steps = day.steps;
+      return steps !== undefined && hesIsValidValue(steps) ? steps : NO_READING;
+    }
+    case HesComponentId.MVPA: {
+      const moderate = day.moderateMin;
+      const vigorous = day.vigorousMin;
+      if (moderate === undefined || vigorous === undefined || !hesIsValidValue(moderate) ||
+        !hesIsValidValue(vigorous)) {
+        return NO_READING;
+      }
+      return equivalentMvpa(moderate, vigorous) * HES_DAYS_PER_WEEK;
+    }
+    case HesComponentId.RHR: {
+      const rhr = day.restingHr;
+      return rhr !== undefined && hesIsValidValue(rhr) ? rhr : NO_READING;
+    }
+    case HesComponentId.SLEEP_DURATION: {
+      const sleep = day.sleep;
+      return sleep !== undefined && hesIsValidNight(sleep) ? sleep.totalSleepMin / MINUTES_PER_HOUR : NO_READING;
+    }
+    case HesComponentId.SLEEP_REGULARITY: {
+      const sleep = day.sleep;
+      if (sleep === undefined || !hesIsValidNight(sleep)) {
+        return NO_READING;
+      }
+      return sleepTimingSd(Math.abs(sleepRelativeMinutes(sleep.bedMin) - meanBedtime),
+        Math.abs(sleepRelativeMinutes(sleep.wakeMin) - meanWake));
+    }
+    case HesComponentId.CRF: {
+      for (let i = history.crf.length - 1; i >= 0; i--) {
+        if (history.crf[i].date === day.date && hesIsValidValue(history.crf[i].percentile)) {
+          return history.crf[i].percentile;
+        }
+      }
+      return NO_READING;
+    }
+    case HesComponentId.HRV: {
+      const hrv = day.hrv;
+      return hrv !== undefined && hesIsScoredHrv(hrv) ? hrv.percentile : NO_READING;
+    }
+    default: {
+      for (let i = history.hrr.length - 1; i >= 0; i--) {
+        const s = history.hrr[i];
+        if (s.date === day.date && hesIsValidValue(s.peakHr) && hesIsValidValue(s.hr60) && s.peakHr > s.hr60) {
+          return s.peakHr - s.hr60;
+        }
+      }
+      return NO_READING;
+    }
   }
 }
 
@@ -296,17 +327,20 @@ function noBars(): number[] {
 }
 
 // The last seven completed days, oldest first: each day's reading on the component's curve, 0..100.
-function barsOf(def: HesComponentDefinition, history: HesDay[]): number[] {
-  const nights = def.id === HesComponentId.SLEEP_REGULARITY ? validDays(def, history) : [];
-  const meanBedtime = nights.length > 0 ? meanClock(nights, true) : 0;
-  const meanWake = nights.length > 0 ? meanClock(nights, false) : 0;
+function barsOf(def: HesComponentDefinition, history: HesHistory): number[] {
+  const days = history.days;
+  const regularity = def.id === HesComponentId.SLEEP_REGULARITY;
+  const meanBedtime = regularity ? meanClock(days, true) : 0;
+  const meanWake = regularity ? meanClock(days, false) : 0;
   const out: number[] = [];
-  for (let i = history.length - BAR_DAYS; i < history.length; i++) {
-    if (i < 0 || !isValidFor(def.id, history[i])) {
+  for (let i = days.length - BAR_DAYS; i < days.length; i++) {
+    if (i < 0) {
       out.push(BAR_NO_DATA);
-    } else {
-      out.push(hesRound(componentScore(def, dayValue(def.id, history[i], meanBedtime, meanWake))));
+      continue;
     }
+    const value = dayValue(def.id, history, days[i], meanBedtime, meanWake);
+    const score = value < 0 ? undefined : piecewise(def.curve, value);
+    out.push(score === undefined ? BAR_NO_DATA : hesRound(score));
   }
   return out;
 }
@@ -315,7 +349,7 @@ function barsOf(def: HesComponentDefinition, history: HesDay[]): number[] {
 // Components, wear and the report
 // ---------------------------------------------------------------------------------------------------------
 
-function findComponent(result: HesResult, id: HesComponentId): HesComponentResult | null {
+function findComponent(result: HesResult, id: HesComponentId): ComponentResult | null {
   for (let i = 0; i < result.components.length; i++) {
     if (result.components[i].id === id) {
       return result.components[i];
@@ -324,41 +358,58 @@ function findComponent(result: HesResult, id: HesComponentId): HesComponentResul
   return null;
 }
 
-function rowOf(c: HesComponentResult, history: HesDay[], scored: boolean, source: string): ComponentRow {
-  const minCount = c.core ? c.minCount : 0;
-  if (!c.available || c.rawValue < 0 || c.score < 0) {
+function rowOf(c: ComponentResult, history: HesHistory, scored: boolean, source: string): ComponentRow {
+  const minCount = c.requiredCore ? c.minimumCount : 0;
+  const rawValue = c.rawValue;
+  const score = c.score;
+  if (!c.available || rawValue === undefined || score === undefined) {
     // Not enough data: no value, no score, no weight and no bar. The counts say how far it is.
     return {
       id: reportComponentId(c.id),
       label: c.label,
       score: HES_NONE,
+      scoreExact: HES_NONE,
       raw: '',
       unit: '',
+      rawText: '',
       weightPct: 0,
+      weightText: '',
       available: false,
+      core: c.requiredCore,
       validCount: c.validCount,
       minCount: minCount,
+      needCount: c.minimumCount,
+      targetCount: c.targetCount,
+      countText: hesCountText(c),
       bars7: noBars(),
       source: ''
     };
   }
-  const text = rawText(c.id, c.rawValue);
+  const text = rawText(c.id, rawValue);
+  const weight = c.effectiveWeight;
   return {
     id: reportComponentId(c.id),
     label: c.label,
-    score: hesRound(c.score),
+    score: hesRound(score),
+    scoreExact: score,
     raw: text.raw,
     unit: text.unit,
-    weightPct: scored ? roundToTenth(c.effectiveWeight * PERCENT) : 0,
+    rawText: hesRawText(c.id, rawValue),
+    weightPct: scored ? hesWeightPct(c) : 0,
+    weightText: scored && weight !== undefined ? hesWeightText(weight) : '',
     available: true,
+    core: c.requiredCore,
     validCount: c.validCount,
     minCount: minCount,
-    bars7: barsOf(hesDefinition(c.id), history),
+    needCount: c.minimumCount,
+    targetCount: c.targetCount,
+    countText: hesCountText(c),
+    bars7: barsOf(hesComponentDefinition(c.id), history),
     source: source
   };
 }
 
-function rowsOf(result: HesResult, history: HesDay[], scored: boolean, source: string): ComponentRow[] {
+function rowsOf(result: HesResult, history: HesHistory, scored: boolean, source: string): ComponentRow[] {
   const out: ComponentRow[] = [];
   for (let i = 0; i < ROW_ORDER.length; i++) {
     const c = findComponent(result, ROW_ORDER[i]);
@@ -422,28 +473,42 @@ function wearMonthOf(id: string): WearMonthResult {
   return month;
 }
 
-function build(id: string, result: HesResult, history: HesDay[], month: WearMonthResult, liveHr: number,
-  liveSteps: number, source: string = ENGINE_SOURCE): PersonaReport {
-  const scored: boolean = result.status === HesStatus.OK && result.score >= 0;
-  const eligible: boolean = scored && month.eligible;
+function isScored(result: HesResult): boolean {
+  return result.status === HesStatus.OK && result.score !== undefined;
+}
+
+// `result` is the score in the profile the report shows. `partner` is the score in the partner's profile:
+// eligibility and the benefit are always taken from it.
+function build(id: string, result: HesResult, partner: HesResult, history: HesHistory, month: WearMonthResult,
+  liveHr: number | undefined, liveSteps: number | undefined, source: string = ENGINE_SOURCE): PersonaReport {
+  const scored: boolean = isScored(result);
+  const partnerScored: boolean = isScored(partner);
+  const eligible: boolean = partnerScored && month.eligible;
   const live: LiveNow = {
-    hr: liveHr > 0 ? liveHr : HES_MISSING,
-    steps: liveSteps >= 0 ? liveSteps : HES_MISSING
+    hr: liveHr !== undefined && liveHr > 0 ? liveHr : LIVE_NONE,
+    steps: liveSteps !== undefined && liveSteps >= 0 ? liveSteps : LIVE_NONE
   };
   const counterfactual = engineWhatIf(result);
+  const score = result.score;
+  const points = pointsToNextTier(result);
   return {
     id: id,
     name: HesPersonas.displayName(id),
-    period: periodLine(month.period, history),
+    period: periodLine(month.period, history.days),
     periodIso: month.period,
-    hes: scored ? result.score : HES_NONE,
+    profile: result.profile,
+    profileLabel: hesProfileLabel(result.profile),
+    partnerProfile: result.profile === PARTNER_HES_PROFILE,
+    hes: scored && score !== undefined ? score : HES_NONE,
     tier: result.tier,
     coveragePct: result.coverage,
+    coverageText: hesCoverageText(result.coveragePermille),
     confidence: confidenceOf(result.confidence),
+    showWeights: scored && result.coveragePermille < FULL_COVERAGE_PERMILLE,
     eligible: eligible,
-    benefit: benefitLevel(eligible, result.tier, scored),
-    benefitReason: benefitReason(eligible, result.tier, scored, month.flagged, month.suspiciousBreaks),
-    pointsToNext: scored ? pointsToNextTier(result.score) : POINTS_UNKNOWN,
+    benefit: benefitLevel(eligible, partner.tier, partnerScored),
+    benefitReason: benefitReason(eligible, partner.tier, partnerScored, month.flagged, month.suspiciousBreaks),
+    pointsToNext: scored ? (points === undefined ? 0 : points) : POINTS_UNKNOWN,
     components: rowsOf(result, history, scored, source),
     wear: wearOf(month),
     live: live,
@@ -466,43 +531,50 @@ export interface EngineWhatIf {
   sentence: string;          // one sentence for the screen
 }
 
-function copyComponent(c: HesComponentResult): HesComponentResult {
-  return {
+function copyComponent(c: ComponentResult): ComponentResult {
+  const out: ComponentResult = {
     id: c.id,
     label: c.label,
-    unit: c.unit,
-    core: c.core,
-    rawValue: c.rawValue,
-    score: c.score,
     available: c.available,
+    requiredCore: c.requiredCore,
     validCount: c.validCount,
-    minCount: c.minCount,
+    minimumCount: c.minimumCount,
     targetCount: c.targetCount,
     quality: c.quality,
     baseWeight: c.baseWeight,
-    effectiveWeight: c.effectiveWeight
+    baseWeightPermille: c.baseWeightPermille
   };
+  if (c.rawValue !== undefined) {
+    out.rawValue = c.rawValue;
+  }
+  if (c.score !== undefined) {
+    out.score = c.score;
+  }
+  return out;
 }
 
 // The score when one component has the value `toRaw` and nothing else changes.
 function resultWith(result: HesResult, id: HesComponentId, toRaw: number): HesResult {
-  const components: HesComponentResult[] = [];
+  const components: ComponentResult[] = [];
   for (let i = 0; i < result.components.length; i++) {
     const c = copyComponent(result.components[i]);
     if (c.id === id) {
-      c.rawValue = toRaw;
-      c.score = componentScore(hesDefinition(id), toRaw);
+      const score = piecewise(hesComponentDefinition(id).curve, toRaw);
+      if (score !== undefined) {
+        c.rawValue = toRaw;
+        c.score = score;
+      }
     }
     components.push(c);
   }
-  return composeHes(components);
+  return composeComponents(result.profile, components);
 }
 
 // The points of a curve between the value today and the top of the curve, the nearest first. For steps
 // they go up; for the resting heart rate and the sleep timing they go down; none when the value is
 // already on the top.
 function pointsTowardsTop(curve: HesPoint[], raw: number): HesPoint[] {
-  let top = HES_MISSING;
+  let top = -1;
   for (let i = 0; i < curve.length; i++) {
     top = Math.max(top, curve[i].y);
   }
@@ -540,16 +612,16 @@ function sentenceOf(id: HesComponentId, fromRaw: number, toRaw: number, tier: st
   let today = '';
   switch (id) {
     case HesComponentId.STEPS:
-      target = `${thousands(toRaw)} steps a day`;
-      today = thousands(fromRaw);
+      target = `${hesThousands(toRaw)} steps a day`;
+      today = hesThousands(fromRaw);
       break;
     case HesComponentId.MVPA:
       target = `${hesRound(toRaw)} active minutes a week`;
       today = `${hesRound(fromRaw)}`;
       break;
     case HesComponentId.SLEEP_DURATION:
-      target = `${hoursText(toRaw)} of sleep a night`;
-      today = hoursText(fromRaw);
+      target = `${hesHoursText(toRaw)} of sleep a night`;
+      today = hesHoursText(fromRaw);
       break;
     case HesComponentId.SLEEP_REGULARITY:
       target = `Bed and wake times within ±${hesRound(toRaw)} min`;
@@ -565,22 +637,24 @@ function sentenceOf(id: HesComponentId, fromRaw: number, toRaw: number, tier: st
 
 // The first point of the component's curve, going towards the top, that reaches `threshold`; null when
 // even the top of the curve is not enough.
-function firstCrossing(result: HesResult, c: HesComponentResult, threshold: number): EngineWhatIf | null {
-  const points = pointsTowardsTop(hesDefinition(c.id).curve, c.rawValue);
+function firstCrossing(result: HesResult, c: ComponentResult, rawValue: number, score: number,
+  threshold: number): EngineWhatIf | null {
+  const points = pointsTowardsTop(hesComponentDefinition(c.id).curve, rawValue);
   for (let i = 0; i < points.length; i++) {
-    if (points[i].y <= c.score) {
+    if (points[i].y <= score) {
       continue;
     }
     const changed = resultWith(result, c.id, points[i].x);
-    if (changed.status === HesStatus.OK && changed.score >= threshold) {
+    const changedScore = changed.score;
+    if (changed.status === HesStatus.OK && changedScore !== undefined && changedScore >= threshold) {
       return {
         componentId: reportComponentId(c.id),
         hesId: c.id,
-        fromRaw: c.rawValue,
+        fromRaw: rawValue,
         toRaw: points[i].x,
-        score: changed.score,
+        score: changedScore,
         tier: changed.tier,
-        sentence: sentenceOf(c.id, c.rawValue, points[i].x, changed.tier)
+        sentence: sentenceOf(c.id, rawValue, points[i].x, changed.tier)
       };
     }
   }
@@ -602,7 +676,7 @@ function relativeChange(change: EngineWhatIf): number {
  * null when there is no score, in tier A, and when no single Core change is enough.
  */
 export function engineWhatIf(result: HesResult): EngineWhatIf | null {
-  if (result.status !== HesStatus.OK || result.score < 0 || nextTierOf(result.tier).length === 0) {
+  if (!isScored(result) || nextTierOf(result.tier).length === 0) {
     return null;
   }
   const threshold = result.tier === TIER_B ? HES_TIER_A_MIN : HES_TIER_B_MIN;
@@ -610,10 +684,15 @@ export function engineWhatIf(result: HesResult): EngineWhatIf | null {
   let restingHeartRate: EngineWhatIf | null = null;
   for (let i = 0; i < ROW_ORDER.length; i++) {
     const c = findComponent(result, ROW_ORDER[i]);
-    if (c === null || !c.core || !c.available || c.rawValue < 0 || c.score < 0) {
+    if (c === null || !c.requiredCore || !c.available) {
       continue;
     }
-    const change = firstCrossing(result, c, threshold);
+    const rawValue = c.rawValue;
+    const score = c.score;
+    if (rawValue === undefined || score === undefined) {
+      continue;
+    }
+    const change = firstCrossing(result, c, rawValue, score, threshold);
     if (change === null) {
       continue;
     }
@@ -639,67 +718,45 @@ export function enginePersonas(): PersonaRef[] {
   return out;
 }
 
-// The days "Close the day" adds, with the consent applied: a data type that is switched off stays missing in
-// every new day, the same way it is missing in the starting history.
-class ScopedPersonaDays implements HesDaySource {
-  private spec: HesPersonaSpec;
-  private scopes: HealthScope[];
-
-  constructor(spec: HesPersonaSpec, scopes: HealthScope[]) {
-    this.spec = spec;
-    this.scopes = scopes;
-  }
-
-  dayAfter(closedDays: number): HesDay {
-    return dayWithScopes(generatePersonaDay(this.spec, closedDays), this.scopes);
-  }
-}
-
-function daysWithScopes(days: HesDay[], scopes: HealthScope[]): HesDay[] {
-  const out: HesDay[] = [];
-  for (let i = 0; i < days.length; i++) {
-    out.push(dayWithScopes(days[i], scopes));
-  }
-  return out;
-}
-
 /**
  * A demo session of a persona: live values, close the day, reset. An unknown id gives the default one.
- * `scopes` are the data types the person agreed to: the fields of every other type are missing in the
- * starting history and in each day that is closed later. With no argument every type is used.
+ * `scopes` are the data types the person agreed to: the readings of every other type are absent in the
+ * starting history, in the running day, and so in each day that is closed later. With no argument every
+ * type is used.
  */
 export function engineSession(id: string, scopes: HealthScope[] = ALL_HEALTH_SCOPES): HesSession {
-  const spec = HesPersonas.spec(knownId(id));
-  if (spec === null) {
-    return new HesSession([], null);
-  }
-  return new HesSession(daysWithScopes(generatePersonaHistory(spec), scopes), new ScopedPersonaDays(spec, scopes));
+  return new HesSession(snapshotWithScopes(HesPersonas.snapshot(knownId(id)), scopes));
 }
 
 /**
- * The report of a persona as its session stands now. The live heart rate and today's steps are in `live`
- * and nowhere else; after `closeDay()` the score, the components and the bars are those of the session.
+ * The report of a persona as its session stands now, in a profile. The live heart rate and today's steps
+ * are in `live` and nowhere else; after `closeDay()` the score, the components and the bars are those of
+ * the session. Without a profile the report is in the partner's profile: the one that is shared.
  */
-export function engineReportOf(id: string, session: HesSession): PersonaReport {
+export function engineReportOf(id: string, session: HesSession,
+  profile: HesProfile = PARTNER_HES_PROFILE): PersonaReport {
   const known = knownId(id);
-  return build(known, session.result(), session.history(), wearMonthOf(known), session.liveHeartRate(),
-    session.liveSteps());
+  return build(known, session.current(profile), session.current(PARTNER_HES_PROFILE), session.history(),
+    wearMonthOf(known), session.liveHeartRate(), session.liveSteps());
 }
 
-let cache: PersonaReport[] = [];
+let cacheProfiles: HesProfile[] = [];
+let caches: PersonaReport[][] = [];
 
-/** The six reports for the personas' starting histories, with no live values. Built once. */
-export function engineReports(): PersonaReport[] {
-  if (cache.length === 0) {
-    const out: PersonaReport[] = [];
-    for (let i = 0; i < HesPersonas.IDS.length; i++) {
-      const id = HesPersonas.IDS[i];
-      const history = HesPersonas.history(id);
-      out.push(build(id, computeHes(history), history, wearMonthOf(id), HES_MISSING, HES_MISSING));
-    }
-    cache = out;
+/** The six reports for the personas' starting histories in a profile, with today's steps as the source has them. Built once. */
+export function engineReports(profile: HesProfile = PARTNER_HES_PROFILE): PersonaReport[] {
+  const at = cacheProfiles.indexOf(profile);
+  if (at >= 0) {
+    return caches[at];
   }
-  return cache;
+  const out: PersonaReport[] = [];
+  for (let i = 0; i < HesPersonas.IDS.length; i++) {
+    const id = HesPersonas.IDS[i];
+    out.push(engineReportOf(id, HesPersonas.session(id), profile));
+  }
+  cacheProfiles.push(profile);
+  caches.push(out);
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -707,14 +764,12 @@ export function engineReports(): PersonaReport[] {
 // ---------------------------------------------------------------------------------------------------------
 
 /**
- * A demo session that starts from the days Health Sim sent for this person. Closing a day continues the
- * persona's own seeded series. An unknown id gives the default persona's session. `scopes` are applied to
- * the days received and to every day closed later, as in `engineSession`.
+ * A demo session that starts from what Health Sim sent for this person: the completed days, the estimates,
+ * the sessions and the running day. Closing a day closes that running day. `scopes` are applied as in
+ * `engineSession`.
  */
 export function engineSessionFrom(person: HealthSimPerson, scopes: HealthScope[] = ALL_HEALTH_SCOPES): HesSession {
-  const spec = HesPersonas.spec(knownId(person.id));
-  return new HesSession(daysWithScopes(person.days, scopes),
-    spec === null ? null : new ScopedPersonaDays(spec, scopes));
+  return new HesSession(snapshotWithScopes(healthSimSnapshot(person), scopes));
 }
 
 /** The wear month of the days Health Sim sent, under the default thresholds, with no sick days. */
@@ -722,15 +777,16 @@ export function wearMonthFrom(person: HealthSimPerson): WearMonthResult {
   return buildWearMonth(person.wear, DEFAULT_THRESHOLDS, []);
 }
 
-/** The report of a person whose data came from Health Sim, as the session stands now. */
-export function engineReportFromPerson(person: HealthSimPerson, session: HesSession): PersonaReport {
-  return build(knownId(person.id), session.result(), session.history(), wearMonthFrom(person),
-    session.liveHeartRate(), session.liveSteps(), HEALTH_SIM_LABEL);
+/** The report of a person whose data came from Health Sim, as the session stands now, in a profile. */
+export function engineReportFromPerson(person: HealthSimPerson, session: HesSession,
+  profile: HesProfile = PARTNER_HES_PROFILE): PersonaReport {
+  return build(knownId(person.id), session.current(profile), session.current(PARTNER_HES_PROFILE),
+    session.history(), wearMonthFrom(person), session.liveHeartRate(), session.liveSteps(), HEALTH_SIM_LABEL);
 }
 
-/** The report of one persona. An unknown id gives the default persona; it never throws. */
-export function engineReport(id: string): PersonaReport {
-  const all = engineReports();
+/** The report of one persona in a profile. An unknown id gives the default persona; it never throws. */
+export function engineReport(id: string, profile: HesProfile = PARTNER_HES_PROFILE): PersonaReport {
+  const all = engineReports(profile);
   const known = knownId(id);
   for (let i = 0; i < all.length; i++) {
     if (all[i].id === known) {

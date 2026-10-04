@@ -6,7 +6,8 @@
 //
 // The dial is a picture of facts the app already holds. Nothing here is scored and nothing is invented:
 // there is no hourly distribution of steps, only the day's total, and a missing value is said, not drawn.
-import { HesDay } from '../hes/HesTypes';
+import { hesIsValidNight, hesIsValidValue } from '../hes/HesAggregate';
+import { HesDayRecord } from '../hes/HesTypes';
 import { SlotRun } from './TourContent';
 import { WEAR_CHARGING, WEAR_OFF, WEAR_WORN } from './WatchDayPresent';
 
@@ -114,12 +115,16 @@ export function groupedNumber(value: number): string {
  * The sleep arc of a day, or nothing when the night was not measured. A night that starts before
  * midnight (23:30 to 07:10) is one arc that begins at 352.5° and runs 115° through 0°.
  */
-export function sleepArcs(day: HesDay | null): DialArc[] {
-  if (day === null || day.sleepMinutes <= 0 || day.sleepStartMin < 0 || day.sleepEndMin < 0) {
+export function sleepArcs(day: HesDayRecord | null): DialArc[] {
+  if (day === null) {
     return [];
   }
-  const start = wrapMinute(day.sleepStartMin);
-  const end = wrapMinute(day.sleepEndMin);
+  const sleep = day.sleep;
+  if (sleep === undefined || !hesIsValidNight(sleep) || sleep.totalSleepMin <= 0) {
+    return [];
+  }
+  const start = wrapMinute(sleep.bedMin);
+  const end = wrapMinute(sleep.wakeMin);
   let span = end - start;
   if (span <= 0) {
     span += DIAL_DAY_MINUTES;
@@ -181,18 +186,20 @@ export function dialKindLabel(kind: string): string {
  * the wear segments of a day the watch sent (empty: the phone has none), `nowMin` the current local
  * minute of the day.
  */
-export function dayDial(day: HesDay | null, segments: DialSegment[], nowMin: number): DayDial {
+export function dayDial(day: HesDayRecord | null, segments: DialSegment[], nowMin: number): DayDial {
   const dial = new DayDial();
   dial.nowDeg = minuteToDeg(nowMin);
 
   dial.sleepArcs = sleepArcs(day);
-  if (day !== null && dial.sleepArcs.length > 0) {
-    dial.sleepNote = `${DIAL_LABEL_SLEEP} ${clock(day.sleepStartMin)}–${clock(day.sleepEndMin)}`;
+  const sleep = day === null ? undefined : day.sleep;
+  if (sleep !== undefined && dial.sleepArcs.length > 0) {
+    dial.sleepNote = `${DIAL_LABEL_SLEEP} ${clock(sleep.bedMin)}–${clock(sleep.wakeMin)}`;
     dial.legend.push(DIAL_SLEEP);
   }
 
-  if (day !== null && day.steps >= 0) {
-    dial.centerValue = groupedNumber(day.steps);
+  const steps = day === null ? undefined : day.steps;
+  if (steps !== undefined && hesIsValidValue(steps)) {
+    dial.centerValue = groupedNumber(steps);
     dial.centerText = `${dial.centerValue} ${DIAL_STEPS_UNIT}`;
   }
 

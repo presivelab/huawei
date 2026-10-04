@@ -1,4 +1,6 @@
+import { hesProfileLabel } from '../hes/HesModel';
 import { benefitLevel, benefitReason } from './Benefit';
+import { PARTNER_HES_PROFILE } from './PartnerProgram';
 import {
   BAR_NO_DATA,
   ComponentId,
@@ -73,12 +75,19 @@ function row(id: string, label: string, minCount: number, m: Measured): Componen
     id: id,
     label: label,
     score: m.score,
+    scoreExact: m.score,
     raw: m.raw,
     unit: m.unit,
+    rawText: `${m.raw} ${m.unit}`,
     weightPct: m.weightPct,
+    weightText: m.weightPct > 0 ? `${m.weightPct}%` : '',
     available: true,
+    core: minCount > 0,
     validCount: m.validCount,
     minCount: minCount,
+    needCount: minCount,
+    targetCount: minCount,
+    countText: `${m.validCount} of ${minCount}`,
     bars7: m.bars7,
     source: PREVIEW_SOURCE
   };
@@ -90,12 +99,19 @@ function missing(id: string, label: string, minCount: number, validCount: number
     id: id,
     label: label,
     score: HES_NONE,
+    scoreExact: HES_NONE,
     raw: '',
     unit: '',
+    rawText: '',
     weightPct: 0,
+    weightText: '',
     available: false,
+    core: minCount > 0,
     validCount: validCount,
     minCount: minCount,
+    needCount: minCount,
+    targetCount: minCount,
+    countText: `${validCount} of ${minCount}`,
     bars7: NO_BARS,
     source: ''
   };
@@ -231,10 +247,15 @@ function report(e: Expected, components: ComponentRow[], wearSummary: WearSummar
     name: e.name,
     period: PREVIEW_PERIOD,
     periodIso: PREVIEW_PERIOD_ISO,
+    profile: PARTNER_HES_PROFILE,
+    profileLabel: hesProfileLabel(PARTNER_HES_PROFILE),
+    partnerProfile: true,
     hes: e.hes,
     tier: e.tier,
     coveragePct: e.coveragePct,
+    coverageText: `${e.coveragePct}%`,
     confidence: e.confidence,
+    showWeights: scored && e.coveragePct < 100,
     eligible: e.eligible,
     benefit: benefitLevel(e.eligible, e.tier, scored),
     benefitReason: benefitReason(e.eligible, e.tier, scored, wearSummary.flagged, wearSummary.suspicious),
@@ -266,11 +287,11 @@ function ania(): PersonaReport {
     '');
 }
 
-// B/75, coverage 85%, High: flagged after three suspicious breaks, so no benefit. Days as on the
+// B/75, coverage 87.5%, High: flagged after three suspicious breaks, so no benefit. Days as on the
 // Evidence mock-up: suspicious on 3, 17 and 24, short on 10, sick on 11, 12 and 25.
 function marek(): PersonaReport {
   return report(
-    expected('marek', 'Marek', 75, ReportTier.B, 85, ReportConfidence.HIGH, false, 5),
+    expected('marek', 'Marek', 75, ReportTier.B, 87.5, ReportConfidence.HIGH, false, 5),
     [
       steps(measured(78, '7,820', '/day', 15, 26, [58, 72, 64, 80, 52, 76, 70])),
       active(measured(72, '142', 'min/week', 18, 26, [48, 66, 30, 74, 58, 80, 62])),
@@ -287,10 +308,10 @@ function marek(): PersonaReport {
     '');
 }
 
-// B/73, coverage 70%, Medium: one suspicious break, which never flags, so partial benefit.
+// B/73, coverage 75%, Medium: one suspicious break, which never flags, so partial benefit.
 function kasia(): PersonaReport {
   return report(
-    expected('kasia', 'Kasia', 73, ReportTier.B, 70, ReportConfidence.MEDIUM, true, 7),
+    expected('kasia', 'Kasia', 73, ReportTier.B, 75, ReportConfidence.MEDIUM, true, 7),
     [
       steps(measured(70, '6,950', '/day', 19, 24, [50, 64, 58, 72, 46, 70, 62])),
       active(measured(68, '124', 'min/week', 22, 24, [42, 60, 34, 70, 52, 74, 56])),
@@ -306,10 +327,10 @@ function kasia(): PersonaReport {
     '');
 }
 
-// B/79, coverage 90%, High: one point to A. Components as on the "Why this tier" mock-up.
+// B/79, coverage 92.5%, High: one point to A. Components as on the "Why this tier" mock-up.
 function tomek(): PersonaReport {
   return report(
-    expected('tomek', 'Tomek', 79, ReportTier.B, 90, ReportConfidence.HIGH, true, 1),
+    expected('tomek', 'Tomek', 79, ReportTier.B, 92.5, ReportConfidence.HIGH, true, 1),
     [
       steps(measured(86, '8,640', '/day', 14, 28, [66, 82, 74, 88, 70, 90, 80])),
       active(measured(67, '118', 'min/week', 17, 28, [40, 58, 32, 66, 50, 72, 54])),
@@ -326,10 +347,10 @@ function tomek(): PersonaReport {
     'Sleeping 7 h a night would be enough for Tier A.');
 }
 
-// C/59, coverage 75%, Medium: wear is fine, the score is C, so no benefit.
+// C/59, coverage 80%, Medium: wear is fine, the score is C, so no benefit.
 function ewa(): PersonaReport {
   return report(
-    expected('ewa', 'Ewa', 59, ReportTier.C, 75, ReportConfidence.MEDIUM, true, POINTS_UNKNOWN),
+    expected('ewa', 'Ewa', 59, ReportTier.C, 80, ReportConfidence.MEDIUM, true, POINTS_UNKNOWN),
     [
       steps(measured(52, '4,870', '/day', 17, 25, [36, 48, 30, 54, 40, 58, 44])),
       active(measured(50, '74', 'min/week', 20, 25, [24, 40, 18, 46, 30, 52, 34])),
@@ -346,10 +367,10 @@ function ewa(): PersonaReport {
     '');
 }
 
-// No score, coverage 43%: fourteen days of history and too few nights. Counters as on the mock-up.
+// No score, coverage 47.5%: fourteen days of history and too few nights. Counters as on the mock-up.
 function ola(): PersonaReport {
   return report(
-    expected('ola', 'Ola', HES_NONE, ReportTier.NONE, 43, ReportConfidence.INSUFFICIENT, false, POINTS_UNKNOWN),
+    expected('ola', 'Ola', HES_NONE, ReportTier.NONE, 47.5, ReportConfidence.INSUFFICIENT, false, POINTS_UNKNOWN),
     [
       steps(measured(HES_NONE, '6,120', '/day', 0, 14, [44, 60, 52, 66, 48, 70, 58])),
       active(measured(HES_NONE, '96', 'min/week', 0, 14, [30, 48, 26, 56, 40, 60, 44])),

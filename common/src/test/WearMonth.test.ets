@@ -1,6 +1,5 @@
 import { describe, it, expect } from '@ohos/hypium';
-import { HesPersonas } from '../main/ets/hes/HesPersonas';
-import { HES_MISSING } from '../main/ets/hes/HesTypes';
+import { HES_PERSONA_END_DATE, HesPersonas } from '../main/ets/hes/HesPersonas';
 import { DEFAULT_THRESHOLDS } from '../main/ets/model/defaults';
 import {
   buildWearMonth,
@@ -14,7 +13,8 @@ import {
   WearDayState,
   WearMonthResult
 } from '../main/ets/wear/WearMonth';
-import { WearPersonas, WEAR_MONTH_DAYS } from '../main/ets/wear/WearPersonas';
+import { WearPersonas, WearPersonaSpec, WEAR_MONTH_DAYS } from '../main/ets/wear/WearPersonas';
+import { dateOfDayNumber, dayNumberOfDate } from '../main/ets/watchlink/WatchLinkTypes';
 
 const TH = DEFAULT_THRESHOLDS;
 
@@ -353,29 +353,66 @@ export default function wearMonthTest() {
       expect(WearPersonas.month('nobody').length).assertEqual(0);
     });
 
-    it('the wear month and the health history describe the same days', 0, () => {
+    it('the wear month follows the wear calendar of its own persona spec (off-wrist days, nights worn, days with a record)', 0, () => {
+      // The wear calendar has its own parameters; it is independent of the score's history by design.
+      const endDay = dayNumberOfDate(HES_PERSONA_END_DATE);
       for (let p = 0; p < HesPersonas.IDS.length; p++) {
         const id = HesPersonas.IDS[p];
-        const history = HesPersonas.history(id);
+        const spec = WearPersonas.spec(id);
+        expect(spec !== null).assertTrue();
+        const wear = spec as WearPersonaSpec;
         const month = WearPersonas.month(id);
+        expect(month.length).assertEqual(WEAR_MONTH_DAYS);
+        let record = 0;
+        let offWrist = 0;
+        let nightsWorn = 0;
         for (let i = 0; i < month.length; i++) {
-          const h = history.length - month.length + i;
-          if (h < 0) {
+          const offset = i - (WEAR_MONTH_DAYS - 1);   // 0 is the persona end date
+          expect(month[i].date).assertEqual(dateOfDayNumber(endDay + offset));
+          if (offset < 1 - wear.days) {
+            // Before the watch has a record at all.
             expect(month[i].observed).assertFalse();
+            expect(month[i].wornMin).assertEqual(0);
             continue;
           }
-          expect(month[i].date).assertEqual(history[h].date);
-          if (history[h].steps === HES_MISSING) {
-            // No health data that day: the watch was off the wrist all day.
+          record++;
+          expect(month[i].observed).assertTrue();
+          const offWristDay = wear.offWristEvery > 0 && (((offset + 3) % wear.offWristEvery) + wear.offWristEvery) %
+            wear.offWristEvery === 0;
+          if (offWristDay) {
+            // The watch stayed off the wrist all day: one break as long as the day.
+            offWrist++;
             expect(month[i].wornMin).assertEqual(0);
+            expect(month[i].breaks.length).assertEqual(1);
             expect(month[i].breaks[0].minutes).assertEqual(1440);
           } else {
+            const nightWorn = wear.nightEvery > 0 && ((offset % wear.nightEvery) + wear.nightEvery) %
+              wear.nightEvery === 0;
+            if (nightWorn) {
+              nightsWorn++;
+            }
             expect(month[i].wornMin).assertLarger(0);
-            expect(month[i].nightWornMin >= 240).assertEqual(history[h].sleepMinutes !== HES_MISSING);
+            expect(month[i].nightWornMin >= 240).assertEqual(nightWorn);
             expect(month[i].wornMin + month[i].chargingMin <= 1440).assertTrue();
           }
         }
+        // The counts the spec implies for the 30 days: 30 or 24 days with a record, an off-wrist day every N-th.
+        expect(record).assertEqual(Math.min(WEAR_MONTH_DAYS, wear.days));
+        if (wear.offWristEvery === 0) {
+          expect(offWrist).assertEqual(0);
+        }
+        if (wear.nightEvery === 1) {
+          expect(nightsWorn).assertEqual(record - offWrist);
+        }
       }
+      // Specific months: Kasia's four days without the watch, Ewa's three, Ola's 24 days and her third nights.
+      expect(WearPersonas.month('kasia').filter((d: WearDayRecord): boolean => d.wornMin === 0).length)
+        .assertEqual(4);
+      expect(WearPersonas.month('ewa').filter((d: WearDayRecord): boolean => d.wornMin === 0).length)
+        .assertEqual(3);
+      expect(WearPersonas.month('ola').filter((d: WearDayRecord): boolean => d.observed).length).assertEqual(24);
+      expect(WearPersonas.month('ola').filter((d: WearDayRecord): boolean => d.observed && d.nightWornMin >= 240)
+        .length).assertEqual(8);
     });
   });
 }

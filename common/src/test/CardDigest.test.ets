@@ -15,9 +15,11 @@ import {
 export default function cardDigestTest() {
   describe('CardDigest', () => {
     it('demo source with a result shows the label, the coverage and that a score is ready', 0, () => {
-      const digest = buildCardDigest(HealthStatus.DEMO, 85, true);
+      const digest = buildCardDigest(HealthStatus.DEMO, 87.5, true);
       expect(digest.sourceLabel).assertEqual('HUAWEI Health · Demo data');
-      expect(cardCoverageText(digest)).assertEqual('85%');
+      expect(cardCoverageText(digest)).assertEqual('87.5%');
+      expect(cardCoverageText(buildCardDigest(HealthStatus.DEMO, 100, true))).assertEqual('100%');
+      expect(cardCoverageText(buildCardDigest(HealthStatus.DEMO, 75, true))).assertEqual('75%');
       expect(cardResultText(digest)).assertEqual('Score ready');
     });
 
@@ -50,9 +52,9 @@ export default function cardDigestTest() {
     });
 
     it('encode and decode round-trip', 0, () => {
-      const back = decodeCardDigest(encodeCardDigest(buildCardDigest(HealthStatus.DEMO, 43, false)));
+      const back = decodeCardDigest(encodeCardDigest(buildCardDigest(HealthStatus.DEMO, 47.5, false)));
       expect(back.sourceLabel).assertEqual(cardSourceLabel(HealthStatus.DEMO));
-      expect(back.coveragePct).assertEqual(43);
+      expect(back.coveragePct).assertEqual(47.5);
       expect(back.resultReady).assertFalse();
     });
 
@@ -96,7 +98,9 @@ export default function cardDigestTest() {
     it('coverage outside 0..100 is clamped or dropped', 0, () => {
       expect(buildCardDigest(HealthStatus.DEMO, 140, true).coveragePct).assertEqual(100);
       expect(buildCardDigest(HealthStatus.DEMO, -5, true).coveragePct).assertEqual(CARD_COVERAGE_NONE);
-      expect(buildCardDigest(HealthStatus.DEMO, 84.6, true).coveragePct).assertEqual(85);
+      expect(buildCardDigest(HealthStatus.DEMO, 84.64, true).coveragePct).assertEqual(84.6);
+      expect(buildCardDigest(HealthStatus.DEMO, 87.5, true).coveragePct).assertEqual(87.5);
+      expect(buildCardDigest(HealthStatus.DEMO, 92.5, true).coveragePct).assertEqual(92.5);
     });
   });
 }

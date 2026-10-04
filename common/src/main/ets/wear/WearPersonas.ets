@@ -1,12 +1,14 @@
-// A deterministic 30-day wear record for each demo persona, built on the same days as the persona's
-// HES history: a day with no health data is a day the watch stayed off the wrist, a night with no sleep
-// record is a night the watch was not worn, and days before the history starts are not observed.
+// A deterministic 30-day wear record for each demo persona: which days the watch stayed off the wrist,
+// which nights it was not worn, and from which day the watch has a record at all.
 // Illustrative values, not measurements of anyone. No Math.random.
+//
+// The wear calendar has its own persona parameters (WearPersonaSpec). They are the ones the wear month was
+// built on from the start and they are independent of the score's history (hes/HesPersonas.ets), so a
+// change of the score model never moves a wear result.
 import { dateOfDayNumber, dayNumberOfDate } from '../watchlink/WatchLinkTypes';
 import { DEFAULT_THRESHOLDS } from '../model/defaults';
-import { generatePersonaDay, HesPersonas, HesPersonaSpec, HES_PERSONA_END_DATE } from '../hes/HesPersonas';
+import { HES_PERSONA_END_DATE } from '../hes/HesPersonas';
 import { HesPrng } from '../hes/HesPrng';
-import { HES_MISSING } from '../hes/HesTypes';
 import { buildWearMonth, WearBreak, WearDayRecord, WearMonthResult } from './WearMonth';
 
 export const WEAR_MONTH_DAYS: number = 30;
@@ -24,6 +26,37 @@ const USUAL_READINGS_SPAN: number = 80;
 const USUAL_DELTA_LIMIT: number = 3;
 const USUAL_RATIO_MIN: number = 88;        // steps before an ordinary break: 0.88..1.12 of the usual
 const USUAL_RATIO_SPAN: number = 25;
+
+// Phases of the repeating patterns, so that they do not fall on the same day.
+const PHASE_NIGHT: number = 0;
+const PHASE_OFF_WRIST: number = 3;
+
+/** What a persona's wear calendar looks like. "Every N" patterns use 0 for "never". */
+export interface WearPersonaSpec {
+  id: string;
+  seed: number;
+  days: number;           // how many days back the watch has a record
+  nightEvery: number;     // the watch is worn every N-th night (1 = every night)
+  offWristEvery: number;  // a whole day without the watch every N days
+}
+
+const WEAR_SPECS: WearPersonaSpec[] = [
+  { id: 'ania', seed: 1101, days: 90, nightEvery: 1, offWristEvery: 0 },
+  { id: 'marek', seed: 2202, days: 90, nightEvery: 1, offWristEvery: 0 },
+  { id: 'kasia', seed: 3303, days: 90, nightEvery: 1, offWristEvery: 8 },
+  { id: 'tomek', seed: 4404, days: 90, nightEvery: 1, offWristEvery: 0 },
+  { id: 'ewa', seed: 5505, days: 90, nightEvery: 1, offWristEvery: 9 },
+  // A new user: 24 days with the watch, on the wrist only every third night.
+  { id: 'ola', seed: 6606, days: 24, nightEvery: 3, offWristEvery: 0 }
+];
+
+function mod(value: number, divisor: number): number {
+  return ((value % divisor) + divisor) % divisor;
+}
+
+function hits(every: number, offset: number, phase: number): boolean {
+  return every > 0 && mod(offset + phase, every) === 0;
+}
 
 /** A scripted break of a persona: when it happened and what the 24 h before it looked like. */
 export interface WearEvent {
@@ -99,7 +132,7 @@ function scriptedBreak(event: WearEvent, startMin: number, minutes: number): Wea
 }
 
 /** One day of the wear record. `offset` 0 is HES_PERSONA_END_DATE. */
-export function generateWearDay(spec: HesPersonaSpec, offset: number, events: WearEvent[]): WearDayRecord {
+export function generateWearDay(spec: WearPersonaSpec, offset: number, events: WearEvent[]): WearDayRecord {
   const record: WearDayRecord = {
     date: dateOfDayNumber(dayNumberOfDate(HES_PERSONA_END_DATE) + offset),
     observed: false,
@@ -112,11 +145,10 @@ export function generateWearDay(spec: HesPersonaSpec, offset: number, events: We
     return record;                           // before the persona's history: the watch has no record
   }
   record.observed = true;
-  const hesDay = generatePersonaDay(spec, offset);
   const prng = HesPrng.forStream(spec.seed, offset, STREAM_WEAR);
   const event = eventAt(events, offset);
 
-  if (hesDay.steps === HES_MISSING) {
+  if (hits(spec.offWristEvery, offset, PHASE_OFF_WRIST)) {
     // The watch stayed off the wrist all day: one break as long as the day.
     record.breaks.push(event === null ? ordinaryBreak(prng, 0, MINUTES_PER_DAY) :
       scriptedBreak(event, 0, MINUTES_PER_DAY));
@@ -126,8 +158,8 @@ export function generateWearDay(spec: HesPersonaSpec, offset: number, events: We
   record.chargingMin = CHARGING_MIN + pick(prng, CHARGING_SPAN);
   let offMin = pick(prng, MINOR_OFF_SPAN);
   let nightWornMin = NIGHT_END_MIN;
-  if (hesDay.sleepMinutes === HES_MISSING) {
-    // No sleep record: the watch was not worn that night.
+  if (!hits(spec.nightEvery, offset, PHASE_NIGHT)) {
+    // The watch was not worn that night.
     const nightOff = NIGHT_OFF_MIN + pick(prng, NIGHT_OFF_SPAN);
     record.breaks.push(ordinaryBreak(prng, 0, nightOff));
     offMin += nightOff;
@@ -147,7 +179,7 @@ export function generateWearDay(spec: HesPersonaSpec, offset: number, events: We
 }
 
 /** The last WEAR_MONTH_DAYS days of a persona, oldest first, ending on HES_PERSONA_END_DATE. */
-export function generateWearMonth(spec: HesPersonaSpec, events: WearEvent[]): WearDayRecord[] {
+export function generateWearMonth(spec: WearPersonaSpec, events: WearEvent[]): WearDayRecord[] {
   const out: WearDayRecord[] = [];
   for (let offset = 1 - WEAR_MONTH_DAYS; offset <= 0; offset++) {
     out.push(generateWearDay(spec, offset, events));
@@ -157,6 +189,16 @@ export function generateWearMonth(spec: HesPersonaSpec, events: WearEvent[]): We
 
 /** The wear month of the six demo personas. An unknown id gives an empty month. */
 export class WearPersonas {
+  /** The wear calendar parameters of a persona, or null for an unknown id. */
+  static spec(id: string): WearPersonaSpec | null {
+    for (let i = 0; i < WEAR_SPECS.length; i++) {
+      if (WEAR_SPECS[i].id === id) {
+        return WEAR_SPECS[i];
+      }
+    }
+    return null;
+  }
+
   /** The scripted breaks of a persona. */
   static events(id: string): WearEvent[] {
     if (id === 'marek') {
@@ -173,7 +215,7 @@ export class WearPersonas {
 
   /** 30 day records, oldest first. */
   static month(id: string): WearDayRecord[] {
-    const spec = HesPersonas.spec(id);
+    const spec = WearPersonas.spec(id);
     return spec === null ? [] : generateWearMonth(spec, WearPersonas.events(id));
   }
 

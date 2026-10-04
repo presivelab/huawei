@@ -1,341 +1,360 @@
-// Six demo personas for HES-Lite (specification section 16): a seeded generator of completed days.
-// Illustrative values, not measurements of anyone. No Math.random: the same persona gives the same
-// history on every run and on every engine.
+// Six demo personas for HES vNext: a deterministic recipe for completed days, with no random numbers.
+// Illustrative values, not measurements of anyone. The same persona gives the same history on every run.
 //
-// The personas are tuned so that the engine returns the team's fixed results. Only the numbers in this
-// file were tuned; the weights, curves and thresholds in HesCurves.ets were not touched.
+// The recipe:
+//   - pattern(A, d, n): n odd gives [A, A-d, A+d, A-d, ...]; n even gives [A-d, A+d, A-d, ...]. So the mean
+//     and the median are A for every n, and the population SD of an even pattern is d;
+//   - a value series of n values goes to the n newest days of the history, oldest first; the older days do
+//     not have that field at all (absent, not zero);
+//   - the last day of the history is the day before `today`. There is no clock here: `today` is a parameter;
+//   - the night's clock times are moved by pattern(0, shift, n) and wrapped into 0..1439; the time in bed
+//     stays fixed and the sleep total is never longer than it.
+//
+// Only the numbers in this file describe the personas. The weights, curves and thresholds are in
+// HesModel.ets and were not touched to make a persona fit.
 import { dateOfDayNumber, dayNumberOfDate } from '../watchlink/WatchLinkTypes';
 import { computeHes } from './HesEngine';
-import { HesPrng } from './HesPrng';
-import { HesDaySource, HesSession } from './HesSession';
-import { emptyHesDay, HesDay, HesResult, HES_MISSING } from './HesTypes';
+import { HRV_PROTOCOL } from './HesModel';
+import { HesSession, HesSnapshot } from './HesSession';
+import {
+  HesCrfEstimate,
+  HesDayRecord,
+  HesHistory,
+  HesHrrSession,
+  HesProfile,
+  HesResult
+} from './HesTypes';
 
-/** The last completed day of every persona's starting history. */
+/** The last completed day of every persona's starting history in the demo. */
 export const HES_PERSONA_END_DATE: string = '2026-10-03';
+/** The running day of the demo: the day after HES_PERSONA_END_DATE. */
+export const HES_PERSONA_TODAY: string = '2026-10-04';
 
 const MINUTES_PER_DAY: number = 1440;
-const DAYS_PER_WEEK: number = 7;
-const MIN_SLEEP_MINUTES: number = 60;
-const MIN_PERCENTILE: number = 1;
-const MAX_PERCENTILE: number = 99;
-const NONE: number = HES_MISSING;
+const NONE: number = -1;
 
-// Independent random streams of one day.
-const STREAM_STEPS: number = 0;
-const STREAM_RHR: number = 1;
-const STREAM_MODERATE: number = 2;
-const STREAM_BEDTIME: number = 3;
-const STREAM_WAKE: number = 4;
-const STREAM_AWAKE: number = 5;
-const STREAM_HRV: number = 6;
-const STREAM_HRR: number = 7;
+// How far the values of a series swing around the persona's base value.
+const STEPS_SWING: number = 600;
+const MVPA_SWING: number = 6;       // equivalent minutes a day
+const RHR_SWING: number = 2;        // bpm
+const SLEEP_TOTAL_SWING: number = 18;  // minutes
+const HRV_SWING: number = 5;        // percentile points
+const VIGOROUS_SHARE: number = 5;   // vigorous minutes = floor(daily equivalent / 5)
 
-// Phases of the repeating patterns, so that they do not all fall on the same day.
-const PHASE_NIGHT: number = 0;
-const PHASE_VIGOROUS: number = 1;
-const PHASE_VO2MAX: number = 2;
-const PHASE_OFF_WRIST: number = 3;
-const PHASE_HRR: number = 4;
+const WALK: string = 'walk-3min';
+const INTERVAL_RUN: string = 'interval-run';
 
-/** What a persona's days look like. "Every N" patterns use 0 for "never". */
+/** A VO2max estimate of a persona, `daysAgo` days before the last completed day. */
+export interface PersonaCrf {
+  daysAgo: number;
+  percentile: number;
+}
+
+/** A heart-rate recovery session of a persona, `daysAgo` days before the last completed day. */
+export interface PersonaHrr {
+  daysAgo: number;
+  protocolId: string;
+  peakHr: number;
+  hr60: number;
+}
+
+/** What a persona's days look like. A count is how many of the newest days carry the value. */
 export interface HesPersonaSpec {
   id: string;
   name: string;
-  seed: number;
-  days: number;              // length of the starting history, completed days
-  stepsMean: number;
-  stepsSd: number;
-  rhrMean: number;           // bpm
-  rhrSd: number;
-  moderateMean: number;      // moderate minutes per day
-  moderateSd: number;
-  vigorousEvery: number;     // a vigorous session every N days
-  vigorousMinutes: number;
-  bedtimeMin: number;        // usual time of falling asleep, minutes after the previous midnight (1410 = 23:30)
-  bedtimeSd: number;
-  wakeMin: number;           // usual wake-up time, minutes since midnight
-  wakeSd: number;
-  weekendShiftMin: number;   // later to bed and later up on Saturday and Sunday mornings
-  awakeMin: number;          // time awake during the night, taken off the time in bed
-  awakeSd: number;
-  nightEvery: number;        // the watch is worn every N-th night (1 = every night)
-  offWristEvery: number;     // a whole day without the watch every N days
-  vo2maxPercentile: number;  // NONE when the persona has no estimate
-  vo2maxEvery: number;
-  hrvPercentile: number;     // NONE when the persona has no HRV
-  hrvSd: number;
-  hrr1Mean: number;          // NONE when the persona has no recovery sessions
-  hrr1Sd: number;
-  hrrEvery: number;
+  days: number;            // length of the starting history, completed days
+  stepsBase: number;       // steps a day
+  stepsCount: number;
+  mvpaBase: number;        // equivalent minutes a day (moderate + 2 x vigorous)
+  mvpaCount: number;
+  rhrBase: number;         // bpm
+  rhrCount: number;
+  sleepCount: number;      // nights with a sleep record
+  bedMin: number;          // usual bedtime, minutes since midnight
+  wakeMin: number;         // usual wake-up time, minutes since midnight
+  sleepShift: number;      // how far the night moves earlier and later, minutes
+  sleepTotalMin: number;   // usual total sleep, minutes
+  hrvBase: number;         // percentile; NONE when the persona's watch has no HRV
+  hrvCount: number;
+  crf: PersonaCrf[];
+  hrr: PersonaHrr[];
+}
+
+function at(hour: number, minute: number): number {
+  return hour * 60 + minute;
 }
 
 const ANIA: HesPersonaSpec = {
   id: 'ania',
   name: 'Ania',
-  seed: 1101,
-  days: 90,
-  stepsMean: 7510,
-  stepsSd: 1300,
-  rhrMean: 58,
-  rhrSd: 2,
-  moderateMean: 21,
-  moderateSd: 9,
-  vigorousEvery: 3,
-  vigorousMinutes: 20,
-  bedtimeMin: 1375,
-  bedtimeSd: 28,
-  wakeMin: 410,
-  wakeSd: 26,
-  weekendShiftMin: 40,
-  awakeMin: 28,
-  awakeSd: 8,
-  nightEvery: 1,
-  offWristEvery: 0,
-  vo2maxPercentile: 72,
-  vo2maxEvery: 7,
-  hrvPercentile: 58,
-  hrvSd: 6,
-  hrr1Mean: 33,
-  hrr1Sd: 3,
-  hrrEvery: 5
+  days: 28,
+  stepsBase: 8800,
+  stepsCount: 28,
+  mvpaBase: 34,
+  mvpaCount: 28,
+  rhrBase: 58,
+  rhrCount: 28,
+  sleepCount: 28,
+  bedMin: at(22, 45),
+  wakeMin: at(6, 45),
+  sleepShift: 45,
+  sleepTotalMin: 444,
+  hrvBase: 60,
+  hrvCount: 28,
+  crf: [
+    { daysAgo: 120, percentile: 60 },  // older than the 90-day window
+    { daysAgo: 70, percentile: 74 },
+    { daysAgo: 12, percentile: 77 }
+  ],
+  hrr: [
+    { daysAgo: 75, protocolId: WALK, peakHr: 150, hr60: 130 },  // older than the 60-day window
+    { daysAgo: 45, protocolId: WALK, peakHr: 152, hr60: 122 },
+    { daysAgo: 25, protocolId: WALK, peakHr: 154, hr60: 120 },
+    { daysAgo: 4, protocolId: WALK, peakHr: 150, hr60: 118 }
+  ]
 };
 
 const MAREK: HesPersonaSpec = {
   id: 'marek',
   name: 'Marek',
-  seed: 2202,
-  days: 90,
-  stepsMean: 6120,
-  stepsSd: 1500,
-  rhrMean: 71,
-  rhrSd: 3,
-  moderateMean: 13,
-  moderateSd: 7,
-  vigorousEvery: 7,
-  vigorousMinutes: 12,
-  bedtimeMin: 1425,
-  bedtimeSd: 70,
-  wakeMin: 420,
-  wakeSd: 58,
-  weekendShiftMin: 75,
-  awakeMin: 35,
-  awakeSd: 10,
-  nightEvery: 1,
-  offWristEvery: 0,
-  vo2maxPercentile: 46,
-  vo2maxEvery: 14,
-  hrvPercentile: NONE,
-  hrvSd: 0,
-  hrr1Mean: NONE,
-  hrr1Sd: 0,
-  hrrEvery: 0
+  days: 28,
+  stepsBase: 6200,
+  stepsCount: 28,
+  mvpaBase: 17,
+  mvpaCount: 28,
+  rhrBase: 68,
+  rhrCount: 28,
+  sleepCount: 28,
+  bedMin: at(23, 30),
+  wakeMin: at(6, 50),
+  sleepShift: 70,
+  sleepTotalMin: 396,
+  hrvBase: 40,
+  hrvCount: 28,
+  crf: [],
+  hrr: [
+    { daysAgo: 50, protocolId: WALK, peakHr: 140, hr60: 118 },
+    { daysAgo: 30, protocolId: WALK, peakHr: 142, hr60: 116 },
+    { daysAgo: 9, protocolId: WALK, peakHr: 141, hr60: 117 }
+  ]
 };
 
 const KASIA: HesPersonaSpec = {
   id: 'kasia',
   name: 'Kasia',
-  seed: 3303,
-  days: 90,
-  stepsMean: 4380,
-  stepsSd: 1200,
-  rhrMean: 66,
-  rhrSd: 3,
-  moderateMean: 10,
-  moderateSd: 6,
-  vigorousEvery: 7,
-  vigorousMinutes: 10,
-  bedtimeMin: 1425,
-  bedtimeSd: 65,
-  wakeMin: 395,
-  wakeSd: 55,
-  weekendShiftMin: 90,
-  awakeMin: 30,
-  awakeSd: 10,
-  nightEvery: 1,
-  offWristEvery: 8,
-  vo2maxPercentile: NONE,
-  vo2maxEvery: 0,
-  hrvPercentile: NONE,
-  hrvSd: 0,
-  hrr1Mean: NONE,
-  hrr1Sd: 0,
-  hrrEvery: 0
+  days: 28,
+  stepsBase: 6000,
+  stepsCount: 20,
+  mvpaBase: 14,
+  mvpaCount: 20,
+  rhrBase: 72,
+  rhrCount: 18,
+  sleepCount: 16,
+  bedMin: at(23, 0),
+  wakeMin: at(6, 30),
+  sleepShift: 70,
+  sleepTotalMin: 384,
+  hrvBase: 52,
+  hrvCount: 4,
+  crf: [],
+  hrr: []
 };
 
+// Tomek's watch has no HRV. One of his recovery sessions used another protocol.
 const TOMEK: HesPersonaSpec = {
   id: 'tomek',
   name: 'Tomek',
-  seed: 4404,
-  days: 90,
-  stepsMean: 6600,
-  stepsSd: 1400,
-  rhrMean: 76,
-  rhrSd: 3,
-  moderateMean: 15,
-  moderateSd: 7,
-  vigorousEvery: 7,
-  vigorousMinutes: 8,
-  bedtimeMin: 1420,
-  bedtimeSd: 34,
-  wakeMin: 415,
-  wakeSd: 32,
-  weekendShiftMin: 35,
-  awakeMin: 70,
-  awakeSd: 10,
-  nightEvery: 1,
-  offWristEvery: 0,
-  vo2maxPercentile: 76,
-  vo2maxEvery: 7,
-  hrvPercentile: NONE,
-  hrvSd: 0,
-  hrr1Mean: 25,
-  hrr1Sd: 3,
-  hrrEvery: 6
+  days: 28,
+  stepsBase: 7000,
+  stepsCount: 28,
+  mvpaBase: 21,
+  mvpaCount: 28,
+  rhrBase: 62,
+  rhrCount: 28,
+  sleepCount: 28,
+  bedMin: at(0, 0),
+  wakeMin: at(7, 0),
+  sleepShift: 80,
+  sleepTotalMin: 390,
+  hrvBase: NONE,
+  hrvCount: 0,
+  crf: [
+    { daysAgo: 40, percentile: 48 },
+    { daysAgo: 5, percentile: 50 }
+  ],
+  hrr: [
+    { daysAgo: 55, protocolId: WALK, peakHr: 150, hr60: 125 },
+    { daysAgo: 50, protocolId: INTERVAL_RUN, peakHr: 178, hr60: 137 },
+    { daysAgo: 33, protocolId: WALK, peakHr: 152, hr60: 123 },
+    { daysAgo: 8, protocolId: WALK, peakHr: 151, hr60: 124 }
+  ]
 };
 
 const EWA: HesPersonaSpec = {
   id: 'ewa',
   name: 'Ewa',
-  seed: 5505,
-  days: 90,
-  stepsMean: 4980,
-  stepsSd: 1300,
-  rhrMean: 76,
-  rhrSd: 3,
-  moderateMean: 10,
-  moderateSd: 6,
-  vigorousEvery: 0,
-  vigorousMinutes: 0,
-  bedtimeMin: 1450,
-  bedtimeSd: 88,
-  wakeMin: 465,
-  wakeSd: 72,
-  weekendShiftMin: 100,
-  awakeMin: 44,
-  awakeSd: 12,
-  nightEvery: 1,
-  offWristEvery: 9,
-  vo2maxPercentile: NONE,
-  vo2maxEvery: 0,
-  hrvPercentile: NONE,
-  hrvSd: 0,
-  hrr1Mean: 20,
-  hrr1Sd: 2,
-  hrrEvery: 21
+  days: 28,
+  stepsBase: 4400,
+  stepsCount: 20,
+  mvpaBase: 10,
+  mvpaCount: 20,
+  rhrBase: 76,
+  rhrCount: 20,
+  sleepCount: 16,
+  bedMin: at(23, 45),
+  wakeMin: at(7, 15),
+  sleepShift: 85,
+  sleepTotalMin: 372,
+  hrvBase: 35,
+  hrvCount: 3,
+  crf: [],
+  hrr: [
+    { daysAgo: 38, protocolId: WALK, peakHr: 135, hr60: 117 },
+    { daysAgo: 6, protocolId: WALK, peakHr: 136, hr60: 114 }
+  ]
 };
 
-// A new user: 24 days of history, the watch on the wrist only every third night, one recovery session.
+// A new user: 16 days of history and only six nights with the watch on.
 const OLA: HesPersonaSpec = {
   id: 'ola',
   name: 'Ola',
-  seed: 6606,
-  days: 24,
-  stepsMean: 5200,
-  stepsSd: 1400,
-  rhrMean: 70,
-  rhrSd: 3,
-  moderateMean: 12,
-  moderateSd: 6,
-  vigorousEvery: 0,
-  vigorousMinutes: 0,
-  bedtimeMin: 1430,
-  bedtimeSd: 50,
-  wakeMin: 430,
-  wakeSd: 40,
-  weekendShiftMin: 60,
-  awakeMin: 30,
-  awakeSd: 10,
-  nightEvery: 3,
-  offWristEvery: 0,
-  vo2maxPercentile: NONE,
-  vo2maxEvery: 0,
-  hrvPercentile: NONE,
-  hrvSd: 0,
-  hrr1Mean: 24,
-  hrr1Sd: 2,
-  hrrEvery: 30
+  days: 16,
+  stepsBase: 6800,
+  stepsCount: 16,
+  mvpaBase: 16,
+  mvpaCount: 16,
+  rhrBase: 68,
+  rhrCount: 16,
+  sleepCount: 6,
+  bedMin: at(23, 15),
+  wakeMin: at(7, 0),
+  sleepShift: 40,
+  sleepTotalMin: 420,
+  hrvBase: 50,
+  hrvCount: 6,
+  crf: [],
+  hrr: []
 };
 
 const SPECS: HesPersonaSpec[] = [ANIA, MAREK, KASIA, TOMEK, EWA, OLA];
 
-function mod(value: number, divisor: number): number {
-  return ((value % divisor) + divisor) % divisor;
-}
-
-function hits(every: number, offset: number, phase: number): boolean {
-  return every > 0 && mod(offset + phase, every) === 0;
-}
-
-function around(spec: HesPersonaSpec, offset: number, stream: number, mean: number, sd: number): number {
-  return Math.round(mean + HesPrng.forStream(spec.seed, offset, stream).gauss() * sd);
-}
-
-function clamp(value: number, low: number, high: number): number {
-  return Math.max(low, Math.min(high, value));
-}
-
 /**
- * One completed day of a persona. `offset` 0 is HES_PERSONA_END_DATE, negative offsets are earlier days,
- * positive offsets are the days that follow (used when the demo closes a day).
- * A day depends only on the persona and its offset, never on the days around it.
+ * n values around `base`: n odd gives [base, base-d, base+d, base-d, ...], n even gives
+ * [base-d, base+d, ...]. The mean and the median are `base` for every n.
  */
-export function generatePersonaDay(spec: HesPersonaSpec, offset: number): HesDay {
-  const day = emptyHesDay(dateOfDayNumber(dayNumberOfDate(HES_PERSONA_END_DATE) + offset));
-  if (hits(spec.offWristEvery, offset, PHASE_OFF_WRIST)) {
-    return day;
-  }
-  day.steps = Math.max(0, around(spec, offset, STREAM_STEPS, spec.stepsMean, spec.stepsSd));
-  day.restingHeartRate = Math.max(1, around(spec, offset, STREAM_RHR, spec.rhrMean, spec.rhrSd));
-  day.moderateMinutes = Math.max(0, around(spec, offset, STREAM_MODERATE, spec.moderateMean, spec.moderateSd));
-  day.vigorousMinutes = hits(spec.vigorousEvery, offset, PHASE_VIGOROUS) ? spec.vigorousMinutes : 0;
-
-  if (hits(spec.nightEvery, offset, PHASE_NIGHT)) {
-    // The end date is a Saturday: offsets 0 and 1 (modulo 7) are Saturday and Sunday mornings.
-    const weekday = mod(offset, DAYS_PER_WEEK);
-    const shift = weekday === 0 || weekday === 1 ? spec.weekendShiftMin : 0;
-    const bedtime = around(spec, offset, STREAM_BEDTIME, spec.bedtimeMin + shift, spec.bedtimeSd);
-    const wake = around(spec, offset, STREAM_WAKE, spec.wakeMin + shift, spec.wakeSd);
-    const awake = Math.max(0, around(spec, offset, STREAM_AWAKE, spec.awakeMin, spec.awakeSd));
-    const inBed = wake + MINUTES_PER_DAY - bedtime;
-    day.sleepStartMin = mod(bedtime, MINUTES_PER_DAY);
-    day.sleepEndMin = mod(wake, MINUTES_PER_DAY);
-    day.sleepMinutes = Math.max(MIN_SLEEP_MINUTES, inBed - awake);
-    if (spec.hrvPercentile >= 0) {
-      day.hrvPercentile = clamp(around(spec, offset, STREAM_HRV, spec.hrvPercentile, spec.hrvSd),
-        MIN_PERCENTILE, MAX_PERCENTILE);
+export function personaPattern(base: number, d: number, n: number): number[] {
+  const out: number[] = [];
+  const odd = n % 2 === 1;
+  for (let i = 0; i < n; i++) {
+    if (odd && i === 0) {
+      out.push(base);
+    } else if (odd) {
+      out.push(i % 2 === 1 ? base - d : base + d);
+    } else {
+      out.push(i % 2 === 0 ? base - d : base + d);
     }
-  }
-  if (spec.vo2maxPercentile >= 0 && hits(spec.vo2maxEvery, offset, PHASE_VO2MAX)) {
-    day.vo2maxPercentile = spec.vo2maxPercentile;
-  }
-  if (spec.hrr1Mean >= 0 && hits(spec.hrrEvery, offset, PHASE_HRR)) {
-    day.hrr1 = Math.max(1, around(spec, offset, STREAM_HRR, spec.hrr1Mean, spec.hrr1Sd));
-  }
-  return day;
-}
-
-/** The starting history of a persona: `spec.days` completed days, oldest first, ending on the end date. */
-export function generatePersonaHistory(spec: HesPersonaSpec): HesDay[] {
-  const out: HesDay[] = [];
-  for (let offset = 1 - spec.days; offset <= 0; offset++) {
-    out.push(generatePersonaDay(spec, offset));
   }
   return out;
 }
 
-class PersonaDaySource implements HesDaySource {
-  private spec: HesPersonaSpec;
-
-  constructor(spec: HesPersonaSpec) {
-    this.spec = spec;
-  }
-
-  dayAfter(closedDays: number): HesDay {
-    return generatePersonaDay(this.spec, closedDays);
-  }
+// Into 0..1439. A plain % leaves a negative number for a night moved before midnight.
+function wrapMinute(value: number): number {
+  return ((value % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
 }
 
-/** The six demo personas. An unknown id gives an empty history, which scores as "Insufficient data". */
+function setMvpa(day: HesDayRecord, equivalent: number): void {
+  const vigorous = Math.floor(equivalent / VIGOROUS_SHARE);
+  day.vigorousMin = vigorous;
+  day.moderateMin = equivalent - 2 * vigorous;
+}
+
+// Day number of the last completed day for a running day `today`; NONE when `today` is not a real date.
+function lastCompletedDay(today: string): number {
+  const n = dayNumberOfDate(today);
+  return n < 0 ? NONE : n - 1;
+}
+
+/** The starting history of a persona: `spec.days` completed days, oldest first, ending the day before `today`. */
+export function generatePersonaHistory(spec: HesPersonaSpec, today: string = HES_PERSONA_TODAY): HesHistory {
+  const history: HesHistory = { days: [], crf: [], hrr: [] };
+  const last = lastCompletedDay(today);
+  if (last < 0) {
+    return history;
+  }
+  const steps = personaPattern(spec.stepsBase, STEPS_SWING, spec.stepsCount);
+  const mvpa = personaPattern(spec.mvpaBase, MVPA_SWING, spec.mvpaCount);
+  const rhr = personaPattern(spec.rhrBase, RHR_SWING, spec.rhrCount);
+  const shift = personaPattern(0, spec.sleepShift, spec.sleepCount);
+  const sleepTotal = personaPattern(spec.sleepTotalMin, SLEEP_TOTAL_SWING, spec.sleepCount);
+  const hrv = personaPattern(spec.hrvBase, HRV_SWING, spec.hrvBase < 0 ? 0 : spec.hrvCount);
+  for (let k = 0; k < spec.days; k++) {
+    const day: HesDayRecord = { date: dateOfDayNumber(last - (spec.days - 1 - k)) };
+    const stepsAt = k - (spec.days - steps.length);
+    if (stepsAt >= 0) {
+      day.steps = steps[stepsAt];
+    }
+    const mvpaAt = k - (spec.days - mvpa.length);
+    if (mvpaAt >= 0) {
+      setMvpa(day, mvpa[mvpaAt]);
+    }
+    const rhrAt = k - (spec.days - rhr.length);
+    if (rhrAt >= 0) {
+      day.restingHr = rhr[rhrAt];
+    }
+    const sleepAt = k - (spec.days - shift.length);
+    if (sleepAt >= 0) {
+      day.sleep = {
+        bedMin: wrapMinute(spec.bedMin + shift[sleepAt]),
+        wakeMin: wrapMinute(spec.wakeMin + shift[sleepAt]),
+        totalSleepMin: sleepTotal[sleepAt]
+      };
+    }
+    const hrvAt = k - (spec.days - hrv.length);
+    if (hrvAt >= 0) {
+      day.hrv = { percentile: hrv[hrvAt], protocol: HRV_PROTOCOL };
+    }
+    history.days.push(day);
+  }
+  for (let i = 0; i < spec.crf.length; i++) {
+    const estimate: HesCrfEstimate = {
+      date: dateOfDayNumber(last - spec.crf[i].daysAgo),
+      percentile: spec.crf[i].percentile
+    };
+    history.crf.push(estimate);
+  }
+  for (let i = 0; i < spec.hrr.length; i++) {
+    const session: HesHrrSession = {
+      date: dateOfDayNumber(last - spec.hrr[i].daysAgo),
+      protocolId: spec.hrr[i].protocolId,
+      peakHr: spec.hrr[i].peakHr,
+      hr60: spec.hrr[i].hr60
+    };
+    history.hrr.push(session);
+  }
+  return history;
+}
+
+/**
+ * The record of the running day as the source has it: the persona's base values, last night's sleep at the
+ * usual times, and HRV for a persona whose watch measures it. It is not scored until the day is closed.
+ */
+export function generatePersonaToday(spec: HesPersonaSpec, today: string = HES_PERSONA_TODAY): HesDayRecord {
+  const day: HesDayRecord = { date: today };
+  day.steps = spec.stepsBase;
+  setMvpa(day, spec.mvpaBase);
+  day.restingHr = spec.rhrBase;
+  day.sleep = {
+    bedMin: wrapMinute(spec.bedMin),
+    wakeMin: wrapMinute(spec.wakeMin),
+    totalSleepMin: spec.sleepTotalMin
+  };
+  if (spec.hrvBase >= 0) {
+    day.hrv = { percentile: spec.hrvBase, protocol: HRV_PROTOCOL };
+  }
+  return day;
+}
+
+/** The six demo personas. An unknown id gives an empty history, which has no score. */
 export class HesPersonas {
   static readonly IDS: string[] = ['ania', 'marek', 'kasia', 'tomek', 'ewa', 'ola'];
 
@@ -359,32 +378,30 @@ export class HesPersonas {
     return spec === null ? id : spec.name;
   }
 
-  /** The starting history: completed days, oldest first. */
-  static history(id: string): HesDay[] {
+  /** The starting history: completed days, oldest first, ending the day before `today`. */
+  static history(id: string, today: string = HES_PERSONA_TODAY): HesHistory {
     const spec = HesPersonas.spec(id);
-    return spec === null ? [] : generatePersonaHistory(spec);
+    return spec === null ? { days: [], crf: [], hrr: [] } : generatePersonaHistory(spec, today);
   }
 
-  /** HES-Lite for the starting history. */
-  static result(id: string): HesResult {
-    return computeHes(HesPersonas.history(id));
+  /** The record of the running day; only a date for an unknown id. */
+  static today(id: string, today: string = HES_PERSONA_TODAY): HesDayRecord {
+    const spec = HesPersonas.spec(id);
+    return spec === null ? { date: today } : generatePersonaToday(spec, today);
   }
 
-  /**
-   * A demo session that starts from a history given from outside (the one Health Sim sent). Closing a day
-   * continues the persona's own series, as in `session`; an unknown id gives a session without a day source.
-   */
-  static sessionFrom(id: string, start: HesDay[]): HesSession {
-    const spec = HesPersonas.spec(id);
-    return new HesSession(start, spec === null ? null : new PersonaDaySource(spec));
+  /** The starting history together with the running day: what a source hands over for the persona. */
+  static snapshot(id: string, today: string = HES_PERSONA_TODAY): HesSnapshot {
+    return { history: HesPersonas.history(id, today), today: HesPersonas.today(id, today) };
   }
 
-  /** A demo session that starts from the persona's history (live values, close the day, reset). */
-  static session(id: string): HesSession {
-    const spec = HesPersonas.spec(id);
-    if (spec === null) {
-      return new HesSession([], null);
-    }
-    return new HesSession(generatePersonaHistory(spec), new PersonaDaySource(spec));
+  /** HES for the starting history in a profile. */
+  static result(id: string, profile: HesProfile, today: string = HES_PERSONA_TODAY): HesResult {
+    return computeHes(profile, HesPersonas.history(id, today));
+  }
+
+  /** A demo session that starts from the persona's snapshot (live values, close the day, reset). */
+  static session(id: string, today: string = HES_PERSONA_TODAY): HesSession {
+    return new HesSession(HesPersonas.snapshot(id, today));
   }
 }
