@@ -30,6 +30,8 @@ import {
   KEY_PERSONA,
   KEY_REPORT_REVISION,
   reportService,
+  reportsFromHealthSim,
+  reportSourceLabel,
   selectedReport
 } from '../report/ServiceLocator';
 import {
@@ -228,17 +230,24 @@ export struct ReportView {
     this.report = next;
   }
 
+  // The source pill: "Health Sim · Simulated data" once Health Sim sent its data, otherwise the status of
+  // the HUAWEI Health connection. It reads the report revision, so it follows Connect and Disconnect.
+  private sourceLine(): string {
+    return this.reportRevision >= 0 && reportsFromHealthSim() ? reportSourceLabel() :
+      reportSourceLine(this.status, this.preview);
+  }
+
   @Builder
   sourceRows() {
     Column({ space: 6 }) {
       Row() {
         StatusPill({
-          text: reportSourceLine(this.status, this.preview),
+          text: this.sourceLine(),
           dot: statusDotColor(this.status),
           textId: 'fw_report_source'
         })
       }
-      .accessibilityText(`${reportSourceLine(this.status, this.preview)}. Opens settings`)
+      .accessibilityText(`${this.sourceLine()}. Opens settings`)
       .onClick(() => {
         this.nav.pushPathByName(ROUTE_SETTINGS, null);
       })
