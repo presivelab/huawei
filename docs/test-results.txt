@@ -894,7 +894,7 @@ Base: feature/engine-reports 2985efc + healthsim/ from feature/health-sim-audit,
   brings back were removed again).
 Removed: the old generator and its client (healthsim/entry/src/main/ets/healthsim/*), the old views, the
   scenario store, the Chinese strings and healthsim/tools/logic-tests. No "Wei" and no Hs* type is left.
-tools/run-logic-tests.sh common   380/380passed; watch 6/6passed; HealthSimCopies.test.ets (Node only) 2/2passed
+tools/run-logic-tests.sh common   380/380 passed; watch 6/6 passed; HealthSimCopies.test.ets (Node only) 2/2 passed
 Health Sim: ohpm install, assembleHap (entry): BUILD SUCCESSFUL, no ArkTS warning in the new files.
 tools/check-wording.sh            0 hits (it does not scan healthsim/; the texts were written to the same rules)
 Phone emulator (127.0.0.1:5557), unsigned debug HAP of com.fairwear.healthsim:
