@@ -19,7 +19,16 @@ Builds: FairWear assembleHap entry and watch BUILD SUCCESSFUL; Health Sim assemb
 tools/lint.sh: entry 0 errors (7 warnings, none new), watch 0 errors (2 warnings), common 0 issues.
 tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
 watch/src/main/ets imports nothing from hes/ (grep).
-Emulator: not walked for this entry when it was written.
+Emulator (phone 127.0.0.1:5557, API 24, light mode, built-in demo data path, HAP from this tree, taps with
+  uitest, texts from the layout dump): PASS.
+  Report, Tomek: "79", B, "1 point to A", Coverage 92.5%, "Illustrative discount: 8% of the monthly premium".
+  Life insurance tapped: "80", A, Coverage 92.5%, Full benefit, "Illustrative discount: 10% of the yearly
+  premium · The code on Share is for health insurance". Why this tier: "HES 80", "Weights for life insurance".
+  Share with life insurance still chosen: "Tier B · Eligible: yes", "For: Health insurance".
+  Ola: "No score yet", ring "47.5%" (value font lowered from 26 to 22 so five characters stay inside the
+  ring), "No discount this month", the same in both profiles. Ola and back to Tomek: health insurance again.
+  The persona list reads "Ola, No score yet · coverage 47.5%".
+  Screenshots: docs/screenshots/vnext-01 to vnext-04. Dark mode was not walked; the switch uses system colours.
 
 2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
 ----------------------------------------------------

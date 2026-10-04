@@ -761,13 +761,17 @@ export function profileFromChoice(choice: string, personaId: string): HesProfile
 
 /**
  * The line under the profile switch: the discount of this month for the profile on screen, and, away from
- * the Share profile, that the code for the partner stays on health insurance.
+ * the Share profile, that the code for the partner stays on health insurance. Without a score there is no
+ * code, so nothing is said about it.
  */
 export function profileNote(report: PersonaReport): string {
   const life: boolean = report.profile === HesProfile.LONGEVITY_WELLNESS;
   const discount: string = discountLine(life ? HesProfile.LONGEVITY_WELLNESS : HES_DEFAULT_PROFILE,
     report.discountPct);
-  return life ? discount + ' · The code on Share is for ' + hesProfileLabel(SHARE_PROFILE).toLowerCase() : discount;
+  if (!life || report.hes === HES_NONE) {
+    return discount;
+  }
+  return discount + ' · The code on Share is for ' + hesProfileLabel(SHARE_PROFILE).toLowerCase();
 }
 
 /** The report of one persona. An unknown id gives the default persona; it never throws. */

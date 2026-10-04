@@ -133,6 +133,8 @@ export default function profileReportsTest() {
         .assertEqual('Illustrative discount: 8% of the monthly premium');
       expect(profileNote(engineReportFor('tomek', session, LIFE)))
         .assertEqual('Illustrative discount: 10% of the yearly premium · The code on Share is for health insurance');
+      // Ola has no score, so there is no code to speak of.
+      expect(profileNote(engineReportFor('ola', engineSession('ola'), LIFE))).assertEqual(DISCOUNT_NONE_LINE);
       // Marek is flagged: no benefit and no discount in either profile.
       expect(profileNote(engineReportFor('marek', engineSession('marek'), HEALTH))).assertEqual(DISCOUNT_NONE_LINE);
     });

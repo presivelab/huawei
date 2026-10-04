@@ -62,6 +62,8 @@ export function selectedPersonaId(): string {
 }
 
 export function selectPersona(id: string): void {
+  // A persona picked from the list starts on health insurance, also when it is picked again later.
+  AppStorage.setOrCreate<string>(KEY_REPORT_PROFILE, NO_PROFILE_CHOICE);
   AppStorage.setOrCreate<string>(KEY_PERSONA, service.report(id).id);
 }
 

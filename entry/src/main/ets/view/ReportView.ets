@@ -504,7 +504,7 @@ export struct ReportView {
         diameter: 104,
         stroke: 10,
         stacked: true,
-        valueFont: 26,
+        valueFont: 22,   // "47.5%" has five characters and must stay inside the ring
         dashed: true
       })
       Column({ space: 6 }) {
