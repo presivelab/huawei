@@ -80,6 +80,7 @@ Build screens from the UI kit, not from hand-made rows and columns:
 | `MonthBar`      | a month as one bar, a segment per day in the colour of its state; `DayStateLegend` names the colours     |
 | `CountBar`      | evidence against what is needed: a name, "9 of 14 nights" and a bar (system `Progress`)                  |
 | `TextLink`      | a link to another screen: text and a forward chevron in the accent colour, at least 44 vp high           |
+| `SlotTimeline`  | one day in time order, slot by slot (`WearBar` shows the totals, this shows when)                       |
 | `KitTokens`     | the colour and symbol constants (`COLOR_*`, `SYMBOL_*`, `wearColor`, `tierColor`, `dayStateColor`, `componentColor`, `componentSymbol`); import them, do not repeat `$r` |
 
 Spacing grid: 4, 8, 12, 16, 24. Cards are rounded and have no border. Navigation is the system
@@ -91,7 +92,9 @@ No chart or UI library from ohpm.
 1. A number is always shown with its unit.
 2. Zero never stands in for missing data. Missing data is an empty state, or "—" with an explanation.
 3. The user never sees an enum name, a hash, a sequence number or a key id, except on the screen
-   "Verification details".
+   "Verification details" and, by the project owner's decision, inside the collapsed "Show the code"
+   panels of the screen "How Watch Link works": those panels show source code word for word, and source
+   code has field names and constants. Outside those panels that screen follows the rule like any other.
 4. The watch shows one main piece of information per screen.
 5. The home-screen card never shows the tier or the score.
 6. Demo and simulated data are labelled where they are shown.

@@ -9,9 +9,11 @@ export const ROUTE_VERIFICATION: string = 'verification-details';
 export const ROUTE_WHY: string = 'why';
 export const ROUTE_PARTNER: string = 'partner';
 export const ROUTE_LEDGER: string = 'ledger';
+export const ROUTE_TOUR: string = 'watch-link-tour';
 
 export const VERIFICATION_LABEL: string = 'Verification details';
 export const VERIFICATION_HINT: string = 'Watch key, sequence numbers, chain and sync log';
+export const TOUR_LABEL: string = 'How Watch Link works';
 
 export const BRAND: string = 'HUAWEI Health';
 export const CONNECT_LABEL: string = 'Connect HUAWEI Health';

@@ -16,6 +16,7 @@ export class FwTarget {
   static readonly EVIDENCE: string = 'evidence';
   static readonly SHARE: string = 'share';
   static readonly SOURCE: string = 'source';
+  static readonly TOUR: string = 'tour';
 }
 
 /** Indexes of the tabs of the start page, in the order of the tab bar. */
@@ -76,6 +77,9 @@ export function resolveFwTarget(value: Object | null | undefined): string {
   }
   if (name === FwTarget.SOURCE) {
     return FwTarget.SOURCE;
+  }
+  if (name === FwTarget.TOUR) {
+    return FwTarget.TOUR;
   }
   return FwTarget.DASHBOARD;
 }

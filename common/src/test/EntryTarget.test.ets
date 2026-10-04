@@ -64,6 +64,13 @@ export default function entryTargetTest() {
       expect(resolveFwTargetFromWant(asNumber, '{"fwTarget":"source"}')).assertEqual(FwTarget.SOURCE);
     });
 
+    it('the Watch Link tour opens from a shortcut, a card or a host app', 0, () => {
+      expect(resolveFwTarget('tour')).assertEqual(FwTarget.TOUR);
+      expect(resolveFwTarget(' Tour ')).assertEqual(FwTarget.TOUR);
+      expect(resolveFwTargetFromWant(undefined, '{"fwTarget":"tour"}')).assertEqual(FwTarget.TOUR);
+      expect(resolveFwTarget('tours')).assertEqual(FwTarget.DASHBOARD);
+    });
+
     it('an oversized value opens the dashboard', 0, () => {
       let long = 'share';
       for (let i = 0; i < 12; i++) {

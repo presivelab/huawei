@@ -7,7 +7,7 @@ import {
   fwTargetTab,
   resolveFwTargetFromWant
 } from 'common';
-import { ROUTE_SETTINGS } from '../addon/AddonTexts';
+import { ROUTE_SETTINGS, ROUTE_TOUR } from '../addon/AddonTexts';
 
 /*
  * The one entry into FairWear. A card tap, an icon shortcut and a host app all start EntryAbility with
@@ -45,5 +45,7 @@ export function openTarget(nav: NavPathStack, target: string): void {
   AppStorage.setOrCreate<number>(KEY_TAB, fwTargetTab(target));
   if (fwTargetOpensSettings(target)) {
     nav.pushPathByName(ROUTE_SETTINGS, null);
+  } else if (target === FwTarget.TOUR) {
+    nav.pushPathByName(ROUTE_TOUR, null);
   }
 }

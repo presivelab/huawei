@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "FairWear"
+    },
+    {
+      "name": "shortcut_tour_label",
+      "value": "How Watch Link works"
     }
   ]
 }

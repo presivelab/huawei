@@ -13,6 +13,7 @@ import hesSessionTest from './HesSession.test';
 import wearMonthTest from './WearMonth.test';
 import reportTest from './Report.test';
 import engineReportsTest from './EngineReports.test';
+import tourContentTest from './TourContent.test';
 
 export default function testsuite() {
   claimTest();
@@ -30,4 +31,5 @@ export default function testsuite() {
   wearMonthTest();
   reportTest();
   engineReportsTest();
+  tourContentTest();
 }

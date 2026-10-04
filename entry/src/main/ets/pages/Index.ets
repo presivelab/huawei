@@ -7,6 +7,7 @@ import {
   ROUTE_PARTNER,
   ROUTE_PLATFORM_CONSENT,
   ROUTE_SETTINGS,
+  ROUTE_TOUR,
   ROUTE_VERIFICATION,
   ROUTE_WHY
 } from '../addon/AddonTexts';
@@ -23,6 +24,7 @@ import { PersonaChip } from '../view/PersonaChip';
 import { PlatformConsentPage } from '../view/PlatformConsentPage';
 import { SettingsPage } from '../view/SettingsPage';
 import { VerificationDetailsPage } from '../view/VerificationDetailsPage';
+import { WatchLinkTourPage } from '../view/WatchLinkTourPage';
 import { WelcomeView } from '../view/WelcomeView';
 import { WhyPage } from '../view/WhyPage';
 
@@ -119,6 +121,8 @@ struct Index {
       PartnerPage()
     } else if (name === ROUTE_LEDGER) {
       LedgerPage()
+    } else if (name === ROUTE_TOUR) {
+      WatchLinkTourPage()
     }
   }
 

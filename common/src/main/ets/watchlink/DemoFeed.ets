@@ -47,9 +47,9 @@ const SCRIPT: FeedStretch[] = [
   new FeedStretch(at(5, 30), at(7, 0), 54, 5, 0, false),        // worn, asleep
   new FeedStretch(at(7, 0), at(8, 30), 66, 9, 12, false),       // morning at home
   new FeedStretch(at(8, 30), at(9, 0), 104, 14, 105, false),    // brisk walk
-  new FeedStretch(at(9, 0), at(12, 30), 64, 10, 6, false),      // desk
-  new FeedStretch(at(12, 30), at(14, 0), 0, 0, 0, false),       // the one break: watch taken off
-  new FeedStretch(at(14, 0), at(18, 0), 66, 12, 9, false),      // afternoon
+  new FeedStretch(at(9, 0), at(12, 0), 64, 10, 6, false),       // desk
+  new FeedStretch(at(12, 0), at(15, 0), 0, 0, 0, false),        // the one break: watch taken off, 3 h
+  new FeedStretch(at(15, 0), at(18, 0), 66, 12, 9, false),      // afternoon
   new FeedStretch(at(18, 0), at(19, 0), 124, 22, 70, false),    // workout
   new FeedStretch(at(19, 0), at(23, 0), 60, 10, 4, false),      // evening
   new FeedStretch(at(23, 0), at(24, 0), 0, 0, 0, true)          // back on the charger

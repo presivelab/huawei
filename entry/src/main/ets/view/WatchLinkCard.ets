@@ -29,6 +29,7 @@ import { SectionCard } from '../ui/kit/SectionCard';
 import { StatusPill } from '../ui/kit/StatusPill';
 import { ValueUnit, ValueWithUnit } from '../ui/kit/ValueWithUnit';
 import { WearBar, WearLegend } from '../ui/kit/WearBar';
+import { ROUTE_TOUR, TOUR_LABEL } from '../addon/AddonTexts';
 import { KEY_LINK_REVISION, WatchLinkService } from '../watchlink/WatchLinkService';
 import { CAPTION } from './Styles';
 
@@ -105,6 +106,7 @@ function stripItems(daysNewestFirst: WatchDayFacts[]): DayStripItem[] {
 // Keys, sequence numbers, the chain and the sync log are on "Verification details".
 @Component
 export struct WatchLinkCard {
+  @Consume('fwNav') nav: NavPathStack;
   @StorageProp(KEY_LINK_REVISION) revision: number = 0;
   private daysRevision: number = -1;
   private daysCache: WatchDayFacts[] = [];
@@ -240,6 +242,13 @@ export struct WatchLinkCard {
       .width('100%')
 
       Text(LINK_EXPLAINED).attributeModifier(CAPTION)
+
+      Button(TOUR_LABEL)
+        .buttonStyle(ButtonStyleMode.TEXTUAL)
+        .id('fw_link_tour')
+        .onClick(() => {
+          this.nav.pushPathByName(ROUTE_TOUR, null);
+        })
     }
   }
 }
