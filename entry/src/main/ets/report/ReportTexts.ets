@@ -46,7 +46,6 @@ export const PERSONA_SHEET_NOTE: string = 'Fixed preview data, for the demo only
 export const PERSONA_CHIP_SUFFIX: string = ' · Demo';
 
 export const SHARE_TAB_TITLE: string = 'Share';
-export const SHARE_PLACEHOLDER: string = 'The share screen arrives in the next step.';
 export const EVIDENCE_TAB_TITLE: string = 'Evidence';
 export const REPORT_TAB_TITLE: string = 'Report';
 export const NEXT_STEP_SENTENCE: string = 'This screen arrives in the next step.';

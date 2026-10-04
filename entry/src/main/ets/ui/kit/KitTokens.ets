@@ -47,6 +47,10 @@ export const SYMBOL_BENEFIT_FULL: Resource = $r('sys.symbol.checkmark_circle_fil
 export const SYMBOL_BENEFIT_PARTIAL: Resource = $r('sys.symbol.checkmark_circle');
 export const SYMBOL_BENEFIT_NONE: Resource = $r('sys.symbol.minus_circle');
 export const SYMBOL_INFO: Resource = $r('sys.symbol.info_circle');
+// Share and the partner view: where the signing key is held, a failed check, a check that was not run.
+export const SYMBOL_KEY_HELD: Resource = $r('sys.symbol.lock');
+export const SYMBOL_CROSS: Resource = $r('sys.symbol.xmark');
+export const SYMBOL_NOT_RUN: Resource = $r('sys.symbol.minus');
 
 // The colour of one wear state (WEAR_WORN, WEAR_CHARGING, WEAR_OFF; anything else is "not observed").
 export function wearColor(state: string): Resource {

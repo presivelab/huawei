@@ -444,3 +444,30 @@ export {
   nextTierOf,
   reportComponentId
 } from './src/main/ets/report/EngineReports';
+// Share and the partner view of the demo: the offer of a report, the signed token, the partner's reading.
+export {
+  CHECK_LABELS,
+  CheckRow,
+  checkRows,
+  CheckState,
+  claimBenefitLabel,
+  claimLedgerEntry,
+  claimLine,
+  claimPeriodText,
+  claimTierLine,
+  keySourceLabel,
+  LEDGER_DESTINATION_PARTNER,
+  LEDGER_KIND_CLAIM,
+  mintClaimToken,
+  ShareOffer,
+  shareOffer,
+  SHARE_NO_SCORE_REASON,
+  SHARE_NO_SCORE_TIER,
+  SHARE_REASON_STAYS,
+  stoppedAt,
+  tamperedTierToken,
+  tamperTargetTier,
+  tokenClaim,
+  tokenLengthLine,
+  verdictLine
+} from './src/main/ets/claim/ShareFlow';
