@@ -88,7 +88,16 @@ and `onNewWant`; the start page opens the screen. The value is untrusted input. 
 unknown value, a non-string, an oversized string or malformed card parameters open the start page and never
 throw (11 tests in `common/src/test/EntryTarget.test.ets`). After consent the start page is three tabs:
 `dashboard` selects Report, `evidence` Evidence and `share` Share (`fwTargetTab`); `source` opens Settings
-above the Report tab. The Share tab is a placeholder in this build and there is no shortcut for it yet.
+above the Report tab. There is no shortcut for the Share tab yet.
+
+The Share tab signs the claim when it is on screen, never before: `ShareService`
+(`entry/src/main/ets/share/ShareService.ets`) asks the demo partner (`PartnerVerifier`, in the same app) for
+a nonce, signs the seven-key claim with `ProofSigner` and writes the exact token to the ledger
+(`share/ledger.json` in the app sandbox) before the QR code is drawn. A report without a score gets no code
+and no ledger entry. The partner view takes the token inside the app (the emulator has no camera) and shows
+the verifier's own result: the status, the check the run stopped at, the claim only when its signature
+verified. What each screen shows is decided in `common/src/main/ets/claim/ShareFlow.ets` (9 tests in
+`common/src/test/ShareFlow.test.ets`).
 
 Checked on the Phone emulator (API 24): cold start and a second start of the running app with
 `--ps fwTarget source`, with an unknown value and with no parameter; the shortcut; the card tap.

@@ -92,8 +92,16 @@ two disagree.
   `fwTarget`, device signing with HUKS and a software fallback.
 - Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
   over `hdc`.
-- Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`); the Report
-  screen is built; Share, "Why this tier", the partner view and the ledger are placeholders with routes.
+- Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`). Built: the
+  Report screen with the Live card and the demo controls, "Why this tier", the Evidence calendar with the
+  day sheet and "Appeal this day". The ledger screen is a placeholder with a route.
+- Share and the partner view (`entry/src/main/ets/view/ShareView.ets`, `PartnerPage.ets`): the claim signed
+  with the device key as a system `QRCode`, and the demo partner (`PartnerVerifier`) checking it, with
+  "Verify the same code again" and "Change tier and verify". Pure logic: `common/src/main/ets/claim/ShareFlow.ets`.
+  The one owner of the code, the partner and the ledger is `entry/src/main/ets/share/ShareService.ets`
+  (`ledgerEntries()` is what the ledger screen reads; the file is `share/ledger.json` in the app sandbox).
+  Without a score no code is signed; a score without eligibility is shared as "Eligible: no" and the reason
+  never enters the claim.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
 - Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
   (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
@@ -107,11 +115,12 @@ two disagree.
 
 **What is NOT in the repository yet**
 
-- The screens Share, the partner view, the content of "Why this tier" and the Evidence calendar are still
-  being built. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
-  that chooses where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per
-  persona), with `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and
-  `selectedDayDetails()`. The fixed preview (`PreviewReportService`) is still in the code and not in use.
+- The screen "What left this phone" (the ledger is written, the screen that lists it is a placeholder), export
+  and deletion of the data.
+- Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place that chooses
+  where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per persona), with
+  `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed
+  preview (`PreviewReportService`) is still in the code and not in use.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
   histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
   this repository; check `docs/HES.md` and the code.

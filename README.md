@@ -55,9 +55,30 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 - Wear rules run next to the score (`common/src/main/ets/wear/`): compliant days, nights, breaks, and the
   selective non-wear flag. One suspicious break never raises the flag, three always do, two only when they
   are more than 30% of all breaks.
-- After consent the phone shows three tabs: Report (the month of the selected demo persona), Evidence and
-  Share. Benefit level: eligible and tier A is a full benefit, eligible and tier B a partial benefit,
-  anything else no benefit this month, always shown with its reason.
+- After consent the phone shows three tabs: Report, Evidence and Share. Benefit level: eligible and tier A is
+  a full benefit, eligible and tier B a partial benefit, anything else no benefit this month, always shown
+  with its reason.
+- Report: the month of the selected demo persona, and "Why this tier": the components behind the tier as
+  Strongest, To improve and Missing data (a missing component is never listed as weak), the one change that
+  reaches the next tier, and how the score is calculated. A persona without a score gets "Measured so far"
+  and "Needed for a score" with day and night counts instead.
+- Demo controls on the Report tab: the Live card shows heart rate and steps labelled "Demo values"; two
+  sliders set them and the score does not move. "Close the day" turns the running day into a completed day
+  and the score is calculated again; "Reset demo" returns the persona to its starting history.
+- Evidence: the wear month as a calendar (compliant, short, suspicious break, no data), with the month's
+  figures and the flag rule above it. A tap on a day opens what the watch recorded and the reason the day
+  counts as it does. A short or suspicious day can be appealed: "Appeal this day" becomes "Appeal sent". The
+  appeal is kept on the phone until the app restarts, is sent nowhere and changes neither the day nor the
+  score. The tab also holds the days received from the watch and "How Watch Link works", a six-step tour of
+  the newest day the watch sent, with three checks (a changed day, a repeated day, a held-back day) run on a
+  copy of the chain.
+- Share: the signed tier claim (seven keys) as a QR code, and a demo partner view that verifies it, refuses
+  the same code a second time and refuses a code whose tier was changed. The single-use nonce comes from the
+  partner verifier, which in the demo runs inside the same app. Each code shown is written to a ledger in
+  the app sandbox with its exact text. A persona without a score gets no code.
+- Not built: the screen "What left this phone" that lists the ledger (the route shows a placeholder), export
+  and deletion of the data, a camera scan of the QR code (the partner view takes the code from the same
+  phone).
 - The screens get their data in one place, `entry/src/main/ets/report/ServiceLocator.ets`, from the engine
   (`EngineReportService`): the report of a persona, the details of each day of the wear month with the reason
   as text, the live readings, "Close the day" and reset.
