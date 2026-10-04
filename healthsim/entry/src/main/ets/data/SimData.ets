@@ -1,8 +1,6 @@
 import { HealthScope } from '../fw/health/HealthConnection';
 import { HES_MISSING, HesDay } from '../fw/hes/HesTypes';
 import { HesPersonas } from '../fw/hes/HesPersonas';
-import { WearDayRecord } from '../fw/wear/WearMonth';
-import { WearPersonas } from '../fw/wear/WearPersonas';
 
 /*
  * What the Health Sim screens show: the people of the simulation and their days, read from the same
@@ -13,6 +11,19 @@ import { WearPersonas } from '../fw/wear/WearPersonas';
 export const HISTORY_DAYS: number = 30;
 /** A value that was not measured. Shown instead of a number, never as zero. */
 export const NO_VALUE: string = '—';
+/** The daily goals the two rings of "Activity records" are drawn against. Display only. */
+export const STEPS_GOAL: number = 10000;
+export const EXERCISE_GOAL_MIN: number = 30;
+/** How many days the small bars of a metric card show. */
+export const RECENT_DAYS: number = 7;
+
+/** The metrics Health Sim shows. One id per card and per detail page. */
+export const METRIC_STEPS: string = 'steps';
+export const METRIC_EXERCISE: string = 'exercise';
+export const METRIC_HEART: string = 'heart';
+export const METRIC_SLEEP: string = 'sleep';
+export const METRIC_VO2MAX: string = 'vo2max';
+export const METRIC_HRV: string = 'hrv';
 
 const MINUTES_PER_HOUR: number = 60;
 const WEEKDAYS: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -24,16 +35,21 @@ export interface SimPerson {
   name: string;
 }
 
-/** One day as a row of the history list: every value already written as text. */
-export interface SimDayRow {
-  date: string;        // "2026-10-03"
-  title: string;       // "Sat 3 Oct"
+/** One day of one metric as a row of the detail page: the value already written as text. */
+export interface SimMetricRow {
+  date: string;    // "2026-10-03"
+  title: string;   // "Sat 3 Oct"
+  value: string;   // NO_VALUE when not measured
+  share: number;   // 0..100, the day against the highest day of the list; 0 when not measured
+}
+
+/** The newest day as the "Activity records" card shows it. */
+export interface SimActivity {
+  title: string;          // "Sat 3 Oct"
   steps: string;
-  restingHr: string;
-  sleep: string;
-  active: string;
-  worn: string;
-  stepsShare: number;  // 0..100, the day's steps against the highest day of the list; 0 when not measured
+  exercise: string;
+  stepsShare: number;     // 0..100 of STEPS_GOAL; 0 when not measured
+  exerciseShare: number;  // 0..100 of EXERCISE_GOAL_MIN; 0 when not measured
 }
 
 export function simPeople(): SimPerson[] {
@@ -88,74 +104,136 @@ export function dayTitle(date: string): string {
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
 
-export function stepsText(day: HesDay): string {
-  return missing(day.steps) ? NO_VALUE : grouped(day.steps);
-}
-
-export function restingHrText(day: HesDay): string {
-  return missing(day.restingHeartRate) ? NO_VALUE : `${Math.round(day.restingHeartRate)}`;
-}
-
-export function sleepText(day: HesDay): string {
-  return missing(day.sleepMinutes) ? NO_VALUE : hoursMinutes(day.sleepMinutes);
-}
-
-/** Moderate plus vigorous minutes; missing only when both are missing. */
-export function activeText(day: HesDay): string {
-  if (missing(day.moderateMinutes) && missing(day.vigorousMinutes)) {
-    return NO_VALUE;
+/**
+ * The number a metric has on a day; HES_MISSING when it was not measured. Exercise is moderate plus
+ * vigorous minutes and is missing only when both are missing.
+ */
+function metricNumber(day: HesDay, metric: string): number {
+  if (metric === METRIC_STEPS) {
+    return missing(day.steps) ? HES_MISSING : day.steps;
   }
-  return `${Math.max(0, day.moderateMinutes) + Math.max(0, day.vigorousMinutes)}`;
-}
-
-export function wornText(record: WearDayRecord | null): string {
-  if (record === null || !record.observed) {
-    return NO_VALUE;
-  }
-  return hoursMinutes(record.wornMin);
-}
-
-function wearOf(records: WearDayRecord[], date: string): WearDayRecord | null {
-  for (let i = 0; i < records.length; i++) {
-    if (records[i].date === date) {
-      return records[i];
+  if (metric === METRIC_EXERCISE) {
+    if (missing(day.moderateMinutes) && missing(day.vigorousMinutes)) {
+      return HES_MISSING;
     }
+    return Math.max(0, day.moderateMinutes) + Math.max(0, day.vigorousMinutes);
   }
-  return null;
+  if (metric === METRIC_HEART) {
+    return missing(day.restingHeartRate) ? HES_MISSING : day.restingHeartRate;
+  }
+  if (metric === METRIC_SLEEP) {
+    return missing(day.sleepMinutes) ? HES_MISSING : day.sleepMinutes;
+  }
+  if (metric === METRIC_VO2MAX) {
+    return missing(day.vo2maxPercentile) ? HES_MISSING : day.vo2maxPercentile;
+  }
+  if (metric === METRIC_HRV) {
+    return missing(day.hrvPercentile) ? HES_MISSING : day.hrvPercentile;
+  }
+  return HES_MISSING;
 }
 
-/** The last `HISTORY_DAYS` days of a person, newest first. An unknown id gives an empty list. */
-export function simHistory(id: string): SimDayRow[] {
+/** The number as a screen writes it, without its unit. A missing value is NO_VALUE, never zero. */
+function metricText(metric: string, n: number): string {
+  if (missing(n)) {
+    return NO_VALUE;
+  }
+  if (metric === METRIC_STEPS) {
+    return grouped(n);
+  }
+  if (metric === METRIC_SLEEP) {
+    return hoursMinutes(n);
+  }
+  return `${Math.round(n)}`;
+}
+
+/** The unit written after a value; sleep carries its units in the value ("7 h 28 min"). */
+export function metricUnit(metric: string): string {
+  if (metric === METRIC_STEPS) {
+    return 'steps';
+  }
+  if (metric === METRIC_EXERCISE) {
+    return 'min';
+  }
+  if (metric === METRIC_HEART) {
+    return 'bpm';
+  }
+  if (metric === METRIC_VO2MAX || metric === METRIC_HRV) {
+    return 'percentile';
+  }
+  return '';
+}
+
+function lastDays(id: string): HesDay[] {
   const days: HesDay[] = HesPersonas.history(id);
-  const wear: WearDayRecord[] = WearPersonas.month(id);
-  const first = Math.max(0, days.length - HISTORY_DAYS);
+  return days.slice(Math.max(0, days.length - HISTORY_DAYS));
+}
+
+function shareOf(n: number, top: number): number {
+  return missing(n) || top <= 0 ? 0 : Math.min(100, Math.round(n * 100 / top));
+}
+
+/** The newest day's value of a metric as text; NO_VALUE for an unknown id or a day without it. */
+export function simMetricToday(id: string, metric: string): string {
+  const days = lastDays(id);
+  return days.length === 0 ? NO_VALUE : metricText(metric, metricNumber(days[days.length - 1], metric));
+}
+
+/** One metric over the last `HISTORY_DAYS` days, newest first. An unknown id gives an empty list. */
+export function simMetricRows(id: string, metric: string): SimMetricRow[] {
+  const days = lastDays(id);
   let top = 0;
-  for (let i = first; i < days.length; i++) {
-    if (!missing(days[i].steps) && days[i].steps > top) {
-      top = days[i].steps;
-    }
+  for (let i = 0; i < days.length; i++) {
+    top = Math.max(top, metricNumber(days[i], metric));
   }
-  const out: SimDayRow[] = [];
-  for (let i = days.length - 1; i >= first; i--) {
-    const day = days[i];
+  const out: SimMetricRow[] = [];
+  for (let i = days.length - 1; i >= 0; i--) {
+    const n = metricNumber(days[i], metric);
     out.push({
-      date: day.date,
-      title: dayTitle(day.date),
-      steps: stepsText(day),
-      restingHr: restingHrText(day),
-      sleep: sleepText(day),
-      active: activeText(day),
-      worn: wornText(wearOf(wear, day.date)),
-      stepsShare: missing(day.steps) || top === 0 ? 0 : Math.round(day.steps * 100 / top)
+      date: days[i].date,
+      title: dayTitle(days[i].date),
+      value: metricText(metric, n),
+      share: shareOf(n, top)
     });
   }
   return out;
 }
 
-/** The newest day of a person; null for an unknown id. */
-export function simToday(id: string): SimDayRow | null {
-  const rows = simHistory(id);
-  return rows.length > 0 ? rows[0] : null;
+/**
+ * The last `RECENT_DAYS` days of a metric as bar heights 0..100 against the highest of them, oldest
+ * first. A day that was not measured is -1, so the card leaves its bar out instead of drawing zero.
+ */
+export function simRecentBars(id: string, metric: string): number[] {
+  const days = lastDays(id);
+  const first = Math.max(0, days.length - RECENT_DAYS);
+  let top = 0;
+  for (let i = first; i < days.length; i++) {
+    top = Math.max(top, metricNumber(days[i], metric));
+  }
+  const out: number[] = [];
+  for (let i = first; i < days.length; i++) {
+    const n = metricNumber(days[i], metric);
+    out.push(missing(n) ? -1 : shareOf(n, top));
+  }
+  return out;
+}
+
+/** The newest day for the "Activity records" card; null for an unknown id. */
+export function simActivity(id: string): SimActivity | null {
+  const days = lastDays(id);
+  if (days.length === 0) {
+    return null;
+  }
+  const day = days[days.length - 1];
+  const steps = metricNumber(day, METRIC_STEPS);
+  const exercise = metricNumber(day, METRIC_EXERCISE);
+  return {
+    title: dayTitle(day.date),
+    steps: metricText(METRIC_STEPS, steps),
+    exercise: metricText(METRIC_EXERCISE, exercise),
+    stepsShare: shareOf(steps, STEPS_GOAL),
+    exerciseShare: shareOf(exercise, EXERCISE_GOAL_MIN)
+  };
 }
 
 /** The readable name of a data type FairWear can ask for. Empty for a name Health Sim does not know. */
@@ -170,7 +248,7 @@ export function scopeLabel(scope: string): string {
     return 'Sleep';
   }
   if (scope === HealthScope.ACTIVITY_MINUTES) {
-    return 'Activity minutes';
+    return 'Exercise';
   }
   if (scope === HealthScope.VO2MAX) {
     return 'VO₂max';

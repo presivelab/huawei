@@ -3,6 +3,30 @@
     {
       "name": "start_window_background",
       "value": "#000000"
+    },
+    {
+      "name": "hs_metric_steps",
+      "value": "#3CC4B4"
+    },
+    {
+      "name": "hs_metric_exercise",
+      "value": "#A294F2"
+    },
+    {
+      "name": "hs_metric_heart",
+      "value": "#EC7C9B"
+    },
+    {
+      "name": "hs_metric_sleep",
+      "value": "#7FA0F5"
+    },
+    {
+      "name": "hs_metric_fitness",
+      "value": "#DDB15A"
+    },
+    {
+      "name": "hs_track",
+      "value": "#2A2E31"
     }
   ]
 }

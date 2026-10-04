@@ -1,5 +1,8 @@
 /**
- * Health Sim on the watch: the simulated day as a 24-hour ring (midnight at the top) with what it holds.
+ * Health Sim on the watch, two pages one above the other (swipe up and down, no loop):
+ *   1. "Activity records": a Steps ring and an Exercise ring with their values, read from the day script;
+ *   2. "Wear today · for FairWear": the same day as a 24-hour ring (midnight at the top) of worn, charging
+ *      and off-wrist time.
  * Nothing here is measured. FairWear on this watch asks WatchExportAbility for the same script.
  */
 import { BUILT_IN_SCRIPT, FeedStretch, MINUTES_PER_DAY } from '../fw/watchlink/DemoFeed';
@@ -7,17 +10,24 @@ import {
   arcsOf,
   DayArc,
   durationText,
+  EXERCISE_GOAL_MIN,
+  exerciseMinutesOf,
+  goalShare,
+  groupedText,
   KIND_CHARGING,
   KIND_OFF,
   KIND_WORN,
   minutesOf,
-  offWristText
+  offWristText,
+  STEPS_GOAL,
+  stepsOf
 } from '../model/DayScript';
 
 const RING_WIDTH: number = 14;
 const RING_MARGIN: number = 6;
 const FULL_TURN: number = Math.PI * 2;
 const TOP: number = -Math.PI / 2;
+const ACTIVITY_STROKE: number = 12;
 
 @Component
 struct LegendRow {
@@ -92,7 +102,72 @@ struct Index {
     }
   }
 
-  build() {
+  @Builder
+  banner() {
+    Text($r('app.string.sim_banner'))
+      .fontSize($r('app.float.banner_font_size'))
+      .fontWeight(FontWeight.Bold)
+      .fontColor($r('app.color.banner_text'))
+      .backgroundColor($r('app.color.banner_bg'))
+      .borderRadius(10)
+      .padding({ left: 10, right: 10, top: 3, bottom: 3 })
+  }
+
+  @Builder
+  activityPage() {
+    Stack() {
+      Progress({ value: goalShare(stepsOf(this.script), STEPS_GOAL), total: 100, type: ProgressType.Ring })
+        .width('94%')
+        .height('94%')
+        .style({ strokeWidth: ACTIVITY_STROKE })
+        .color($r('app.color.ring_steps'))
+        .backgroundColor($r('app.color.ring_track'))
+      Progress({
+        value: goalShare(exerciseMinutesOf(this.script), EXERCISE_GOAL_MIN),
+        total: 100,
+        type: ProgressType.Ring
+      })
+        .width('80%')
+        .height('80%')
+        .style({ strokeWidth: ACTIVITY_STROKE })
+        .color($r('app.color.ring_exercise'))
+        .backgroundColor($r('app.color.ring_track'))
+
+      Column({ space: 5 }) {
+        this.banner()
+        Text($r('app.string.activity_title'))
+          .fontSize($r('app.float.label_font_size'))
+          .fontColor($r('app.color.muted'))
+        Column({ space: 3 }) {
+          LegendRow({
+            label: $r('app.string.steps'),
+            value: groupedText(stepsOf(this.script)),
+            dot: $r('app.color.ring_steps')
+          })
+          LegendRow({
+            label: $r('app.string.exercise'),
+            value: durationText(exerciseMinutesOf(this.script)),
+            dot: $r('app.color.ring_exercise')
+          })
+        }
+        .alignItems(HorizontalAlign.Start)
+        .id('hsw_activity')
+
+        Text($r('app.string.swipe_hint'))
+          .fontSize($r('app.float.note_font_size'))
+          .fontColor($r('app.color.muted'))
+          .textAlign(TextAlign.Center)
+      }
+      .width('60%')
+      .alignItems(HorizontalAlign.Center)
+      .justifyContent(FlexAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+  }
+
+  @Builder
+  wearPage() {
     Stack() {
       Canvas(this.ring)
         .width('100%')
@@ -102,20 +177,13 @@ struct Index {
         })
 
       Column({ space: 6 }) {
-        Text($r('app.string.sim_banner'))
-          .fontSize($r('app.float.banner_font_size'))
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.banner_text'))
-          .backgroundColor($r('app.color.banner_bg'))
-          .borderRadius(10)
-          .padding({ left: 10, right: 10, top: 3, bottom: 3 })
-        Text($r('app.string.app_title'))
-          .fontSize($r('app.float.title_font_size'))
+        this.banner()
+        Text($r('app.string.day_title'))
+          .fontSize($r('app.float.label_font_size'))
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.ink'))
-        Text($r('app.string.day_title'))
-          .fontSize($r('app.float.note_font_size'))
-          .fontColor($r('app.color.muted'))
+          .textAlign(TextAlign.Center)
+          .id('hsw_wear_title')
 
         Column({ space: 3 }) {
           LegendRow({
@@ -148,6 +216,19 @@ struct Index {
     }
     .width('100%')
     .height('100%')
+  }
+
+  build() {
+    Swiper() {
+      this.activityPage()
+      this.wearPage()
+    }
+    .vertical(true)
+    .loop(false)
+    .indicator(false)
+    .width('100%')
+    .height('100%')
     .backgroundColor($r('app.color.page'))
+    .id('hsw_pages')
   }
 }

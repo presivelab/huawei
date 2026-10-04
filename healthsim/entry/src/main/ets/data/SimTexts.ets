@@ -3,29 +3,41 @@
 export const APP_TITLE: string = 'Health Sim';
 export const BANNER: string = 'SIMULATED DATA · stands in for HUAWEI Health';
 
-export const TAB_TODAY: string = 'Today';
-export const TAB_HISTORY: string = 'History';
-export const TAB_APPS: string = 'Apps';
+export const TAB_HEALTH: string = 'Health';
+export const TAB_ME: string = 'Me';
 
-export const PERSON_LABEL: string = 'Person';
-export const TODAY_NOTE: string = 'The newest completed day of this person in the simulation.';
+export const PERSON_LABEL: string = 'Demo person';
+export const PERSON_NOTE: string =
+  'Only in this demo: choose whose simulated days Health Sim shows.';
+export const ACTIVITY_TITLE: string = 'Activity records';
+export const HEALTH_NOTE: string =
+  'The newest completed day of this person in the simulation. — means not measured; it is never shown as zero.';
 export const HISTORY_TITLE: string = 'Last 30 days';
 export const HISTORY_NOTE: string = '— means not measured that day. It is never shown as zero.';
+export const BACK: string = 'Back';
 
 export const LABEL_STEPS: string = 'Steps';
-export const LABEL_RESTING: string = 'Resting heart rate';
+export const LABEL_EXERCISE: string = 'Exercise';
+export const LABEL_HEART: string = 'Heart rate';
 export const LABEL_SLEEP: string = 'Sleep';
-export const LABEL_ACTIVE: string = 'Activity minutes';
-export const LABEL_WORN: string = 'Watch worn';
-export const UNIT_STEPS: string = 'steps';
-export const UNIT_BPM: string = 'bpm';
-export const UNIT_MIN: string = 'min';
+export const LABEL_VO2MAX: string = 'VO₂max';
+export const LABEL_HRV: string = 'HRV';
+export const SUB_HEART: string = 'Resting';
+export const SUB_SLEEP: string = 'Last night';
+export const SUB_STEPS: string = 'Day total';
+export const SUB_EXERCISE: string = 'Moderate + vigorous';
+export const SUB_FITNESS: string = 'Newest day';
 
 export const APPS_TITLE: string = 'Connected apps';
 export const FAIRWEAR_NAME: string = 'FairWear';
 export const FAIRWEAR_LINE: string = 'Signed tier for your partner';
 export const FAIRWEAR_NOTE: string =
   'FairWear reads the data types you allow and turns them into a signed A/B/C tier on this phone.';
+export const FAIRWEAR_WEAR: string =
+  'Shared with FairWear when you allow it: wear time per day (used by FairWear\'s wear check).';
+export const FAIRWEAR_SIMULATED: string =
+  'Simulated integration point · real HUAWEI Health has no such card; sharing with other apps is in its ' +
+    'privacy settings.';
 export const OPEN_FAIRWEAR: string = 'Open FairWear';
 export const FAIRWEAR_MISSING: string = 'FairWear is not installed on this device.';
 export const ABOUT_TITLE: string = 'About Health Sim';

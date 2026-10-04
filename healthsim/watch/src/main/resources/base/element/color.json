@@ -39,6 +39,14 @@
     {
       "name": "ring_off",
       "value": "#8E7CC3"
+    },
+    {
+      "name": "ring_steps",
+      "value": "#3CC4B4"
+    },
+    {
+      "name": "ring_exercise",
+      "value": "#A294F2"
     }
   ]
 }
