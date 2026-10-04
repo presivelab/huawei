@@ -1,6 +1,25 @@
 FairWear test results
 =====================
 
+2026-10-04 04:46 CEDT  branch feature/engine-reports  (G3: the last build of both HAPs)
+----------------------------------------------------
+Tree: d6d3307 = the G2 merge (1ec3f81) + the G2 record + the three G3 records of the other sessions
+  (ef36a9a watch, 9a20ff1 share, 8d2b174 screens). No file under common/, entry/, watch/ or tools/ changed
+  since the G2 merge: the three sessions found nothing to fix on the merged build.
+tools/run-logic-tests.sh common   362/362 passed
+tools/run-logic-tests.sh watch    6/6 passed
+hvigorw clean, then assembleHap (entry) and assembleHap (watch): BUILD SUCCESSFUL, unsigned debug HAPs
+  entry/build/default/outputs/default/entry-default-unsigned.hap   1,887,355 bytes  sha256 981b77fc65beda0a…
+  watch/build/default/outputs/default/watch-default-unsigned.hap     959,369 bytes  sha256 9663114c95644cf9…
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+On the emulators at G3, by the sessions that own the screens (their entries follow): the watch -> phone flow
+  with a fifth demo-feed day; Share and the partner view for six personas in light and dark; Report headline,
+  "Why this tier", the Evidence calendar and the 17 September sheet for six personas in light and dark.
+Not run at G3: Close the day and reset again, --tamper and --drop of the relay again, the software-key
+  fallback, a screen reader, the large system font, the HAPs of this clean build on the emulators (the
+  installed ones were built from e991ad1, the same sources).
+
 2026-10-04 04:28 CEDT  branch feature/watch-link-tour  (G3, agent 3: watch -> phone once more on the merged build)
 ----------------------------------------------------
 Base: feature/engine-reports e991ad1 (fast-forward). No code file changed: this record and one screenshot.
