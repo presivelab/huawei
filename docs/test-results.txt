@@ -1,6 +1,35 @@
 FairWear test results
 =====================
 
+2026-10-04 04:12 CEDT  branch feature/engine-reports  (G2: the four branches of the night merged)
+----------------------------------------------------
+Merged into feature/engine-reports (d50a231), in this order, each with --no-ff:
+  feature/phone-screens   9a03064 -> 5630173   no conflict
+  feature/watch-link-tour 359d7cb -> 9e282ce   no conflict (documents and screenshots only)
+  feature/share-partner   8e95ba4 -> 1ec3f81   conflicts in common/Index.ets and docs/test-results.txt (both
+                                               sides kept), AGENTS.md, README.md, docs/ARCHITECTURE.md (the
+                                               engine-reports text kept, the Share sentences written in)
+After each merge: tools/run-logic-tests.sh common and watch, assembleHap entry and watch.
+  after phone-screens:    common 353/353, watch 6/6, both builds BUILD SUCCESSFUL
+  after watch-link-tour:  common 353/353, watch 6/6, both builds BUILD SUCCESSFUL
+  after share-partner:    common 362/362, watch 6/6, both builds BUILD SUCCESSFUL
+At 1ec3f81: tools/lint.sh entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues;
+  tools/check-wording.sh 0 hits (14 wordings, 4 status names).
+Phone emulator (127.0.0.1:5557, API 24), the merged unsigned debug HAP installed with install -r, consent and
+the persona sheet with uitest clicks, texts read from the layout dump, light mode:
+  Report tab, six personas: the same values as at G1; Ewa now reads "1 point to B". No text with "preview".
+  Evidence tab (Ola): Calendar | Watch days, "8 of 30 Days compliant", "8 of 30 Nights worn", "0 Suspicious
+  breaks". Share tab (Ola): "Tier: not available", "No code yet. Without a score nothing is signed and nothing
+  leaves this phone."
+  Shots re-taken on the merged build: docs/screenshots/final/a1-report-{ania,marek,kasia,tomek,ewa,ola}-light.jpeg.
+Checked by the other sessions on the engine build before the merge, see their entries in this file: Close the
+  day, reset, the live readings, the day sheet and the appeal (feature/phone-screens, at the end of the file);
+  Share and the partner view (feature/share-partner); the watch -> phone run (feature/watch-link-tour).
+Not run on the merged build: those paths again (Close the day, the day sheet, a signed code and the partner
+  view, the relay from the watch), dark mode, the watch HAP on the wearable emulator. They are the G3 pass.
+Not built: the screen "What left this phone" (the ledger is written to share/ledger.json; LedgerPage is a
+  placeholder and no screen links to it), export and deletion of the data.
+
 2026-10-04 04:05 CEDT  branch feature/watch-link-tour  (tour on the common base; watch -> phone run with the demo feed and its 3 h break)
 ----------------------------------------------------
 Base: feature/engine-reports 7213345 (fast-forward: 75fe748 -> b9ce4b2 -> 7213345, no conflict). No code file

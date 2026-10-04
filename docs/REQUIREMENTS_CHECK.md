@@ -11,6 +11,14 @@ screens, the watch live screen, the home-screen card and the shortcut (`docs/scr
 rule (`docs/test-results.txt`); B4, B5, B8 and B9 have a first version in `README.md`, `docs/ARCHITECTURE.md`
 and `docs/DEMO_SCRIPT.md`. The watch permissions are in `docs/ARCHITECTURE.md`.
 
+State on 2026-10-04 04:12, branch `feature/engine-reports` at the G2 merge (`1ec3f81`), from
+`docs/test-results.txt`: logic tests `common` 362/362 and `watch` 6/6; `assembleHap` for `entry` and `watch`
+BUILD SUCCESSFUL; lint 0 errors (7 warnings in `entry`, 2 in `watch`, all one performance rule, 0 issues in
+`common`); wording check 0 hits. B2 is met for the product screens: Report, "Why this tier", Evidence, Share
+and the partner view ran on the Phone emulator and the watch recorder on the Wearable emulator (screenshots
+in `docs/screenshots/final/` and `docs/screenshots/`). The table below still shows the first check and is
+kept as the record of it.
+
 ## Status
 
 | Point | Requirement                                 | Status                          | Evidence                                                                                                               |
