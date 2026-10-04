@@ -48,6 +48,7 @@ export class PreviewReportService implements ReportService {
     const copy: PersonaReport = {
       id: base.id,
       name: base.name,
+      profile: base.profile,
       period: base.period,
       periodIso: base.periodIso,
       hes: base.hes,
@@ -57,6 +58,7 @@ export class PreviewReportService implements ReportService {
       eligible: base.eligible,
       benefit: base.benefit,
       benefitReason: base.benefitReason,
+      discountPct: base.discountPct,
       pointsToNext: base.pointsToNext,
       components: base.components,
       wear: base.wear,

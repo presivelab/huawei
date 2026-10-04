@@ -41,7 +41,7 @@ The recorded demo follows `docs/DEMO_SCRIPT.md` (part A, about four minutes):
 
 - [x] `entry` launches on the phone emulator and `watch` launches on the wearable emulator; both use the `common` module (`docs/test-results.txt`, `docs/screenshots/`).
 - [x] On the wearable emulator, the watch shows heart rate, steps and wear state; without a heart-rate reading the wear state is unknown or off-wrist, never invented (`LiveWear.test.ets`, `WatchLinkFlow.test.ets`, `docs/screenshots/i3-watch-wear-state.jpeg`). Changing the heart rate in the emulator's Virtual sensor panel was not run.
-- [x] Ania: A / 92, full benefit. Kasia: B / 73, partial benefit, no flag. Marek: B / 75, flagged for selective non-wear, not eligible, no benefit (`HesPersonas.test.ets`, `WearMonth.test.ets`, `EngineReports.test.ets`, `docs/screenshots/final/`).
+- [x] Ania: A / 92, full benefit. Kasia: B / 71, partial benefit, no flag. Marek: B / 75, flagged for selective non-wear, not eligible, no benefit (`HesPersonas.test.ets`, `WearMonth.test.ets`, `EngineReports.test.ets`, `docs/screenshots/final/`).
 - [x] A signed claim verifies in the partner view; a tampered payload, a reused nonce and an unknown key are rejected without a crash (`ClaimVerifier.test.ets`, `ShareFlow.test.ets`, `docs/screenshots/final/a4-partner-*`).
 - [x] The pure-logic tests pass under Node (`tools/run-logic-tests.sh common` and `watch`; counts in `docs/test-results.txt`).
 

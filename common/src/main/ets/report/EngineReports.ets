@@ -57,7 +57,7 @@ import { DEFAULT_THRESHOLDS } from '../model/defaults';
 import { Thresholds } from '../model/types';
 import { buildWearMonth, WearBreakResult, WearDayResult, WearDayState, WearMonthResult } from '../wear/WearMonth';
 import { WearPersonas } from '../wear/WearPersonas';
-import { benefitLevel, benefitReason } from './Benefit';
+import { benefitLevel, benefitReason, discountPct } from './Benefit';
 import {
   BAR_NO_DATA,
   ComponentId,
@@ -430,9 +430,11 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
     steps: liveSteps >= 0 ? liveSteps : HES_MISSING
   };
   const counterfactual = engineWhatIf(result);
+  const benefit: string = benefitLevel(eligible, result.tier, scored);
   return {
     id: id,
     name: HesPersonas.displayName(id),
+    profile: result.profile,
     period: periodLine(month.period, history),
     periodIso: month.period,
     hes: scored ? result.score : HES_NONE,
@@ -440,8 +442,9 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
     coveragePct: result.coverage,
     confidence: confidenceOf(result.confidence),
     eligible: eligible,
-    benefit: benefitLevel(eligible, result.tier, scored),
+    benefit: benefit,
     benefitReason: benefitReason(eligible, result.tier, scored, month.flagged, month.suspiciousBreaks),
+    discountPct: discountPct(result.profile, benefit),
     pointsToNext: scored ? pointsToNextTier(result.score) : POINTS_UNKNOWN,
     components: rowsOf(result, history, scored, source),
     wear: wearOf(month),
@@ -494,7 +497,7 @@ function resultWith(result: HesResult, id: HesComponentId, toRaw: number): HesRe
     }
     components.push(c);
   }
-  return composeHes(components);
+  return composeHes(components, result.profile);
 }
 
 // The points of a curve between the value today and the top of the curve, the nearest first. For steps

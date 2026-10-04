@@ -11,11 +11,11 @@
 //   - VO2max: the latest valid estimate, as written;
 //   - sleep duration is scored in hours (the curve's unit); the history carries minutes;
 //   - component scores are kept unrounded. Only the final score is rounded (section 4.2).
-import { HES_COMPONENTS, HES_DAYS_PER_WEEK } from './HesCurves';
+import { HES_DAYS_PER_WEEK, HES_DEFAULT_PROFILE, hesComponentsFor } from './HesCurves';
 import { hesMean, hesMedian, hesSampleSd, sleepRelativeMinutes, sleepTimingSd } from './HesMath';
 import { piecewiseScore } from './HesPiecewise';
 import { isSufficient, quality, validDays } from './HesSufficiency';
-import { HesComponentDefinition, HesComponentId, HesComponentResult, HesDay, HES_MISSING } from './HesTypes';
+import { HesComponentDefinition, HesComponentId, HesComponentResult, HesDay, HesProfile, HES_MISSING } from './HesTypes';
 
 const MINUTES_PER_HOUR: number = 60;
 const PERMILLE: number = 1000;
@@ -132,11 +132,13 @@ export function evaluateComponent(def: HesComponentDefinition, history: HesDay[]
   };
 }
 
-/** All eight components, in the order of HES_COMPONENTS. */
-export function evaluateComponents(history: HesDay[]): HesComponentResult[] {
+/** All eight components with the base weights of `profile`, in the order of HES_COMPONENTS. */
+export function evaluateComponents(history: HesDay[],
+  profile: HesProfile = HES_DEFAULT_PROFILE): HesComponentResult[] {
+  const defs = hesComponentsFor(profile);
   const out: HesComponentResult[] = [];
-  for (let i = 0; i < HES_COMPONENTS.length; i++) {
-    out.push(evaluateComponent(HES_COMPONENTS[i], history));
+  for (let i = 0; i < defs.length; i++) {
+    out.push(evaluateComponent(defs[i], history));
   }
   return out;
 }

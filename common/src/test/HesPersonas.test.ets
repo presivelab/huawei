@@ -15,6 +15,7 @@ import {
   HesComponentResult,
   HesConfidence,
   HesDay,
+  HesProfile,
   HesResult,
   HesStatus,
   HES_MISSING
@@ -49,10 +50,11 @@ function specOf(id: string): HesPersonaSpec {
   return spec;
 }
 
-// The team's fixed table: tier, score, coverage, confidence.
+// The fixed table: tier, score, coverage, confidence, for one profile (health insurance when not named).
 function expectResult(id: string, tier: string, score: number, coveragePct: number,
-  confidence: HesConfidence): void {
-  const result = HesPersonas.result(id);
+  confidence: HesConfidence, profile: HesProfile = HesProfile.HEALTH_WELLNESS): void {
+  const result = HesPersonas.result(id, profile);
+  expect(result.profile).assertEqual(profile);
   expect(result.tier).assertEqual(tier);
   expect(result.score).assertEqual(score);
   expect(result.coverage).assertEqual(coveragePct);
@@ -62,48 +64,82 @@ function expectResult(id: string, tier: string, score: number, coveragePct: numb
 const CORE: string[] = ['rhr', 'mvpa', 'sleepRegularity', 'steps', 'sleepDuration'];
 
 export default function hesPersonasTest() {
-  describe('HES-Lite personas: the fixed results', () => {
+  describe('HES personas: the fixed results, health insurance', () => {
     it('Ania: A / 92, coverage 100%, confidence High (full data)', 0, () => {
       expectResult('ania', TIER_A, 92, 100, HesConfidence.HIGH);
       expect(availableIds(HesPersonas.result('ania')).length).assertEqual(8);
     });
 
-    it('Marek: B / 75, coverage 85%, confidence High (Core + VO2max)', 0, () => {
-      expectResult('marek', TIER_B, 75, 85, HesConfidence.HIGH);
+    it('Marek: B / 75, coverage 88%, confidence High (Core + VO2max)', 0, () => {
+      expectResult('marek', TIER_B, 75, 88, HesConfidence.HIGH);
       expect(availableIds(HesPersonas.result('marek'))).assertDeepEquals(['crf'].concat(CORE));
     });
 
-    it('Kasia: B / 73, coverage 70%, confidence Medium (Core only)', 0, () => {
-      expectResult('kasia', TIER_B, 73, 70, HesConfidence.MEDIUM);
+    it('Kasia: B / 71, coverage 75%, confidence Medium (Core only)', 0, () => {
+      expectResult('kasia', TIER_B, 71, 75, HesConfidence.MEDIUM);
       expect(availableIds(HesPersonas.result('kasia'))).assertDeepEquals(CORE);
     });
 
-    it('Tomek: B / 79, coverage 90%, confidence High, one point from A', 0, () => {
-      expectResult('tomek', TIER_B, 79, 90, HesConfidence.HIGH);
+    it('Tomek: B / 79, coverage 93%, confidence High, one point from A', 0, () => {
+      expectResult('tomek', TIER_B, 79, 93, HesConfidence.HIGH);
       expect(availableIds(HesPersonas.result('tomek'))).assertDeepEquals(['crf'].concat(CORE).concat(['hrr']));
       expect(pointsToNextTier(HesPersonas.result('tomek').score)).assertEqual(1);
     });
 
-    it('Ewa: C / 59, coverage 75%, confidence Medium (Core + heart-rate recovery)', 0, () => {
-      expectResult('ewa', TIER_C, 59, 75, HesConfidence.MEDIUM);
+    it('Ewa: C / 58, coverage 80%, confidence High (Core + heart-rate recovery)', 0, () => {
+      expectResult('ewa', TIER_C, 58, 80, HesConfidence.HIGH);
       expect(availableIds(HesPersonas.result('ewa'))).assertDeepEquals(CORE.concat(['hrr']));
     });
 
-    it('Ola: no score, coverage 43%, not enough data', 0, () => {
+    it('Ola: no score, coverage 48%, not enough data', 0, () => {
       const result = HesPersonas.result('ola');
       expect(result.status).assertEqual(HesStatus.INSUFFICIENT_DATA);
       expect(result.tier).assertEqual(TIER_NO_SCORE);
       expect(result.score).assertEqual(HES_MISSING);
-      expect(result.coverage).assertEqual(43);
+      expect(result.coverage).assertEqual(48);
       expect(result.confidence).assertEqual(HesConfidence.INSUFFICIENT_DATA);
       expect(availableIds(result)).assertDeepEquals(['rhr', 'mvpa', 'steps']);
     });
+  });
 
-    it('every score sits in the middle of its integer, away from a rounding edge', 0, () => {
-      const scored = ['ania', 'marek', 'kasia', 'tomek', 'ewa'];
-      for (let i = 0; i < scored.length; i++) {
-        const result = HesPersonas.result(scored[i]);
-        expect(Math.abs(observedHes(result.components) - result.score)).assertLess(0.25);
+  describe('HES personas: the fixed results, life insurance', () => {
+    it('Ania: A / 91, Marek: B / 75, Kasia: B / 71', 0, () => {
+      expectResult('ania', TIER_A, 91, 100, HesConfidence.HIGH, HesProfile.LONGEVITY_WELLNESS);
+      expectResult('marek', TIER_B, 75, 88, HesConfidence.HIGH, HesProfile.LONGEVITY_WELLNESS);
+      expectResult('kasia', TIER_B, 71, 65, HesConfidence.MEDIUM, HesProfile.LONGEVITY_WELLNESS);
+    });
+
+    it('Tomek reaches A / 80: VO2max weighs 22.5% for life insurance', 0, () => {
+      expectResult('tomek', TIER_A, 80, 93, HesConfidence.HIGH, HesProfile.LONGEVITY_WELLNESS);
+    });
+
+    it('Ewa: C / 59, coverage 70%, Medium; Ola: no score, coverage 48%', 0, () => {
+      expectResult('ewa', TIER_C, 59, 70, HesConfidence.MEDIUM, HesProfile.LONGEVITY_WELLNESS);
+      const ola = HesPersonas.result('ola', HesProfile.LONGEVITY_WELLNESS);
+      expect(ola.tier).assertEqual(TIER_NO_SCORE);
+      expect(ola.coverage).assertEqual(48);
+    });
+  });
+
+  describe('HES personas: the unrounded values', () => {
+    // The scores are pinned to three decimals, so any change in the generator or the engine shows here
+    // before it moves a rounded score. Tomek's health score (78.501) and Marek's life score (74.511) sit
+    // close to a rounding edge: a persona change can move them by one point.
+    it('health insurance', 0, () => {
+      const ids = ['ania', 'marek', 'kasia', 'tomek', 'ewa'];
+      const values = [92.373, 74.890, 71.367, 78.501, 57.559];
+      for (let i = 0; i < ids.length; i++) {
+        const result = HesPersonas.result(ids[i], HesProfile.HEALTH_WELLNESS);
+        expect(observedHes(result.components)).assertClose(values[i], 0.0005);
+      }
+    });
+
+    it('life insurance', 0, () => {
+      const ids = ['ania', 'marek', 'kasia', 'tomek', 'ewa'];
+      const values = [91.183, 74.511, 71.452, 79.682, 59.385];
+      for (let i = 0; i < ids.length; i++) {
+        const result = HesPersonas.result(ids[i], HesProfile.LONGEVITY_WELLNESS);
+        expect(observedHes(result.components)).assertClose(values[i], 0.0005);
       }
     });
   });
@@ -208,9 +244,10 @@ export default function hesPersonasTest() {
       expect(computeHes(HesPersonas.history('nobody')).tier).assertEqual(TIER_NO_SCORE);
     });
 
-    it('tier C is one point below B for Ewa', 0, () => {
+    it('Ewa is tier C, two points below B for health insurance and one for life insurance', 0, () => {
       expect(HesPersonas.result('ewa').tier).assertEqual(TIER_C);
-      expect(pointsToNextTier(HesPersonas.result('ewa').score)).assertEqual(1);
+      expect(pointsToNextTier(HesPersonas.result('ewa').score)).assertEqual(2);
+      expect(pointsToNextTier(HesPersonas.result('ewa', HesProfile.LONGEVITY_WELLNESS).score)).assertEqual(1);
     });
   });
 }

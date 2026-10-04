@@ -93,6 +93,7 @@ export interface LiveNow {
 export interface PersonaReport {
   id: string;
   name: string;
+  profile: string;       // HesProfile the score was calculated with: health or life insurance
   period: string;        // as read on screen, "4 Sep – 3 Oct"
   periodIso: string;     // first and last day as the claim writes them, "2026-09-04..2026-10-03"
   hes: number;           // 0..100, HES_NONE when there is no score
@@ -102,6 +103,7 @@ export interface PersonaReport {
   eligible: boolean;
   benefit: string;       // BenefitLevel
   benefitReason: string;
+  discountPct: number;   // premium discount of the benefit for this profile, 0 when there is no benefit
   pointsToNext: number;  // points to the next tier; 0 at the top tier; POINTS_UNKNOWN when not known
   components: ComponentRow[];
   wear: WearSummary;

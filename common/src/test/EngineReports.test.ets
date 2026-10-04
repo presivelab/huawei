@@ -14,6 +14,7 @@ import {
   HesComponentResult,
   HesDay,
   HesPoint,
+  HesProfile,
   HesResult,
   HES_MISSING
 } from '../main/ets/hes/HesTypes';
@@ -130,6 +131,7 @@ function withoutLive(r: PersonaReport): string {
   const copy: PersonaReport = {
     id: r.id,
     name: r.name,
+    profile: r.profile,
     period: r.period,
     periodIso: r.periodIso,
     hes: r.hes,
@@ -139,6 +141,7 @@ function withoutLive(r: PersonaReport): string {
     eligible: r.eligible,
     benefit: r.benefit,
     benefitReason: r.benefitReason,
+    discountPct: r.discountPct,
     pointsToNext: r.pointsToNext,
     components: r.components,
     wear: r.wear,
@@ -170,7 +173,7 @@ function resultWithChange(result: HesResult, id: HesComponentId, toRaw: number):
       effectiveWeight: 0
     });
   }
-  return composeHes(components);
+  return composeHes(components, result.profile);
 }
 
 function whatIfOf(id: string): EngineWhatIf {
@@ -205,14 +208,37 @@ export default function engineReportsTest() {
     it('the six personas equal the fixed table: score, tier, coverage, confidence, benefit, eligible', 0, () => {
       expect(engineReports().length).assertEqual(6);
       expectPersona('ania', 92, ReportTier.A, 100, ReportConfidence.HIGH, BenefitLevel.FULL, true);
-      expectPersona('marek', 75, ReportTier.B, 85, ReportConfidence.HIGH, BenefitLevel.NONE, false);
-      expectPersona('kasia', 73, ReportTier.B, 70, ReportConfidence.MEDIUM, BenefitLevel.PARTIAL, true);
-      expectPersona('tomek', 79, ReportTier.B, 90, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
-      expectPersona('ewa', 59, ReportTier.C, 75, ReportConfidence.MEDIUM, BenefitLevel.NONE, true);
-      expectPersona('ola', HES_NONE, ReportTier.NONE, 43, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
+      expectPersona('marek', 75, ReportTier.B, 88, ReportConfidence.HIGH, BenefitLevel.NONE, false);
+      expectPersona('kasia', 71, ReportTier.B, 75, ReportConfidence.MEDIUM, BenefitLevel.PARTIAL, true);
+      expectPersona('tomek', 79, ReportTier.B, 93, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
+      expectPersona('ewa', 58, ReportTier.C, 80, ReportConfidence.HIGH, BenefitLevel.NONE, true);
+      expectPersona('ola', HES_NONE, ReportTier.NONE, 48, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
         false);
       expect(hasScore(engineReport('ola'))).assertFalse();
       expect(hasScore(engineReport('ewa'))).assertTrue();
+    });
+
+    it('discount: health insurance 15% for A, 8% for B, 0% otherwise', 0, () => {
+      const ids = ['ania', 'marek', 'kasia', 'tomek', 'ewa', 'ola'];
+      const pct = [15, 0, 8, 8, 0, 0];
+      for (let i = 0; i < ids.length; i++) {
+        expect(engineReport(ids[i]).profile).assertEqual(HesProfile.HEALTH_WELLNESS);
+        expect(engineReport(ids[i]).discountPct).assertEqual(pct[i]);
+      }
+    });
+
+    it('discount: life insurance 10% for A, 5% for B; Tomek reaches A only here', 0, () => {
+      const ids = ['ania', 'marek', 'kasia', 'tomek', 'ewa', 'ola'];
+      const tiers = [ReportTier.A, ReportTier.B, ReportTier.B, ReportTier.A, ReportTier.C, ReportTier.NONE];
+      const pct = [10, 0, 5, 10, 0, 0];
+      for (let i = 0; i < ids.length; i++) {
+        const session = engineSession(ids[i]);
+        session.setProfile(HesProfile.LONGEVITY_WELLNESS);
+        const r = engineReportOf(ids[i], session);
+        expect(r.profile).assertEqual(HesProfile.LONGEVITY_WELLNESS);
+        expect(r.tier).assertEqual(tiers[i]);
+        expect(r.discountPct).assertEqual(pct[i]);
+      }
     });
 
     it('engine and preview agree on score, tier, coverage, confidence, benefit and eligible', 0, () => {
@@ -268,9 +294,9 @@ export default function engineReportsTest() {
     it('points to the next tier come from the engine; no score gives "not known", never 0', 0, () => {
       expect(engineReport('ania').pointsToNext).assertEqual(0);
       expect(engineReport('marek').pointsToNext).assertEqual(5);
-      expect(engineReport('kasia').pointsToNext).assertEqual(7);
+      expect(engineReport('kasia').pointsToNext).assertEqual(9);
       expect(engineReport('tomek').pointsToNext).assertEqual(1);
-      expect(engineReport('ewa').pointsToNext).assertEqual(1);       // to B
+      expect(engineReport('ewa').pointsToNext).assertEqual(2);       // to B
       expect(engineReport('ola').pointsToNext).assertEqual(POINTS_UNKNOWN);
       for (let i = 0; i < IDS.length; i++) {
         const r = engineReport(IDS[i]);
@@ -305,7 +331,8 @@ export default function engineReportsTest() {
             expect(row.source).assertEqual(ENGINE_SOURCE);
           }
           if (row.available && hasScore(r)) {
-            expect(Math.abs(row.weightPct - source.effectiveWeight * 100) <= 0.05).assertTrue();
+            // Rounding to a tenth is off by at most 0.05 (18.75 -> 18.8), plus floating point.
+            expect(Math.abs(row.weightPct - source.effectiveWeight * 100) <= 0.05 + 1e-9).assertTrue();
           }
         }
       }
@@ -605,7 +632,7 @@ export default function engineReportsTest() {
       expect(engineReportOf('kasia', session)).assertDeepEquals(engineReport('kasia'));
       // The cached report was not touched by the session.
       expect(engineReport('kasia').live.steps).assertEqual(HES_MISSING);
-      expect(engineReport('kasia').hes).assertEqual(73);
+      expect(engineReport('kasia').hes).assertEqual(71);
     });
 
     it('closing the day adds one completed day and the score is calculated again from that history', 0, () => {
@@ -629,16 +656,28 @@ export default function engineReportsTest() {
       }
     });
 
-    it('Ewa: one closed day moves her from C / 59 to B / 64; reset gives C / 59 again', 0, () => {
+    it('Ewa: one closed day moves her from C / 58 to B / 62; reset gives C / 58 again', 0, () => {
       const session = engineSession('ewa');
-      expect(engineReportOf('ewa', session).hes).assertEqual(59);
+      expect(engineReportOf('ewa', session).hes).assertEqual(58);
       expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.C);
       session.closeDay();
-      expect(engineReportOf('ewa', session).hes).assertEqual(64);
+      expect(engineReportOf('ewa', session).hes).assertEqual(62);
       expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.B);
       session.reset();
-      expect(engineReportOf('ewa', session).hes).assertEqual(59);
+      expect(engineReportOf('ewa', session).hes).assertEqual(58);
       expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.C);
+    });
+
+    it('life insurance: Ewa moves from C / 59 to B / 63 with one closed day', 0, () => {
+      const session = engineSession('ewa');
+      session.setProfile(HesProfile.LONGEVITY_WELLNESS);
+      const before = engineReportOf('ewa', session);
+      expect(before.profile).assertEqual(HesProfile.LONGEVITY_WELLNESS);
+      expect(before.hes).assertEqual(59);
+      expect(before.tier).assertEqual(ReportTier.C);
+      session.closeDay();
+      expect(engineReportOf('ewa', session).hes).assertEqual(63);
+      expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.B);
     });
 
     it('live readings never change the score, before or after a closed day', 0, () => {
@@ -844,10 +883,9 @@ export default function engineReportsTest() {
       expect(engineReport('marek').whatIf).assertEqual(
         '250 active minutes a week instead of 117 would be enough for Tier A, with everything else unchanged.');
       expect(engineReport('kasia').whatIf).assertEqual(
-        'Bed and wake times within ±30 min instead of ±88 min would be enough for Tier A, ' +
-          'with everything else unchanged.');
+        '250 active minutes a week instead of 110 would be enough for Tier A, with everything else unchanged.');
       expect(engineReport('ewa').whatIf).assertEqual(
-        'Bed and wake times within ±90 min instead of ±94 min would be enough for Tier B, ' +
+        '6 h 30 min of sleep a night instead of 5 h 58 min would be enough for Tier B, ' +
           'with everything else unchanged.');
       const withSentence = ['marek', 'kasia', 'tomek', 'ewa'];
       for (let i = 0; i < withSentence.length; i++) {
@@ -875,7 +913,7 @@ export default function engineReportsTest() {
       // Steps, activity, sleep and sleep timing on the top of their curves; resting heart rate 100 bpm
       // and a low VO2max percentile keep the score in tier B.
       const result = computeHes(steadyHistory(12000, 100, 60, 1380, 420, 480, 5));
-      expect(result.score).assertEqual(70);
+      expect(result.score).assertEqual(76);
       expect(result.tier).assertEqual(ReportTier.B);
       const change = engineWhatIf(result);
       if (change === null) {
@@ -883,12 +921,12 @@ export default function engineReportsTest() {
       }
       expect(change.hesId).assertEqual(HesComponentId.RHR);
       expect(change.componentId).assertEqual(ComponentId.RESTING_HR);
-      expect(change.toRaw).assertEqual(75);
+      expect(change.toRaw).assertEqual(80);
       expect(change.sentence).assertEqual(
-        'A resting heart rate of 75 bpm instead of 100 bpm would be enough for Tier A, ' +
+        'A resting heart rate of 80 bpm instead of 100 bpm would be enough for Tier A, ' +
           'with everything else unchanged.');
-      expect(resultWithChange(result, HesComponentId.RHR, 75).tier).assertEqual(ReportTier.A);
-      expect(resultWithChange(result, HesComponentId.RHR, 80).tier).assertEqual(ReportTier.B);
+      expect(resultWithChange(result, HesComponentId.RHR, 80).tier).assertEqual(ReportTier.A);
+      expect(resultWithChange(result, HesComponentId.RHR, 90).tier).assertEqual(ReportTier.B);
     });
   });
 }
