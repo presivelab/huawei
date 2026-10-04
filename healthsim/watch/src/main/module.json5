@@ -1,0 +1,47 @@
+{
+  "module": {
+    "name": "watch",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "WatchAbility",
+    "deviceTypes": [
+      "wearable"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "WatchAbility",
+        "srcEntry": "./ets/watchability/WatchAbility.ets",
+        "description": "$string:WatchAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:WatchAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "ohos.want.action.home"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "WatchExportAbility",
+        "srcEntry": "./ets/watchexportability/WatchExportAbility.ets",
+        "description": "$string:WatchExportAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:WatchExportAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "removeMissionAfterTerminate": true
+      }
+    ]
+  }
+}
