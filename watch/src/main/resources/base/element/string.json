@@ -19,6 +19,90 @@
     {
       "name": "reason_steps",
       "value": "FairWear shows the steps counted today on the watch and adds them to the day summary it records."
+    },
+    { "name": "watch_missing", "value": "—" },
+    { "name": "watch_heart_demo_feed", "value": "Heart rate · demo feed" },
+    { "name": "watch_heart_no_sensor", "value": "Heart rate · no sensor" },
+    { "name": "watch_heart_unavailable", "value": "Heart rate · unavailable" },
+    {
+      "name": "watch_heart_sensor_error",
+      "value": "Heart rate · sensor error"
+    },
+    { "name": "watch_heart_live", "value": "Heart rate · live" },
+    { "name": "watch_steps_demo_feed", "value": "Steps · demo feed" },
+    { "name": "watch_steps_no_sensor", "value": "Steps no sensor" },
+    { "name": "watch_steps_unavailable", "value": "Steps unavailable" },
+    { "name": "watch_steps_sensor_error", "value": "Steps sensor error" },
+    { "name": "watch_steps_today", "value": "Steps today" },
+    { "name": "watch_wear_worn", "value": "worn" },
+    { "name": "watch_wear_charging", "value": "charging" },
+    { "name": "watch_wear_not_on_wrist", "value": "not on wrist" },
+    { "name": "watch_wear_no_data", "value": "no data" },
+    { "name": "watch_wear_state", "value": "Wear state" },
+    { "name": "watch_demo_feed_health_sim", "value": "FEED · Health Sim · %s" },
+    { "name": "watch_demo_x300_feed", "value": "DEMO ×300 · FEED · %s" },
+    { "name": "watch_demo_x300", "value": "DEMO ×300 · %s" },
+    { "name": "watch_demo_time", "value": "DEMO TIME · %s %s" },
+    {
+      "name": "watch_action_demo_clock_on",
+      "value": "Demo clock ×300 on · screen stays on"
+    },
+    { "name": "watch_action_demo_clock_off", "value": "Demo clock off" },
+    {
+      "name": "watch_action_demo_feed_on",
+      "value": "Demo feed on · scripted heart rate and steps"
+    },
+    {
+      "name": "watch_action_demo_feed_off",
+      "value": "Demo feed off · sensors again"
+    },
+    { "name": "watch_action_asking_health_sim", "value": "Asking Health Sim…" },
+    {
+      "name": "watch_action_health_sim_used",
+      "value": "Today from Health Sim · used by the demo feed"
+    },
+    {
+      "name": "watch_action_health_sim_missing",
+      "value": "Health Sim not on this watch · built-in script"
+    },
+    { "name": "watch_action_closing_day", "value": "Closing day…" },
+    {
+      "name": "watch_action_day_closed",
+      "value": "Day closed · #%d in outbox"
+    },
+    {
+      "name": "watch_action_nothing_recorded",
+      "value": "Nothing recorded yet"
+    },
+    { "name": "watch_action_close_day_failed", "value": "Close day failed" },
+    { "name": "watch_action_pairing_ready", "value": "Pairing request ready" },
+    { "name": "watch_action_pairing_failed", "value": "Pairing failed" },
+    {
+      "name": "watch_action_data_reset",
+      "value": "Watch data reset · on the phone: Forget watch, then Pair phone here"
+    },
+    { "name": "watch_bpm", "value": "bpm" },
+    {
+      "name": "watch_dial_footer",
+      "value": "FairWear · add-on for\nHUAWEI Health · Demo"
+    },
+    { "name": "watch_link_title", "value": "Watch link" },
+    { "name": "watch_button_close_day", "value": "Close day (demo)" },
+    { "name": "watch_button_demo_clock", "value": "Demo clock ×300" },
+    {
+      "name": "watch_button_get_from_health_sim",
+      "value": "Get today from Health Sim"
+    },
+    { "name": "watch_button_demo_feed_on", "value": "Demo feed: on" },
+    { "name": "watch_button_demo_feed_off", "value": "Demo feed: off" },
+    { "name": "watch_phone_ack", "value": "Phone: %s" },
+    { "name": "watch_button_pair_phone", "value": "Pair phone" },
+    { "name": "watch_confirm_code", "value": "Confirm this code on the phone" },
+    { "name": "watch_button_reset_again", "value": "Tap again to reset" },
+    { "name": "watch_button_reset", "value": "Reset watch data" },
+    {
+      "name": "watch_records_note",
+      "value": "Records while this app is open.\nBackground time is not observed."
     }
   ]
 }

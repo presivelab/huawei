@@ -5,27 +5,20 @@ import { LiveSensors, LiveSnapshot, SensorLink } from '../sensors/LiveSensors';
 import { NO_STEPS } from '../model/DaySteps';
 import { SlotRing } from '../watchlink/SlotRing';
 import { WatchLinkRuntime } from '../watchlink/WatchLinkRuntime';
+import { str } from '../ui/Strings';
 
 const DOMAIN = 0x0000;
 const TAG = 'FairWear';
 const TICK_MS = 1000;
 const PERMISSIONS: Permissions[] = ['ohos.permission.READ_HEALTH_DATA', 'ohos.permission.ACTIVITY_MOTION'];
-const MISSING = '—';
+const MISSING: Resource = $r('app.string.watch_missing');
 const CLOCK_REAL = 'REAL';
 const FEED_FROM_HEALTH_SIM = 'Health Sim';
-const ASKING_HEALTH_SIM = 'Asking Health Sim…';
+const ASKING_HEALTH_SIM: Resource = $r('app.string.watch_action_asking_health_sim');
 
-function linkNote(link: SensorLink): string {
-  if (link === SensorLink.ABSENT) {
-    return 'no sensor';
-  }
-  if (link === SensorLink.NO_PERMISSION) {
-    return 'unavailable';
-  }
-  if (link === SensorLink.ERROR) {
-    return 'sensor error';
-  }
-  return '';
+// Whether a sensor has a note to show (no sensor, no permission, error).
+function hasLinkNote(link: SensorLink): boolean {
+  return link === SensorLink.ABSENT || link === SensorLink.NO_PERMISSION || link === SensorLink.ERROR;
 }
 
 function pad2(n: number): string {
@@ -34,8 +27,8 @@ function pad2(n: number): string {
 
 @Component
 struct ValueTile {
-  @Prop label: string = '';
-  @Prop value: string = MISSING;
+  @Prop label: ResourceStr = '';
+  @Prop value: ResourceStr = MISSING;
   @Prop valueColor: ResourceColor = $r('sys.color.font_primary');
   @Prop labelColor: ResourceColor = $r('sys.color.font_secondary');
 
@@ -62,7 +55,7 @@ struct ValueTile {
 
 @Component
 struct ControlButton {
-  @Prop label: string = '';
+  @Prop label: ResourceStr = '';
   @Prop labelColor: ResourceColor = $r('sys.color.font_primary');
   // A page with four buttons uses the lower height, so the round screen cuts nothing.
   @Prop compact: boolean = false;
@@ -218,32 +211,48 @@ struct Index {
 
   private heartText(): string {
     if (this.feedOn) {
-      return this.feedHr > 0 ? this.feedHr.toString() : MISSING;
+      return this.feedHr > 0 ? this.feedHr.toString() : str(MISSING);
     }
-    return this.heartRate > 0 ? Math.round(this.heartRate).toString() : MISSING;
+    return this.heartRate > 0 ? Math.round(this.heartRate).toString() : str(MISSING);
   }
 
   private heartLabel(): string {
     if (this.feedOn) {
-      return 'Heart rate · demo feed';
+      return str($r('app.string.watch_heart_demo_feed'));
     }
-    const note = linkNote(this.heartSensor);
-    return note.length > 0 ? `Heart rate · ${note}` : 'Heart rate · live';
+    if (this.heartSensor === SensorLink.ABSENT) {
+      return str($r('app.string.watch_heart_no_sensor'));
+    }
+    if (this.heartSensor === SensorLink.NO_PERMISSION) {
+      return str($r('app.string.watch_heart_unavailable'));
+    }
+    if (this.heartSensor === SensorLink.ERROR) {
+      return str($r('app.string.watch_heart_sensor_error'));
+    }
+    return str($r('app.string.watch_heart_live'));
   }
 
   private stepsText(): string {
     if (this.feedOn) {
       return this.feedSteps.toString();
     }
-    return this.steps >= 0 ? this.steps.toString() : MISSING;
+    return this.steps >= 0 ? this.steps.toString() : str(MISSING);
   }
 
   private stepsLabel(): string {
     if (this.feedOn) {
-      return 'Steps · demo feed';
+      return str($r('app.string.watch_steps_demo_feed'));
     }
-    const note = linkNote(this.stepSensor);
-    return note.length > 0 ? `Steps ${note}` : 'Steps today';
+    if (this.stepSensor === SensorLink.ABSENT) {
+      return str($r('app.string.watch_steps_no_sensor'));
+    }
+    if (this.stepSensor === SensorLink.NO_PERMISSION) {
+      return str($r('app.string.watch_steps_unavailable'));
+    }
+    if (this.stepSensor === SensorLink.ERROR) {
+      return str($r('app.string.watch_steps_sensor_error'));
+    }
+    return str($r('app.string.watch_steps_today'));
   }
 
   // The wear state the recorder uses (60 s without heart rate, 3 s on the demo clock), once it runs.
@@ -251,26 +260,26 @@ struct Index {
   private wearText(): string {
     if (this.linkReady) {
       if (this.slotState === 'W') {
-        return 'worn';
+        return str($r('app.string.watch_wear_worn'));
       }
       if (this.slotState === 'C') {
-        return 'charging';
+        return str($r('app.string.watch_wear_charging'));
       }
       if (this.slotState === 'O') {
-        return 'not on wrist';
+        return str($r('app.string.watch_wear_not_on_wrist'));
       }
-      return 'no data';
+      return str($r('app.string.watch_wear_no_data'));
     }
     if (this.wear === WearState.WORN) {
-      return 'worn';
+      return str($r('app.string.watch_wear_worn'));
     }
     if (this.wear === WearState.CHARGING) {
-      return 'charging';
+      return str($r('app.string.watch_wear_charging'));
     }
     if (this.wear === WearState.REMOVED) {
-      return 'not on wrist';
+      return str($r('app.string.watch_wear_not_on_wrist'));
     }
-    return 'no data';
+    return str($r('app.string.watch_wear_no_data'));
   }
 
   private wearColor(): ResourceColor {
@@ -293,7 +302,7 @@ struct Index {
   }
 
   private noteColor(link: SensorLink): ResourceColor {
-    return linkNote(link).length > 0 ? $r('sys.color.warning') : $r('sys.color.font_secondary');
+    return hasLinkNote(link) ? $r('sys.color.warning') : $r('sys.color.font_secondary');
   }
 
   private statusColor(): ResourceColor {
@@ -314,53 +323,56 @@ struct Index {
   private demoText(): string {
     if (this.demoOn) {
       if (this.feedOn && this.feedSource === FEED_FROM_HEALTH_SIM) {
-        return `FEED · Health Sim · ${this.recorderTime()}`;
+        return str($r('app.string.watch_demo_feed_health_sim'), this.recorderTime());
       }
-      return this.feedOn ? `DEMO ×300 · FEED · ${this.recorderTime()}` : `DEMO ×300 · ${this.recorderTime()}`;
+      return this.feedOn ? str($r('app.string.watch_demo_x300_feed'), this.recorderTime()) :
+        str($r('app.string.watch_demo_x300'), this.recorderTime());
     }
-    return `DEMO TIME · ${this.recorderDate.substring(5)} ${this.recorderTime()}`;
+    return str($r('app.string.watch_demo_time'), this.recorderDate.substring(5), this.recorderTime());
   }
 
   private toggleDemo(): void {
     const turnOn = !this.demoOn;
     this.link.setDemoClock(turnOn);
-    this.lastAction = turnOn ? 'Demo clock ×300 on · screen stays on' : 'Demo clock off';
+    this.lastAction = turnOn ? str($r('app.string.watch_action_demo_clock_on')) :
+      str($r('app.string.watch_action_demo_clock_off'));
     this.showLink();
   }
 
   private toggleFeed(): void {
     const on = this.link.setDemoFeed(!this.feedOn);
-    this.lastAction = on ? 'Demo feed on · scripted heart rate and steps' : 'Demo feed off · sensors again';
+    this.lastAction = on ? str($r('app.string.watch_action_demo_feed_on')) :
+      str($r('app.string.watch_action_demo_feed_off'));
     this.showLink();
   }
 
   // Health Sim on this watch hands over the script of the demo day. Without Health Sim the built-in
   // script stays in use and the watch says so.
   private getFromHealthSim(): void {
-    if (this.lastAction === ASKING_HEALTH_SIM) {
+    if (this.lastAction === str(ASKING_HEALTH_SIM)) {
       return;
     }
-    this.lastAction = ASKING_HEALTH_SIM;
+    this.lastAction = str(ASKING_HEALTH_SIM);
     this.link.fetchDayScript().then((taken: boolean) => {
-      this.lastAction = taken ? 'Today from Health Sim · used by the demo feed' :
-        'Health Sim not on this watch · built-in script';
+      this.lastAction = taken ? str($r('app.string.watch_action_health_sim_used')) :
+        str($r('app.string.watch_action_health_sim_missing'));
       this.showLink();
     });
   }
 
   private closeDay(): void {
     // A second tap while the first is still sealing would seal an empty next day.
-    if (this.lastAction === 'Closing day…') {
+    if (this.lastAction === str($r('app.string.watch_action_closing_day'))) {
       return;
     }
-    this.lastAction = 'Closing day…';
+    this.lastAction = str($r('app.string.watch_action_closing_day'));
     this.link.closeDay().then((seq: number) => {
       if (seq > 0) {
-        this.lastAction = `Day closed · #${seq} in outbox`;
+        this.lastAction = str($r('app.string.watch_action_day_closed'), seq);
       } else if (seq === 0) {
-        this.lastAction = 'Nothing recorded yet';
+        this.lastAction = str($r('app.string.watch_action_nothing_recorded'));
       } else {
-        this.lastAction = 'Close day failed';
+        this.lastAction = str($r('app.string.watch_action_close_day_failed'));
       }
       this.showLink();
     });
@@ -369,7 +381,8 @@ struct Index {
   private pairPhone(): void {
     this.link.pair().then((code: string) => {
       this.pairShown = code.length > 0;
-      this.lastAction = code.length > 0 ? 'Pairing request ready' : 'Pairing failed';
+      this.lastAction = code.length > 0 ? str($r('app.string.watch_action_pairing_ready')) :
+        str($r('app.string.watch_action_pairing_failed'));
       this.showLink();
     });
   }
@@ -382,7 +395,7 @@ struct Index {
     this.resetArmed = false;
     this.pairShown = false;
     this.link.reset();
-    this.lastAction = 'Watch data reset · on the phone: Forget watch, then Pair phone here';
+    this.lastAction = str($r('app.string.watch_action_data_reset'));
     this.showLink();
   }
 
@@ -404,7 +417,7 @@ struct Index {
             .fontWeight(this.heartRate > 0 ? FontWeight.Bold : FontWeight.Lighter)
             .fontColor(this.heartRate > 0 ? $r('sys.color.font_primary') : $r('sys.color.font_secondary'))
             .maxLines(1)
-          Text('bpm')
+          Text($r('app.string.watch_bpm'))
             .fontSize($r('app.float.unit_font_size'))
             .fontColor($r('sys.color.font_secondary'))
             .margin({ bottom: this.heartRate > 0 ? 9 : 0 })
@@ -422,7 +435,7 @@ struct Index {
             .height(26)
             .color($r('sys.color.comp_divider'))
           ValueTile({
-            label: 'Wear state',
+            label: $r('app.string.watch_wear_state'),
             value: this.wearText(),
             valueColor: this.wearColor()
           })
@@ -446,7 +459,7 @@ struct Index {
             .margin({ top: 2 })
         }
 
-        Text('FairWear · add-on for\nHUAWEI Health · Demo')
+        Text($r('app.string.watch_dial_footer'))
           .fontSize($r('app.float.caption_font_size'))
           .fontColor($r('sys.color.font_tertiary'))
           .textAlign(TextAlign.Center)
@@ -467,7 +480,7 @@ struct Index {
     Column({ space: 7 }) {
       if (!this.demoOn) {
         // On the demo clock the page has four buttons and no room for its title.
-        Text('Watch link')
+        Text($r('app.string.watch_link_title'))
           .fontSize($r('app.float.title_font_size'))
           .fontWeight(FontWeight.Medium)
           .fontColor($r('sys.color.font_primary'))
@@ -477,14 +490,14 @@ struct Index {
         .fontColor(this.statusColor())
 
       ControlButton({
-        label: 'Close day (demo)',
+        label: $r('app.string.watch_button_close_day'),
         compact: this.demoOn,
         onTap: () => {
           this.closeDay();
         }
       })
       ControlButton({
-        label: 'Demo clock ×300',
+        label: $r('app.string.watch_button_demo_clock'),
         labelColor: this.demoOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
         compact: this.demoOn,
         onTap: () => {
@@ -494,7 +507,7 @@ struct Index {
       if (this.demoOn) {
         // The script of the demo day from Health Sim on this watch; the dial then reads "FEED · Health Sim".
         ControlButton({
-          label: 'Get today from Health Sim',
+          label: $r('app.string.watch_button_get_from_health_sim'),
           labelColor: this.feedSource === FEED_FROM_HEALTH_SIM ? $r('sys.color.warning') :
           $r('sys.color.font_primary'),
           compact: true,
@@ -504,7 +517,7 @@ struct Index {
         })
         // Only offered on the demo clock. The dial then reads "DEMO ×300 · FEED".
         ControlButton({
-          label: this.feedOn ? 'Demo feed: on' : 'Demo feed: off',
+          label: this.feedOn ? $r('app.string.watch_button_demo_feed_on') : $r('app.string.watch_button_demo_feed_off'),
           labelColor: this.feedOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
           compact: true,
           onTap: () => {
@@ -520,7 +533,7 @@ struct Index {
           .maxLines(2)
       }
       if (this.lastAck.length > 0) {
-        Text(`Phone: ${this.lastAck}`)
+        Text(str($r('app.string.watch_phone_ack'), this.lastAck))
           .fontSize($r('app.float.note_font_size'))
           .fontColor($r('sys.color.font_secondary'))
           .textAlign(TextAlign.Center)
@@ -539,7 +552,7 @@ struct Index {
   PhonePage() {
     Column({ space: 6 }) {
       ControlButton({
-        label: 'Pair phone',
+        label: $r('app.string.watch_button_pair_phone'),
         onTap: () => {
           this.pairPhone();
         }
@@ -551,13 +564,13 @@ struct Index {
           .fontFamily('monospace')
           .fontColor($r('sys.color.font_primary'))
           .maxLines(1)
-        Text('Confirm this code on the phone')
+        Text($r('app.string.watch_confirm_code'))
           .fontSize($r('app.float.note_font_size'))
           .fontColor($r('sys.color.font_secondary'))
           .textAlign(TextAlign.Center)
       }
       ControlButton({
-        label: this.resetArmed ? 'Tap again to reset' : 'Reset watch data',
+        label: this.resetArmed ? $r('app.string.watch_button_reset_again') : $r('app.string.watch_button_reset'),
         labelColor: $r('sys.color.warning'),
         onTap: () => {
           this.resetData();
@@ -584,7 +597,7 @@ struct Index {
           .textAlign(TextAlign.Center)
           .maxLines(2)
       }
-      Text('Records while this app is open.\nBackground time is not observed.')
+      Text($r('app.string.watch_records_note'))
         .fontSize($r('app.float.caption_font_size'))
         .fontColor($r('sys.color.font_tertiary'))
         .textAlign(TextAlign.Center)
