@@ -36,6 +36,12 @@ export const NONCE_BYTES: number = 16;
 export const NONCE_TTL_MS: number = 10 * 60 * 1000;
 /** Upper bound on nonces waiting for a token; the oldest unused one is dropped first. */
 export const MAX_OUTSTANDING_NONCES: number = 512;
+/**
+ * Used nonces are kept apart from the waiting ones, so issuing new nonces never removes one. Above this
+ * count the used nonces whose time limit has passed are dropped, oldest first; one still inside its time
+ * limit is never dropped, so a replay within the limit always reads "Already used".
+ */
+export const MAX_USED_NONCES: number = 512;
 
 export class PartnerKey {
   kid: string;
@@ -62,13 +68,16 @@ export class VerifyResult {
   claim: TierClaim | null = null;
 }
 
-class IssuedNonce {
-  issuedAtMs: number;
-  used: boolean = false;
-
-  constructor(issuedAtMs: number) {
-    this.issuedAtMs = issuedAtMs;
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) {
+    return false;
   }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export class PartnerVerifier {
@@ -76,7 +85,9 @@ export class PartnerVerifier {
   private clock: Clock;
   private sigVerifier: SigVerifier;
   private keys: Map<string, PartnerKey> = new Map<string, PartnerKey>();
-  private nonces: Map<string, IssuedNonce> = new Map<string, IssuedNonce>();
+  // Nonces waiting for a token and nonces a token has used, each with the time it was issued.
+  private nonces: Map<string, number> = new Map<string, number>();
+  private used: Map<string, number> = new Map<string, number>();
 
   constructor(random: RandomSource, clock: Clock, sigVerifier: SigVerifier) {
     this.random = random;
@@ -84,9 +95,18 @@ export class PartnerVerifier {
     this.sigVerifier = sigVerifier;
   }
 
-  /** Registers a key (or replaces the key with the same kid). Call it when the user agrees to share. */
-  registerKey(kid: string, publicKeyDer: Uint8Array, source: string): void {
+  /**
+   * Registers a key. Call it when the user agrees to share. The same key under the same kid may be
+   * registered again. A different key under a kid that is already taken is refused and the registered key
+   * stays: a key is never replaced silently. Returns whether the key is now the registered one.
+   */
+  registerKey(kid: string, publicKeyDer: Uint8Array, source: string): boolean {
+    const have = this.keys.get(kid);
+    if (have !== undefined && !sameBytes(have.publicKeyDer, publicKeyDer)) {
+      return false;
+    }
     this.keys.set(kid, new PartnerKey(kid, publicKeyDer, source));
+    return true;
   }
 
   /** Empties the registry; the software key changes on every app start, so it is rebuilt each session. */
@@ -107,7 +127,7 @@ export class PartnerVerifier {
       }
       this.nonces.delete(oldest.value);
     }
-    this.nonces.set(nonce, new IssuedNonce(now));
+    this.nonces.set(nonce, now);
     return nonce;
   }
 
@@ -138,17 +158,35 @@ export class PartnerVerifier {
 
     // Step 4: the nonce must be one this partner issued, and still inside its time limit unless it has
     // been used already (a used nonce stays on record so that a replay reports "Already used").
-    const issued = this.nonces.get(claim.nonce);
-    if (issued === undefined || (!issued.used && now - issued.issuedAtMs > NONCE_TTL_MS)) {
+    const wasUsed = this.used.has(claim.nonce);
+    const issuedAtMs = this.nonces.get(claim.nonce);
+    if (!wasUsed && (issuedAtMs === undefined || now - issuedAtMs > NONCE_TTL_MS)) {
       return this.stop(result, 4);
     }
 
     // Step 5: replays are recognised by nonce, never by signature bytes.
-    if (issued.used) {
+    if (wasUsed || issuedAtMs === undefined) {
       return this.stop(result, 5);
     }
-    issued.used = true;
+    this.nonces.delete(claim.nonce);
+    this.rememberUsed(claim.nonce, issuedAtMs, now);
     return this.stop(result, 6);
+  }
+
+  // Moves a nonce to the used ones. Over the limit, used nonces past their time limit go, oldest first.
+  private rememberUsed(nonce: string, issuedAtMs: number, now: number): void {
+    if (this.used.size >= MAX_USED_NONCES) {
+      const stale: string[] = [];
+      this.used.forEach((issued: number, key: string) => {
+        if (now - issued > NONCE_TTL_MS) {
+          stale.push(key);
+        }
+      });
+      for (let i = 0; i < stale.length && this.used.size >= MAX_USED_NONCES; i++) {
+        this.used.delete(stale[i]);
+      }
+    }
+    this.used.set(nonce, issuedAtMs);
   }
 
   private stop(result: VerifyResult, step: number): VerifyResult {
@@ -160,8 +198,8 @@ export class PartnerVerifier {
 
   private dropExpired(now: number): void {
     const stale: string[] = [];
-    this.nonces.forEach((value: IssuedNonce, key: string) => {
-      if (!value.used && now - value.issuedAtMs > NONCE_TTL_MS) {
+    this.nonces.forEach((issuedAtMs: number, key: string) => {
+      if (now - issuedAtMs > NONCE_TTL_MS) {
         stale.push(key);
       }
     });

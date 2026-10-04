@@ -141,7 +141,10 @@ export class ShareService {
     const key = await ProofSigner.shared().ensureKey();
     const keySource = key.source === KeySource.HUKS ? KEY_SOURCE_HUKS : KEY_SOURCE_SOFTWARE;
     // The demo partner learns the public key here; a real partner gets it once, when the user enrols.
-    this.partner.registerKey(key.kid, key.publicKeyDer, keySource);
+    // A different key under the same key id is refused: the code is not made, the screen offers "Try again".
+    if (!this.partner.registerKey(key.kid, key.publicKeyDer, keySource)) {
+      throw new Error('Another key is already registered under this key id');
+    }
     const signer = await KeySigner.create(ProofSigner.ALIAS);
     const nonce = await this.partner.issueNonce();
     const token = await mintClaimToken(signer, keySource, offer, nonce, now);

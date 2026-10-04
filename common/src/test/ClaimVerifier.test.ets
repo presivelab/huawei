@@ -350,6 +350,42 @@ export default function claimVerifierTest() {
       expect(await b.status(token)).assertEqual(STATUS_ALREADY_USED);
     });
 
+    it('S-15b a used token stays "Already used" however many nonces are issued afterwards', 0, async () => {
+      const b = new Bench();
+      const first = await b.verifier.issueNonce();
+      for (let i = 0; i < 600; i++) {
+        await b.verifier.issueNonce();
+      }
+      const token = await b.issueAndMint();
+      expect(await b.status(token)).assertEqual(STATUS_VALID);
+      for (let i = 0; i < 600; i++) {
+        await b.verifier.issueNonce();
+      }
+      const again = await b.verifier.verify(token);
+      expect(again.status).assertEqual(STATUS_ALREADY_USED);
+      expect(again.step).assertEqual(5);
+      // The limit drops the oldest nonce that nobody used: a token for it is not known any more.
+      expect(await b.status(await b.mint(b.claimJson(first)))).assertEqual(STATUS_NONCE_MISMATCH);
+      // The newest nonce is still waiting.
+      expect(await b.status(await b.issueAndMint())).assertEqual(STATUS_VALID);
+    });
+
+    it('S-10b a different key under a registered kid is refused; the same key may be registered again', 0,
+      async () => {
+        const b = new Bench();
+        const kid = b.signer.kid();
+        const own = b64urlDecode(b.signer.publicKeySpkiB64());
+        const other = b64urlDecode(new NodeSigner().publicKeySpkiB64());
+        expect(b.verifier.registerKey(kid, other, 'SOFTWARE')).assertFalse();
+        // The registered key was not replaced: its token still verifies, with the source recorded first.
+        const token = await b.issueAndMint();
+        const r = await b.verifier.verify(token);
+        expect(r.status).assertEqual(STATUS_VALID);
+        expect(r.keySource).assertEqual('SOFTWARE');
+        expect(b.verifier.registerKey(kid, own, 'SOFTWARE')).assertTrue();
+        expect(await b.status(await b.issueAndMint())).assertEqual(STATUS_VALID);
+      });
+
     it('S-16 replay with the signature (r, n - s) is recognised by nonce', 0, async () => {
       const b = new Bench();
       const nonce = await b.verifier.issueNonce();
