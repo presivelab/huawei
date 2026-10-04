@@ -93,7 +93,14 @@ two disagree.
 - Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
   over `hdc`.
 - Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`); the Report
-  screen is built; Share, "Why this tier", the partner view and the ledger are placeholders with routes.
+  screen is built; "Why this tier" and the ledger are placeholders with routes.
+- Share and the partner view (`entry/src/main/ets/view/ShareView.ets`, `PartnerPage.ets`): the claim signed
+  with the device key as a system `QRCode`, and the demo partner (`PartnerVerifier`) checking it, with
+  "Verify the same code again" and "Change tier and verify". Pure logic: `common/src/main/ets/claim/ShareFlow.ets`.
+  The one owner of the code, the partner and the ledger is `entry/src/main/ets/share/ShareService.ets`
+  (`ledgerEntries()` is what the ledger screen reads; the file is `share/ledger.json` in the app sandbox).
+  Without a score no code is signed; a score without eligibility is shared as "Eligible: no" and the reason
+  never enters the claim.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
 - Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
   (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
@@ -107,8 +114,7 @@ two disagree.
 
 **What is NOT in the repository yet**
 
-- The screens Share, the partner view, the content of "Why this tier" and the Evidence calendar are still
-  being built. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
+- The content of "Why this tier", the Evidence calendar and the ledger screen are still being built. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
   that chooses between the fixed preview (`PreviewReports`) and the engine (`engineReport` /
   `engineReportOf`). While the preview is shown it is labelled as preview on screen.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona

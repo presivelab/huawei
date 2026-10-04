@@ -196,17 +196,21 @@ export struct ShareView {
     Column() {
       Column({ space: 14 }) {
         if (this.code !== null) {
-          // A QR code stays dark on white in dark mode too, or a scanner cannot read it.
-          QRCode(this.code.token)
-            .width(QR_SIDE)
-            .height(QR_SIDE)
-            .color(Color.Black)
-            .backgroundColor(Color.White)
-            .contentOpacity(this.code.used ? 0.25 : 1)
-            .padding(10)
-            .borderRadius(12)
-            .accessibilityText(QR_SPOKEN)
-            .id('fw_share_qr')
+          // A QR code stays dark on white in dark mode too, with a white margin around it, or a scanner
+          // cannot read it.
+          Column() {
+            QRCode(this.code.token)
+              .width(QR_SIDE)
+              .height(QR_SIDE)
+              .color(Color.Black)
+              .backgroundColor(Color.White)
+              .contentOpacity(this.code.used ? 0.25 : 1)
+              .accessibilityText(QR_SPOKEN)
+              .id('fw_share_qr')
+          }
+          .padding(12)
+          .backgroundColor(Color.White)
+          .borderRadius(12)
           if (this.code.used) {
             InfoChip({
               text: CODE_USED,
