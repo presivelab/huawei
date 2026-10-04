@@ -34,7 +34,7 @@ import {
   nextTierOf,
   reportComponentId
 } from '../main/ets/report/EngineReports';
-import { previewPersonas, previewReport } from '../main/ets/report/PreviewReports';
+import { previewPersonas, previewReport } from './fixtures/PreviewReports';
 import {
   BAR_NO_DATA,
   BenefitLevel,

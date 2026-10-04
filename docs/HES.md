@@ -155,8 +155,8 @@ On the phone the screens get it through `entry/src/main/ets/report/EngineReportS
 `ServiceLocator.ets` puts in use: one `HesSession` per persona, created the first time the persona is opened.
 `closeSelectedDay()` closes the running day of the persona on screen, `resetSelected()` takes that persona back
 to its starting history, `setSelectedLive(hr, steps)` sets the live readings. `isPreview()` is false, so no
-screen writes "preview". The fixed preview (`PreviewReportService`) is still in the code as the second
-implementation of the same interface; it is not in use.
+screen writes "preview". The hand-written preview of the six personas is no longer in the app: it is a test
+fixture (`common/src/test/fixtures/PreviewReports.ets`) the engine's reports are compared with.
 
 | Function                      | Returns                                                                                              |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------- |

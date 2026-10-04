@@ -107,9 +107,10 @@ two disagree.
   (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
   `feature/hes-lite` → `feature/engine-reports`; the package `fairwear-ui` never arrived. Description and
   decisions: `docs/HES.md`.
-- Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
-  from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
-  `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
+- Report: the view models, the benefit rule and the report built from the engine
+  (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `EngineReports`). The hand-written preview of the
+  six personas is a test fixture (`common/src/test/fixtures/PreviewReports.ets`), not shipped. The claim
+  verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
 - Health Sim (`healthsim/`, its own DevEco project, bundle `com.fairwear.healthsim`): our simulator app that
   stands in for HUAWEI Health on the emulators, with the same six people and the banner "SIMULATED DATA". On
   the phone, **Connect HUAWEI Health** asks it for data with `startAbilityForResult`
@@ -125,8 +126,7 @@ two disagree.
 - Export and deletion of the data.
 - Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place that chooses
   where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per persona), with
-  `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed
-  preview (`PreviewReportService`) is still in the code and not in use.
+  `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
   histories (from Health Sim when it is connected, otherwise the built-in ones). The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
   this repository; check `docs/HES.md` and the code.

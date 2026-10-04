@@ -37,7 +37,7 @@ import {
 import { TIER_CLAIM_KEYS } from '../main/ets/claim/TierClaimCodec';
 import { b64urlDecode } from '../main/ets/platform/Bytes';
 import { BENEFIT_FULL_LABEL, BENEFIT_NONE_LABEL, BENEFIT_PARTIAL_LABEL } from '../main/ets/report/Benefit';
-import { previewReport } from '../main/ets/report/PreviewReports';
+import { previewReport } from './fixtures/PreviewReports';
 import { Clock } from '../main/ets/watchlink/WatchLinkPorts';
 
 const NOW = 1790000000000;

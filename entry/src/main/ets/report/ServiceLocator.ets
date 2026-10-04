@@ -7,8 +7,8 @@ import {
   HealthSimPayload,
   healthSourceLabel,
   HealthStatus,
-  PersonaReport,
-  PREVIEW_DEFAULT_ID
+  HesPersonas,
+  PersonaReport
 } from 'common';
 import { EngineReportService } from './EngineReportService';
 import { ReportService } from './ReportService';
@@ -17,8 +17,7 @@ import { ReportService } from './ReportService';
  * The one place that decides where reports come from.
  *
  * In use: the scoring engine (`EngineReportService`), so `isPreview()` is false and no screen writes
- * "preview". The fixed preview (`PreviewReportService`) stays in ReportService.ets as the other
- * implementation of the same interface.
+ * "preview".
  *
  * The selected persona id lives in AppStorage under KEY_PERSONA. A screen reads the report like this:
  *
@@ -30,7 +29,7 @@ import { ReportService } from './ReportService';
 
 export const KEY_PERSONA: string = 'fwPersonaId';               // id of the persona on screen
 export const KEY_REPORT_REVISION: string = 'fwReportRevision';  // bumped when a report's content changes
-export const DEFAULT_PERSONA_ID: string = PREVIEW_DEFAULT_ID;
+export const DEFAULT_PERSONA_ID: string = HesPersonas.IDS[0];   // 'ania'
 
 const engine: EngineReportService = new EngineReportService();
 const service: ReportService = engine;
