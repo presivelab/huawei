@@ -35,7 +35,7 @@ Deliverables (challenge statement, "Required Deliverables"):
 
 | Deliverable | State | Evidence |
 | --- | --- | --- |
-| Public source code repository | open, owner decision (the repository is private for now) | before it is shown: drop the working branches (`materials`, `merge/all-into-main`, `feature/health-sim-audit`, session-report commits), decide on the commit e-mail addresses |
+| Public source code repository | open, owner decision (the repository is private for now) | working material (`materials/`, end-of-session reports, local tool config, a duplicate PDF) removed from the tree on 4 Oct; before it is shown: drop the working branches (`materials`, `merge/all-into-main`, `feature/health-sim-audit`), decide on the commit e-mail addresses |
 | Setup, build, installation and launch instructions | met | `README.md`, "How to install" (versions, emulators, commands) |
 | Working `.hap` | built, unsigned debug | `entry/build/default/outputs/default/entry-default-unsigned.hap`, same path under `watch/`; a signed build needs the owner's Huawei account (FAQ) |
 | Brief recorded demonstration | open | script: `docs/DEMO_SCRIPT.md` |

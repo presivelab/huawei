@@ -46,5 +46,9 @@ Not in this folder:
 - The HES-Lite specification documents. The score's specification as built is `docs/HES.md`.
 - The design canvas pages (`mock-telefon/*.html`) that `13` refers to.
 
+Paths under `materials/` named in `11` and `12` were the team's working files (specifications, prototypes); they are
+not part of the submission. `/raport` and `/backup` at the end of some briefs are local session commands; their
+output is not kept in the repository.
+
 `tools/check-wording.sh` does not search this folder: the briefs quote the forbidden wordings in their
 "never say" lists.

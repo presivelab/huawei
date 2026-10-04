@@ -25,3 +25,8 @@ entry/src/main/resources/rawfile/local.json
 _relay/
 healthsim/tools/logic-tests/src/
 healthsim/tools/logic-tests/out/
+
+# Local session tooling: config and end-of-session reports stay out of the repository
+.nadzor.yml
+docs/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-*.md
+_handoff/
