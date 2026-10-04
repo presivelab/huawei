@@ -222,7 +222,7 @@ export function countLine(row: ComponentRow): string {
 export const LIVE_TITLE: string = 'Live';
 export const LIVE_CHIP: string = 'Demo values';
 export const LIVE_NOTE: string =
-  'Live readings are shown, never scored. Your score uses completed days only.';
+  'Shown, not scored. Close the day turns today\'s steps into a completed day; the heart rate is never stored.';
 export const NO_READING: string = '—';
 export const DEMO_TITLE: string = 'Demo controls';
 export const DEMO_HR_LABEL: string = 'Heart rate';
@@ -232,6 +232,8 @@ export const DEMO_RESET: string = 'Reset demo';
 export const DEMO_NOTE: string =
   'Close the day adds today as a completed day and recalculates the score. Reset returns this persona ' +
     'to its starting month.';
+export const DEMO_DAY_CLOSED: string = 'Day closed';
+export const DEMO_RESET_DONE: string = 'Demo reset';
 export const PERSONA_SHEET_NOTE_ENGINE: string = 'Scripted demo personas, scored by the same rules';
 
 // The note under the persona sheet title: fixed preview values, or scripted days scored by the rules.

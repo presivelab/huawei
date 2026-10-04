@@ -309,6 +309,34 @@ export default function watchLinkFlowTest() {
       b.dispose();
     });
 
+    it('after a pause the old readings do not count: the state is unknown until a new reading', 0, async () => {
+      const b = new Bench();
+      await b.watch.start();
+      b.watch.setDemoClock(true);
+      await b.run(10, 70);
+      expect(b.watch.view().state).assertEqual('W');
+      b.watch.pause();
+      b.clock.ms += 2000;                 // the page was hidden
+      await b.run(8, 0);                  // back, but no sensor event yet
+      expect(b.watch.view().state).assertEqual('U');
+      await b.run(3, 70);                 // the first new reading
+      expect(b.watch.view().state).assertEqual('W');
+      b.dispose();
+    });
+
+    it('forget watch also removes the old ACKs, so a new pairing is not answered by them', 0, async () => {
+      const b = new Bench();
+      await b.watch.start();
+      await b.watch.pair();
+      await b.relay();
+      b.phone.confirmPair();
+      await b.relay();
+      expect(b.phoneStore.list('acks').length > 0).assertTrue();
+      b.phone.forget();
+      expect(b.phoneStore.list('acks').length).assertEqual(0);
+      b.dispose();
+    });
+
     it('without any sensor signal nothing is recorded as off-wrist', 0, async () => {
       const b = new Bench();
       await b.watch.start();

@@ -344,6 +344,11 @@ export class PhoneLinkEngine {
     for (let i = 0; i < names.length; i++) {
       this.store.remove(`${LINK_DAYS_DIR}/${names[i]}`);
     }
+    // Old ACKs must not reach a watch that pairs again: it would see "paired" before Confirm.
+    const acks = this.store.list(PHONE_ACKS_DIR);
+    for (let i = 0; i < acks.length; i++) {
+      this.store.remove(`${PHONE_ACKS_DIR}/${acks[i]}`);
+    }
     this.log = [];
     this.saveLog();
   }

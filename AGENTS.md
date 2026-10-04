@@ -94,10 +94,10 @@ two disagree.
   over `hdc`.
 - Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`). Built: the
   Report screen with the Live card and the demo controls, "Why this tier", the Evidence calendar with the
-  day sheet and "Appeal this day". The ledger screen is a placeholder with a route.
+  day sheet and "Appeal this day", and "What left this phone" (`view/LedgerPage.ets`, linked from Share).
 - Share and the partner view (`entry/src/main/ets/view/ShareView.ets`, `PartnerPage.ets`): the claim signed
   with the device key as a system `QRCode`, and the demo partner (`PartnerVerifier`) checking it, with
-  "Verify the same code again" and "Change tier and verify". Pure logic: `common/src/main/ets/claim/ShareFlow.ets`.
+  "Verify the same code again" and "Change tier to A and verify" (B when the claim already says A). Pure logic: `common/src/main/ets/claim/ShareFlow.ets`.
   The one owner of the code, the partner and the ledger is `entry/src/main/ets/share/ShareService.ets`
   (`ledgerEntries()` is what the ledger screen reads; the file is `share/ledger.json` in the app sandbox).
   Without a score no code is signed; a score without eligibility is shared as "Eligible: no" and the reason
@@ -115,8 +115,7 @@ two disagree.
 
 **What is NOT in the repository yet**
 
-- The screen "What left this phone" (the ledger is written, the screen that lists it is a placeholder), export
-  and deletion of the data.
+- Export and deletion of the data.
 - Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place that chooses
   where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per persona), with
   `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed

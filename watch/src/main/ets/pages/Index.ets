@@ -322,6 +322,10 @@ struct Index {
   }
 
   private closeDay(): void {
+    // A second tap while the first is still sealing would seal an empty next day.
+    if (this.lastAction === 'Closing day…') {
+      return;
+    }
     this.lastAction = 'Closing day…';
     this.link.closeDay().then((seq: number) => {
       if (seq > 0) {
@@ -351,7 +355,7 @@ struct Index {
     this.resetArmed = false;
     this.pairShown = false;
     this.link.reset();
-    this.lastAction = 'Watch data reset · pair again on the phone';
+    this.lastAction = 'Watch data reset · on the phone: Forget watch, then Pair phone here';
     this.showLink();
   }
 

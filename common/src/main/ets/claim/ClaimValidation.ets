@@ -23,9 +23,8 @@ export const TIER_A: string = 'A';
 export const TIER_B: string = 'B';
 export const TIER_C: string = 'C';
 /*
- * The value of `tier` when the scoring module has no score ("No score yet"). The repository has no
- * scoring module yet, so this value is not defined anywhere else: it is a placeholder that must be
- * aligned with HES-Lite when that module arrives. A claim with this tier can never be eligible.
+ * The value of `tier` when there is no score ("No score yet"); HES-Lite uses the same value (docs/HES.md).
+ * A claim with this tier can never be eligible.
  */
 export const TIER_NO_SCORE: string = 'NONE';
 export const CLAIM_TIERS: string[] = [TIER_A, TIER_B, TIER_C, TIER_NO_SCORE];

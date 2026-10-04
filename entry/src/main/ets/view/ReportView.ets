@@ -16,6 +16,7 @@ import {
   periodDayIso,
   PersonaReport,
   ReportTier,
+  SCORE_TO,
   scoreSpoken,
   STRIP_DAYS,
   wearSpoken,
@@ -242,7 +243,7 @@ export struct ReportView {
         this.nav.pushPathByName(ROUTE_SETTINGS, null);
       })
 
-      Text(this.report.period + PERIOD_SUFFIX)
+      Text(this.report.period.indexOf(SCORE_TO) >= 0 ? this.report.period : this.report.period + PERIOD_SUFFIX)
         .fontSize($r('sys.float.Body_M'))
         .fontColor($r('sys.color.font_secondary'))
         .margin({ left: 4 })
@@ -445,7 +446,7 @@ export struct ReportView {
             spoken: metricSpoken(tileName(row.id), row.raw, row.unit, row.available)
           })
         }
-      }, (row: ComponentRow) => `${this.report.id}|${row.id}`)
+      }, (row: ComponentRow) => `${this.report.id}|${row.id}|${row.available}|${row.raw}|${row.unit}|${row.bars7.join(',')}`)
     }
     .columnsTemplate('1fr 1fr')
     .columnsGap(TILE_GAP)

@@ -1,5 +1,5 @@
-import { withoutAppealsOf } from 'common';
-import { closeSelectedDay, resetSelected, selectedPersonaId, setSelectedLive } from '../report/ServiceLocator';
+import { hasScore, PersonaReport, withoutAppealsOf } from 'common';
+import { closeSelectedDay, resetSelected, selectedPersonaId, selectedReport, setSelectedLive } from '../report/ServiceLocator';
 import { KEY_APPEALS } from './EvidenceDayData';
 
 /*
@@ -23,4 +23,14 @@ export function demoReset(): void {
   const appeals: string[] = AppStorage.get<string[]>(KEY_APPEALS) ?? [];
   AppStorage.setOrCreate<string[]>(KEY_APPEALS, withoutAppealsOf(appeals, selectedPersonaId()));
   resetSelected();
+}
+
+// One line about the result of a demo action, for a short toast: the controls sit far below the score, so
+// the presenter sees the new score without scrolling.
+export function demoResultLine(action: string): string {
+  const r: PersonaReport = selectedReport();
+  if (hasScore(r)) {
+    return `${action} · HES ${r.hes} · Tier ${r.tier}`;
+  }
+  return `${action} · no score yet · evidence ${r.coveragePct}%`;
 }
