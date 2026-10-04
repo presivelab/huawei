@@ -15,7 +15,8 @@ HES vNext keeps every curve, minimum count, window and threshold of HES-Lite v1.
 - **HRV looks at the recent 14 nights** (`HES_HRV_WINDOW_DAYS`), not the 28-day window.
 - **A discount per profile and benefit level** (`discountPct` in `report/Benefit.ets`, `PersonaReport.discountPct`).
 
-All weights, curves, thresholds and minimum counts are prototype product assumptions, not clinically tested.
+All weights, curves, thresholds, windows and minimum counts are research-informed product assumptions, not
+clinically or actuarially validated coefficients. Future validation must use real cohort/outcome data.
 
 ## Files and specification sections
 
@@ -38,8 +39,9 @@ All weights, curves, thresholds and minimum counts are prototype product assumpt
 The wear month is next to it, in `common/src/main/ets/wear/`: `WearMonth.ets` (the rules) and `WearPersonas.ets`
 (a 30-day wear record per persona).
 
-Tests: `common/src/test/Hes.test.ets` (75, every line of specification section 15 as its own test, then sections
-2 to 11), `HesPersonas.test.ets` (16), `HesSession.test.ets` (11), `WearMonth.test.ets` (22).
+Tests: `common/src/test/Hes.test.ets` (85, every line of specification section 15 as its own test, then sections
+2 to 11 and the vNext profiles), `HesPersonas.test.ets` (20), `HesSession.test.ets` (11), `HesFuzz.test.ets` (4),
+`WearMonth.test.ets` (22).
 
 ## Profiles and weights
 
@@ -82,8 +84,39 @@ Discount only, never a surcharge. Illustrative product assumptions, not actuaria
    tier `NONE`, confidence "Insufficient data". Coverage is still reported.
 5. Otherwise the score is the weighted mean of the available components, rounded to an integer. Missing
    components are left out of both the numerator and the denominator.
-6. Coverage is the sum of the profile's base weights of the available components. Confidence is coverage times the
-   weighted data quality.
+6. Coverage is the sum of the profile's base weights of the available components, exact to 0.5 (87.5%, never
+   88%). A missing component lowers it by exactly its weight. Confidence is coverage times the weighted data
+   quality.
+7. A reading that is not a finite number (NaN, Infinity) is no reading. A raw value that overflows makes the
+   component missing. The engine never returns NaN or Infinity.
+
+## HES vNext conformance
+
+The vNext sections this build was checked against. The other sections are the HES-Lite ones in the table
+"Files and specification sections" above; vNext did not change them.
+
+| vNext section                                     | Where                                                                                              | Test                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1 Profiles, selectable                            | `hesWeightPermille`, `computeHes(history, profile)`; Report tab: `ProfileSwitch.ets`, `engineReportFor` | `Hes.test.ets` "HES vNext profiles", `ProfileReports.test.ets`                         |
+| 3 One HRV and one heart-rate recovery protocol    | `HesDay.hrvPercentile`, `HesDay.hrr1`; format `fwhs1` (see below)                                  | `HealthSimPayload.test.ets`                                                            |
+| 7 Evidence Coverage, exact                        | `coverage` in `HesComposite.ets`                                                                   | `Hes.test.ets` "Ania without HRV", "a coverage of 42.5 stays 42.5"                     |
+| 10 Confidence from the exact coverage             | `confidenceIndex` in `HesConfidence.ets`                                                           | `Hes.test.ets` "HES-Lite data confidence", `HesPersonas.test.ets`                      |
+| 16 Never NaN, never Infinity                      | `isValidFor` in `HesSufficiency.ets`, `evaluateComponent` in `HesComponents.ets`                   | `HesFuzz.test.ets`: 1000 seeded histories, both profiles, 0 violations (2352 before) |
+| 17 Coverage decreases exactly by the missing weight | `coverage`                                                                                       | `Hes.test.ets` "Coverage is lower by exactly the HRV weight (7.5 points: 100 -> 92.5)" |
+
+### Deviations from the spec
+
+- **MVPA** is the mean of the valid days times 7, not SUM / 4: a missing day is not zero minutes.
+- **SD is the sample SD** (n - 1) in sleep regularity.
+- **"Why this tier" has no duplicates**: with five available components the lists are 3 + 2.
+- **Coverage is exact to 0.5 points** and shown that way (87.5%); a whole value has no decimal (75%).
+
+### One HRV and one heart-rate recovery protocol
+
+Health Sim hands over one HRV value per night, the overnight percentile, and one heart-rate recovery value
+per session, HRR1 from one post-exercise test. The format `fwhs1` has no field for a second protocol, so
+protocols cannot be mixed in a history. A real source must filter to one protocol before it hands the data
+over; the engine does not tell protocols apart.
 
 ## Personas
 
@@ -95,11 +128,11 @@ not changed for it.
 | Persona | Health insurance           | Life insurance             | Available components                             |
 | ------- | -------------------------- | -------------------------- | ------------------------------------------------ |
 | Ania    | A / 92, 100%, High → 15%   | A / 91, 100%, High → 10%   | all eight                                        |
-| Marek   | B / 75, 88%, High → 0%     | B / 75, 88%, High → 0%     | Core + VO₂max (flagged, so not eligible)         |
+| Marek   | B / 75, 87.5%, High → 0%   | B / 75, 87.5%, High → 0%   | Core + VO₂max (flagged, so not eligible)         |
 | Kasia   | B / 71, 75%, Medium → 8%   | B / 71, 65%, Medium → 5%   | Core only                                        |
-| Tomek   | B / 79, 93%, High → 8%     | A / 80, 93%, High → 10%    | Core + VO₂max + heart-rate recovery              |
+| Tomek   | B / 79, 92.5%, High → 8%   | A / 80, 92.5%, High → 10%  | Core + VO₂max + heart-rate recovery              |
 | Ewa     | C / 58, 80%, High → 0%     | C / 59, 70%, Medium → 0%   | Core + heart-rate recovery                       |
-| Ola     | no score, 48%              | no score, 48%              | resting heart rate, MVPA, steps (8 of 14 nights) |
+| Ola     | no score, 47.5%            | no score, 47.5%            | resting heart rate, MVPA, steps (8 of 14 nights) |
 
 Each cell is tier / score, coverage, confidence → discount. The persona parameters were not changed for vNext;
 these are the engine's results with the new weights. Tomek shows the difference between the products: his
@@ -139,7 +172,8 @@ Engine:
 1. **Missing numbers are -1, not optional fields.** The specification writes `rawValue?` and `score?`; the
    repository's convention is `HEALTH_MISSING = -1`. `HES_MISSING` is the same value.
 2. **Weights are held in thousandths.** 0.15 + 0.15 + 0.125 is not exactly 0.425 in floating point, so a
-   coverage of 42.5% could round either way. With whole numbers 42.5 always rounds to 43 and 84.50 to 85.
+   coverage could come out as 42.499999. With whole numbers the coverage is exactly 42.5 and a score of 84.50
+   always rounds to 85. Coverage itself is never rounded: it moves in steps of 0.5.
 3. **Rounding is half up** (`floor(x + 0.5)`), as the test list asks: 84.49 gives 84, 84.50 gives 85.
 4. **MVPA with missing days.** The specification divides the 28-day sum by 4. With missing days that counts
    each of them as zero minutes, against "missing metrics are not treated as zero". The weekly value is the
@@ -159,7 +193,7 @@ Engine:
 12. **Component scores are not rounded**; only the final score is. A screen rounds them for display.
 13. **Confidence boundaries are inclusive with a tolerance of 1e-9**, so an index meant to be exactly 0.80 is
     High even if floating point delivers 0.7999999999.
-14. **Confidence uses the rounded coverage percentage**, as the function in specification section 13 does.
+14. **Confidence uses the exact coverage percentage** (87.5, not 88).
 15. **"Why this tier" list sizes.** The specification says "2-3". Strongest takes up to 3 but at most half of
     the available components, rounded up; improvement takes up to 3 of the remaining ones, so nothing is in
     both lists (5 available give 3 + 2). Equal scores keep the order of the weight table. Without a score both
@@ -191,8 +225,16 @@ Personas and wear month:
 
 ## The report on the phone
 
+**Profile on the Report tab.** Under the score card a switch, "Health insurance" | "Life insurance", scores
+the same completed days with the other weights (`ReportService.reportFor`, `engineReportFor`): score, tier,
+coverage, confidence, points to the next tier, the "Why this tier" lists and the discount line follow it;
+wear and the live values do not. The choice is kept with its persona and in memory only, so another persona
+or a restart starts on health insurance. **Share is always for health insurance**: the code, the partner
+view, the benefit behind the code and the home-screen card use `report(id)`, and Share says "For: Health
+insurance". Tomek on "Life insurance" reads 80 · A while his code carries tier B. The claim is unchanged.
+
 `common/src/main/ets/report/EngineReports.ets` builds the phone's view model (`PersonaReport`, the shape the
-fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (33).
+fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (36), `ProfileReports.test.ets` (8).
 
 On the phone the screens get it through `entry/src/main/ets/report/EngineReportService.ets`, which
 `ServiceLocator.ets` puts in use: one `HesSession` per persona, created the first time the persona is opened.

@@ -1,6 +1,26 @@
 FairWear test results
 =====================
 
+2026-10-04 08:40 CEDT  branch feature/hes-vnext-fix  (HES vNext: exact coverage, no NaN or Infinity, profile switch)
+----------------------------------------------------
+Base: origin/feature/hes-vnext-profiles (59d1174) with origin/main (bd4c970) merged as a253190, no conflict.
+  Before any change: common 397/397, watch 6/6.
+Phase 1, exact coverage (fae7e16): 18 tests failed on the old whole-percent values, as the brief lists, plus
+  two in Report.test.ets that pin the preview table. All 20 updated to 87.5 / 92.5 / 47.5 / 42.5 / 12.5 / 82.5.
+  New: Ania without HRV, health 93 / A / 92.5% (observed 93.2946), life 92 / A / 92.5% (observed 92.0082).
+Phase 2, non-finite readings (191386d): HesFuzz.test.ets, seed 20261004, 1000 histories of 0..99 days, both
+  profiles. Before the fix: 2352 violations. After: 0, no exception. Persona results unchanged.
+Phase 3 (d8768ca): four engine files copied to healthsim/entry/src/main/ets/fw/hes; HealthSimCopies.test.ets green.
+Phase 4, profile on the Report tab (c9626e5): ProfileReports.test.ets 8/8. Tomek: life 80 / A / 92.5%, the
+  report Share uses 79 / B; after one closed day health 78 / B, life 80 / A; Ola no score, 47.5% in both.
+tools/run-logic-tests.sh common 411/411, watch 6/6.
+Builds: FairWear assembleHap entry and watch BUILD SUCCESSFUL; Health Sim assembleHap entry and watch BUILD
+  SUCCESSFUL.
+tools/lint.sh: entry 0 errors (7 warnings, none new), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+watch/src/main/ets imports nothing from hes/ (grep).
+Emulator: not walked for this entry when it was written.
+
 2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
 ----------------------------------------------------
 H0: feature/watch-link-tour (eb6daf8, a relayed file still being written is left for the next look) merged

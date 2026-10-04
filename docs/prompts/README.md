@@ -3,7 +3,7 @@
 These are the briefs a team member handed to coding-agent sessions as their standing instructions during
 HackYeah 2026 (3–4 October 2026). They are kept as written, in Polish, so that `AI_WORKFLOW.md` can point to
 the full text. Each file starts with one added line saying it is a public-safe copy; apart from that only a leftover paste marker was removed from `3` and `4`.
-They contain no credentials, e-mail addresses or user names; the paths in them (`C:\dev\…`) are the
+They contain no credentials, e-mail addresses or user names (one user name was removed from `14`); the paths in them (`C:\dev\…`) are the
 development machine's working folders.
 
 A brief describes what was asked at the time, not the state of the code. Where a brief and the repository
@@ -26,6 +26,7 @@ disagree, the repository and `docs/` are right. The decisions still in force are
 | `11-DANE_WYMAGANIA_BRAKI.md` | Data: what is collected, what the score needs, what is missing | 4 Oct 02:01 | complements `00` |
 | `12-TELEFON_RAPORT_UI.md` | Phone report: what goes where on the screens and how to build it natively | 4 Oct 02:18 | complements `00` |
 | `13-MOCK_TELEFON_ARKUI.md` | Phone screens from the design canvas as working ArkUI on the emulator | 4 Oct 02:27 | complements `00` |
+| `14-HES_VNEXT_DOKONCZENIE.md` | HES vNext on top of the two profiles: exact coverage, no NaN or Infinity, the profile switch on the Report tab, documents | 4 Oct 08:20 | done on `feature/hes-vnext-fix`; what differs from the brief is in `AI_WORKFLOW.md` |
 
 Not in this folder:
 
