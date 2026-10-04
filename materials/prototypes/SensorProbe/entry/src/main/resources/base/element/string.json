@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Sensor probe for the wearable emulator"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Shows live heart rate and step count"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "SensorProbe"
+    },
+    {
+      "name": "reason_heart_rate",
+      "value": "Reads heart rate to show it live on the watch"
+    },
+    {
+      "name": "reason_steps",
+      "value": "Reads step count to show it live on the watch"
+    }
+  ]
+}
