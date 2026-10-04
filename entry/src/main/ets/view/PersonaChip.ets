@@ -7,14 +7,14 @@ import {
 } from '../report/ServiceLocator';
 import {
   PERSONA_CHIP_SUFFIX,
-  PERSONA_SHEET_NOTE,
   PERSONA_SHEET_TITLE,
+  personaSheetNote,
   personaSummary
 } from '../report/ReportTexts';
 import { SYMBOL_CHECK, SYMBOL_EXPAND } from '../ui/kit/KitTokens';
 
 // The demo switcher: a chip with the persona on screen ("Ania · Demo") that opens a sheet with the six
-// personas. Demo only: it changes which fixed report the screens show, nothing else.
+// personas. Demo only: it changes which persona's report the screens show, nothing else.
 @Component
 export struct PersonaChip {
   @StorageProp(KEY_PERSONA) personaId: string = DEFAULT_PERSONA_ID;
@@ -109,7 +109,7 @@ export struct PersonaChip {
     })
     .bindSheet($$this.open, this.personaSheet(), {
       height: SheetSize.FIT_CONTENT,
-      title: { title: PERSONA_SHEET_TITLE, subtitle: PERSONA_SHEET_NOTE },
+      title: { title: PERSONA_SHEET_TITLE, subtitle: personaSheetNote(reportService().isPreview()) },
       showClose: true,
       backgroundColor: $r('sys.color.background_secondary')
     })
