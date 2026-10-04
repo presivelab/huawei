@@ -91,6 +91,7 @@ export function MetricTile(p: MetricTileParams) {
     }
     .width('100%')
   }
+  .width('100%')
   .alignItems(HorizontalAlign.Start)
   .padding({
     left: 16,
