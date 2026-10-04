@@ -521,3 +521,24 @@ export {
 } from './src/main/ets/claim/ShareFlow';
 // The days of the wear month in detail: worn time, breaks and the reason of each day as text.
 export { DayBreak, DayDetail, dayDetailOf, engineDayDetails } from './src/main/ets/report/EngineReports';
+// Visits and day dial
+export {
+  DayDial,
+  dayDial,
+  DIAL_CHARGING,
+  DIAL_DEMO_NOTE,
+  DIAL_NOW_NOTE,
+  DIAL_OFF,
+  DIAL_SLEEP,
+  DIAL_TICK_LABELS,
+  DIAL_TITLE,
+  DIAL_WORN,
+  DialArc,
+  dialKindLabel,
+  DialSegment,
+  dialSegmentsOfRuns,
+  groupedNumber,
+  minuteToDeg,
+  sleepArcs,
+  wearArcs
+} from './src/main/ets/present/DayDialModel';
