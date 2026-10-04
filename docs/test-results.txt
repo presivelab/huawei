@@ -1,6 +1,45 @@
 FairWear test results
 =====================
 
+2026-10-04 06:22 CEDT  branch feature/healthsim-connect  (round 3, agent 4: FairWear asks Health Sim for the data on the phone, C1 and C2)
+----------------------------------------------------
+Base: feature/engine-reports 2985efc, then feature/healthsim-base bec6913 and feature/engine-reports 0f17cae merged in.
+Commits: b7a7945 (C1 client), 0eb6263 (C2 consent flow), 51bbe09 (way out while Health Sim does not answer).
+Node run (tools/run-logic-tests.sh): common 380/380, watch 6/6. No test added (the new code is the platform
+  call and the screens; decode and withScopes are tested in the base). No existing assertion was changed.
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL. tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors
+  (2 warnings), common 0 issues; none in a changed file. tools/check-wording.sh: 0 hits.
+Phone emulator (127.0.0.1:5557, API 24), unsigned debug HAPs, taps by element id, texts from the uitest layout
+dump, FairWear log lines "healthsim request" / "healthsim answer" (counters and text length only), light mode.
+With Health Sim installed (agent 2, com.fairwear.healthsim; 06:14-06:21):
+  Connect HUAWEI Health -> Health Sim screen "FairWear asks for access" (banner "SIMULATED DATA · stands in
+    for HUAWEI Health", seven data types, Don't allow / Allow). The explicit start by bundle and ability name
+    works: log "path=ability"; error 16000018 did not occur, so the deep-link path of the client was not used.
+  Allow -> log "kind=OK chars=29643 code=0", decodeHealthSimPayload accepted the text -> FairWear consent
+    (step 2 of 2) -> Agree and continue -> Report: Ania 92 · A, Coverage 100%, pill "Health Sim · Simulated
+    data"; Settings > Data source: "Health Sim · Simulated data", "Reads the simulated data Health Sim handed
+    over after your consent. Health Sim stands in for HUAWEI Health on this emulator.", "Data types allowed:
+    7 of 7"; healthsim/fwhs1.json in the app sandbox, 29 643 bytes.
+  Don't allow -> log "kind=REFUSED code=1" -> "HUAWEI Health · Not connected" and the notice "HUAWEI Health
+    was not connected".
+  Disconnect -> "HUAWEI Health disconnected", fwhs1.json removed; Reconnect asks Health Sim again.
+  HRV switched off in FairWear's consent -> Ania 93 · A, Coverage 90% (HRV is missing evidence, not zero).
+  From the second jump on the system itself asks "Allow FairWear to open Health Sim?" (Cancel / Allow) before
+    Health Sim appears. Allow -> as above. Cancel -> the system reports nothing back to FairWear (no log line):
+    the page stays on "Asking Health Sim for access…" with "Ask Health Sim again" and "Continue with built-in
+    demo data"; the second one shows the demo placeholder with "Health Sim did not answer: built-in demo data".
+Without Health Sim: not tested by uninstalling it (the emulator is shared). Tested with a one-off HAP whose
+  bundle name and link point at an app that does not exist (two constants changed, not committed):
+  Connect -> log "kind=NOT_INSTALLED code=16000001" -> the demo placeholder as before, with the line "Health Sim
+    is not installed: built-in demo data" -> Simulate consent -> FairWear consent -> Report: Ania 92 · A,
+    Coverage 100%, pill "HUAWEI Health · Demo data"; no fwhs1.json.
+Shots: docs/screenshots/final/a4-connect-healthsim-consent-light.jpeg (Health Sim build 0e3ccfa),
+  a4-report-healthsim-source-light.jpeg, a4-connect-healthsim-missing-light.jpeg.
+Not run: dark mode of the changed page; the deep-link path (needs a system that refuses the explicit start);
+  an unreadable answer from Health Sim on the device (decode is covered by the Node tests of the base);
+  "Ask Health Sim again"; the persona sheet for the other five people on Health Sim data; app restart with
+  fwhs1.json present.
+
 2026-10-04 05:15 CEDT  branch feature/engine-reports  (fix/audit merged: audit fixes compiled and walked on the emulators)
 ----------------------------------------------------
 Merge: git merge fix/audit into 9d414b7 -> c119ad7, no conflict. Then 4ce179b (relay, see Watch Link below).
