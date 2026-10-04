@@ -34,6 +34,20 @@ technology, digital wellbeing).
 | Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
 | Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
 
+### Required deliverables
+
+The seven deliverables of the [challenge statement](https://github.com/onirodeveloper/hackyeah2026-challenge/blob/main/hackathon_challenge.md#required-deliverables) and where each one is.
+
+| Deliverable | Where |
+| --- | --- |
+| 1. Source code repository | This repository, branch `main`. Target HarmonyOS, `compatibleSdkVersion` 6.0.0 (API 20), `targetSdkVersion` 6.1.1 (API 24) in `build-profile.json5` |
+| 2. Setup, build, installation and launch instructions | "How to install" and "How to check it" below; Health Sim: `healthsim/README.md` |
+| 3. Working `.hap` | [Release hackyeah-2026-final](https://github.com/presivelab/huawei/releases/tag/hackyeah-2026-final): four HAPs (FairWear and Health Sim, phone and watch) with SHA256SUMS, built from commit `531e4f9`; the app code on `main` is the same |
+| 4. Recorded demonstration | "Demo video" above; the script in `docs/DEMO_SCRIPT.md` |
+| 5. Architecture and implementation description | `docs/ARCHITECTURE.md`; per part `docs/HES.md`, `docs/WATCH_LINK.md`, `docs/VISITS.md` |
+| 6. `AI_WORKFLOW.md` | `AI_WORKFLOW.md`: tools, prompts (`docs/prompts/`), workflow, review and validation, limitations |
+| 7. AI integration documentation | Not applicable: the product has no AI feature. The score, the wear rules and the visit notes are deterministic rules (`AI_WORKFLOW.md`, "AI feature disclosure") |
+
 ## FairWear as a component
 
 **What it does.** FairWear takes the health history a person already has, turns it into an A/B/C tier on
@@ -242,7 +256,8 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 
 ## Security & privacy
 
-- **Phone.** The phone app declares no permissions and has no network code: health history and the score
+- **Phone.** The phone app declares one permission, `PUBLISH_AGENT_REMINDER` (the visit follow-up reminder),
+  and has no network code and no `INTERNET` permission: health history and the score
   never leave the phone. The only output meant for a partner is the signed tier claim. The code is a bearer
   token: whoever holds an unused code can present it once, and the single-use nonce and the expiry limit that. Its
   key id (`kid`) is 8 hex characters, 32 bits, and only selects the key from the partner's registry; the
@@ -267,8 +282,9 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
   data the user controls. Next step: the partner checks a HUKS key attestation at enrolment. Watch days travel
   signed, not encrypted: on real devices Wear Engine is the channel; the hdc relay of the demo is a
   development tool.
-- **Watch.** Two permissions, `READ_HEALTH_DATA` (heart rate) and `ACTIVITY_MOTION` (steps), each with a
-  stated reason and used only while the app is open. A refused permission shows "unavailable" and the wear
+- **Watch.** Three permissions, `READ_HEALTH_DATA` (heart rate), `ACTIVITY_MOTION` (steps) and `MICROPHONE`
+  (visit notes, only in `VisitRecordAbility` after the doctor agreed), each with a stated reason and used only
+  while the app is open. A refused permission shows "unavailable" and the wear
   state "no data", never a made-up value (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg` shows
   the earlier dial). The sensors are
   switched off when the page is hidden.

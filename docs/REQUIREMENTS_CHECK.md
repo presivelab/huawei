@@ -98,10 +98,10 @@ that document records; it is not part of the product.
 
 | Module                                       | Permission                         | Why the user needs it                                     | Where it is used               |
 | -------------------------------------------- | ---------------------------------- | --------------------------------------------------------- | ------------------------------ |
-| `entry`                                      | none                               | signing with HUKS and CryptoFramework needs no permission | `entry/src/main/ets/platform/` |
-| `watch` (on `main`)                          | none                               | template page only                                        |                                |
+| `entry`                                      | `ohos.permission.PUBLISH_AGENT_REMINDER` | visit follow-up reminder; signing with HUKS and CryptoFramework needs no permission | `entry/src/main/ets/visits/VisitReminder.ets` |
 | `watch`                                      | `ohos.permission.READ_HEALTH_DATA` | live heart rate on the watch face, wear state            | `watch/src/main/ets/sensors/LiveSensors.ets` |
 | `watch`                                      | `ohos.permission.ACTIVITY_MOTION`  | today's step count on the watch face, day summary         | `watch/src/main/ets/sensors/LiveSensors.ets` |
+| `watch`                                      | `ohos.permission.MICROPHONE`       | visit notes after the doctor agreed, kept on the watch    | `watch/src/main/ets/pages/VisitRecord.ets` (`VisitRecordAbility`) |
 
 Not requested and not to be copied from sample code: `INTERNET`, `GET_NETWORK_INFO`, `VIBRATE`, `GYROSCOPE`.
 

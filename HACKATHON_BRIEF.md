@@ -62,3 +62,10 @@ The recorded demo follows `docs/DEMO_SCRIPT.md` (part A, about four minutes):
 | Claim signature                           | Real ECDSA; key in HUKS, a software-key fallback labelled in the UI                                    |
 | Partner                                   | A screen in the same app, not a separate system                                                        |
 | Benefit levels                            | Illustrative: eligible and A is a full benefit, eligible and B a partial benefit, anything else none   |
+
+## First-minute narrative
+
+The opening of recording A in `docs/DEMO_SCRIPT.md`: the six people are synthetic demo personas; HUAWEI Health
+is played by Health Sim, our own simulator app with the banner "SIMULATED DATA"; the watch days come from the
+labelled demo feed because the emulator's heart rate is 0; watch to phone goes over a development relay on `hdc`
+instead of Wear Engine; the score is deterministic rules and curves, not AI.

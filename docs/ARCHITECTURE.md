@@ -117,9 +117,10 @@ Health Sim data and the consent move it. Shown, never scored.
 
 | Module  | Permission                         | Reason shown to the user                                                                          |
 | ------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `entry` | none                               | The add-on screens need no permission in this build; the HUAWEI Health adapter is a stub.         |
+| `entry` | `ohos.permission.PUBLISH_AGENT_REMINDER` | The visit follow-up reminder (`entry/src/main/ets/visits/VisitReminder.ets`). No other permission; the HUAWEI Health adapter is a stub. |
 | `watch` | `ohos.permission.READ_HEALTH_DATA` | "FairWear shows your live heart rate on the watch and uses it to tell whether the watch is worn." |
 | `watch` | `ohos.permission.ACTIVITY_MOTION`  | "FairWear shows the steps counted today on the watch and adds them to the day summary it records." |
+| `watch` | `ohos.permission.MICROPHONE`       | "FairWear records a visit for your own notes after the doctor agreed. The recording stays on this watch." (`VisitRecordAbility` only) |
 
 ## One entry point
 
