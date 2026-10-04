@@ -51,6 +51,13 @@ The HAPs are written to `entry/build/default/outputs/default/entry-default-unsig
 `watch/build/default/outputs/default/watch-default-unsigned.hap`; they can also be installed by hand with
 `hdc -t <target> install -r <hap>`. They are unsigned debug builds, which the emulators accept.
 
+**Health Sim (optional, for the full demo).** A second DevEco project in `healthsim/` builds the simulator app
+that stands in for HUAWEI Health on the emulators: `com.fairwear.healthsim`, one HAP for the phone and one for
+the watch. Build and install steps are in `healthsim/README.md`. With it installed, **Connect HUAWEI Health**
+opens Health Sim, which asks for its own consent and hands FairWear the simulated histories of the six people;
+on the watch, **Get today from Health Sim** fetches the script of the demo day. Without it FairWear uses its
+built-in demo data and says so.
+
 **How to check it.** Follow `docs/DEMO_SCRIPT.md`: the whole product in about four minutes (Report, Why,
 Evidence with an appeal, Share, the partner check with a replay and a changed tier, the watch and its signed
 days), and the connect / consent / disconnect / consent-again path that Huawei asks to see when it verifies an
@@ -164,6 +171,7 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 | Icon shortcuts, one entry point | Want parameter `fwTarget` | `entry/src/main/ets/nav/EntryRouter.ets` | `docs/screenshots/ta2-*` |
 | QR code | ArkUI `QRCode` | `entry/src/main/ets/view/ShareView.ets` | `docs/screenshots/final/a4-share-*` |
 | Watch → phone on real devices | Wear Engine Kit (send path) | `watch/src/main/ets/watchlink/WearEngineTransport.ets` | not run: needs paired devices and approval |
+| One app asks another for data and gets a result | Ability Kit: `startAbilityForResult`, `terminateSelfWithResult` | `entry/src/main/ets/platform/HealthSimClient.ets`, `watch/src/main/ets/watchlink/WatchLinkRuntime.ets`, `healthsim/` | Connect HUAWEI Health opens Health Sim; `docs/screenshots/final/a1-report-ania-healthsim-light`, `a1-healthsim-fairwear-card-light` |
 | HUAWEI Health data | Health Service Kit | `entry/src/main/ets/platform/HuaweiHealthSource.ets` | stub: needs Huawei's approval |
 
 ## Security & privacy
