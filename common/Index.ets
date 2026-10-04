@@ -426,6 +426,8 @@ export {
   benefitLabel,
   benefitLevel,
   benefitReason,
+  DISCOUNT_NONE_LINE,
+  discountLine,
   discountPct
 } from './src/main/ets/report/Benefit';
 export {
@@ -464,7 +466,14 @@ export {
   engineReportFromPerson,
   engineSessionFrom,
   HEALTH_SIM_LABEL,
-  wearMonthFrom
+  wearMonthFrom,
+  engineReportFor,
+  engineReportFromPersonFor,
+  profileChoice,
+  profileFromChoice,
+  profileNote,
+  SHARE_PROFILE,
+  shareProfileLine
 } from './src/main/ets/report/EngineReports';
 // Health Sim: the simulator app that stands in for HUAWEI Health hands its data over in this format.
 export {

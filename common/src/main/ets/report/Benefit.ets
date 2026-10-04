@@ -51,6 +51,20 @@ export function discountPct(profile: HesProfile, level: string): number {
   return 0;
 }
 
+export const DISCOUNT_NONE_LINE: string = 'No discount this month';
+
+/**
+ * "Illustrative discount: 8% of the monthly premium" (life insurance: "of the yearly premium").
+ * Without a benefit there is no discount to name.
+ */
+export function discountLine(profile: HesProfile, pct: number): string {
+  if (pct <= 0) {
+    return DISCOUNT_NONE_LINE;
+  }
+  const premium: string = profile === HesProfile.LONGEVITY_WELLNESS ? 'yearly' : 'monthly';
+  return `Illustrative discount: ${pct}% of the ${premium} premium`;
+}
+
 export function benefitLabel(level: string): string {
   if (level === BenefitLevel.FULL) {
     return BENEFIT_FULL_LABEL;

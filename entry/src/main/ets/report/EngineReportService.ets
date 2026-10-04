@@ -4,7 +4,9 @@ import {
   engineDayDetails,
   engineDayDetailsFrom,
   enginePersonas,
+  engineReportFor,
   engineReportFromPerson,
+  engineReportFromPersonFor,
   engineReportOf,
   engineSession,
   engineSessionFrom,
@@ -12,9 +14,11 @@ import {
   HealthSimPerson,
   healthSimPerson,
   HesPersonas,
+  HesProfile,
   HesSession,
   PersonaRef,
-  PersonaReport
+  PersonaReport,
+  SHARE_PROFILE
 } from 'common';
 import { ReportService } from './ReportService';
 
@@ -79,6 +83,18 @@ export class EngineReportService implements ReportService {
       this.reports.set(known, report);
     }
     return report;
+  }
+
+  // The same session with the weights of another profile. The session keeps its own profile, so
+  // `report(id)` (Share, the partner, the card) is not touched.
+  reportFor(id: string, profile: HesProfile): PersonaReport {
+    if (profile === SHARE_PROFILE) {
+      return this.report(id);
+    }
+    const known: string = this.known(id);
+    const person = this.person(known);
+    return person === null ? engineReportFor(known, this.session(known), profile) :
+      engineReportFromPersonFor(person, this.session(known), profile);
   }
 
   liveSet(id: string, hr: number, steps: number): void {

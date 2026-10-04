@@ -12,9 +12,11 @@ import {
   FW_TAB_REPORT,
   hasScore,
   HealthStatus,
+  HesProfile,
   metricSpoken,
   periodDayIso,
   PersonaReport,
+  profileNote,
   ReportTier,
   SCORE_TO,
   scoreSpoken,
@@ -28,11 +30,15 @@ import { KEY_TAB } from '../nav/EntryRouter';
 import {
   DEFAULT_PERSONA_ID,
   KEY_PERSONA,
+  KEY_REPORT_PROFILE,
   KEY_REPORT_REVISION,
+  NO_PROFILE_CHOICE,
+  profileOf,
   reportService,
   reportsFromHealthSim,
   reportSourceLabel,
-  selectedReport
+  selectedProfileReport,
+  selectProfile
 } from '../report/ServiceLocator';
 import {
   countUnit,
@@ -83,6 +89,7 @@ import { StatusPill } from '../ui/kit/StatusPill';
 import { TextLink } from '../ui/kit/TextLink';
 import { TierBadge } from '../ui/kit/TierBadge';
 import { DemoLiveCard } from './DemoLiveCard';
+import { ProfileSwitch } from './ProfileSwitch';
 import { CAPTION, CARD_LARGE, HEADING, statusDotColor } from './Styles';
 
 const CARD_GAP: number = 14;
@@ -216,14 +223,21 @@ export struct ReportView {
   @StorageProp(KEY_STATUS) status: string = HealthStatus.NOT_AUTHORIZED;
   @StorageProp(KEY_PERSONA) @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
+  @StorageProp(KEY_REPORT_PROFILE) @Watch('reload') profileChoice: string = NO_PROFILE_CHOICE;
   @StorageLink(KEY_TAB) tab: number = FW_TAB_REPORT;
-  @State report: PersonaReport = selectedReport();
+  @State report: PersonaReport = selectedProfileReport();
   private preview: boolean = reportService().isPreview();
   private scroller: Scroller = new Scroller();
 
-  // Another persona (or new live readings): take the report again and show it from the top.
+  // The profile on screen: the one chosen for this persona, health insurance for any other persona.
+  private profile(): HesProfile {
+    return profileOf(this.profileChoice, this.personaId);
+  }
+
+  // Another persona (or new live readings, or another profile): take the report again; a new persona is
+  // shown from the top.
   reload(): void {
-    const next: PersonaReport = reportService().report(this.personaId);
+    const next: PersonaReport = reportService().reportFor(this.personaId, this.profile());
     if (next.id !== this.report.id) {
       this.scroller.scrollEdge(Edge.Top);
     }
@@ -278,6 +292,18 @@ export struct ReportView {
       .padding({ left: 4, right: 4 })
       .alignItems(VerticalAlign.Center)
     }
+  }
+
+  // Under the score card: the product the score is calculated for, and this month's discount for it.
+  @Builder
+  profileSwitch() {
+    ProfileSwitch({
+      selected: profileOf(this.profileChoice, this.personaId),
+      note: profileNote(this.report),
+      onPick: (profile: HesProfile) => {
+        selectProfile(profile);
+      }
+    })
   }
 
   @Builder
@@ -559,6 +585,7 @@ export struct ReportView {
         this.sourceRows()
         if (hasScore(this.report)) {
           this.scoreCard()
+          this.profileSwitch()
           this.previewLine()
           this.wearCard()
           this.tiles()
@@ -568,6 +595,7 @@ export struct ReportView {
             .padding({ left: 4, right: 4 })
         } else {
           this.noScoreCard()
+          this.profileSwitch()
           this.previewLine()
           this.unlockCard()
           DemoLiveCard({ hr: this.report.live.hr, steps: this.report.live.steps, personaId: this.report.id })

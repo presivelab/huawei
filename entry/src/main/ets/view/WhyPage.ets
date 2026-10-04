@@ -1,7 +1,9 @@
 import {
   ComponentRow,
   hasScore,
+  hesProfileLabel,
   PersonaReport,
+  profileFromChoice,
   scoreEvidence,
   ScoreEvidence,
   whySections,
@@ -32,9 +34,11 @@ import {
 import {
   DEFAULT_PERSONA_ID,
   KEY_PERSONA,
+  KEY_REPORT_PROFILE,
   KEY_REPORT_REVISION,
+  NO_PROFILE_CHOICE,
   reportService,
-  selectedReport
+  selectedProfileReport
 } from '../report/ServiceLocator';
 import { CountBar } from '../ui/kit/CountBar';
 import {
@@ -60,11 +64,18 @@ const SCORE_TOP: number = 100;
 export struct WhyPage {
   @StorageProp(KEY_PERSONA) @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
-  @State report: PersonaReport = selectedReport();
+  @StorageProp(KEY_REPORT_PROFILE) @Watch('reload') profileChoice: string = NO_PROFILE_CHOICE;
+  @State report: PersonaReport = selectedProfileReport();
   @State howOpen: boolean = false;
 
+  // The page explains the score the Report tab shows, so it follows the profile chosen there.
   reload(): void {
-    this.report = reportService().report(this.personaId);
+    this.report = reportService().reportFor(this.personaId, profileFromChoice(this.profileChoice, this.personaId));
+  }
+
+  // "Weights for health insurance": which product's weights the lists below use.
+  private profileLine(): string {
+    return 'Weights for ' + hesProfileLabel(profileFromChoice(this.profileChoice, this.personaId)).toLowerCase();
   }
 
   private sections(): WhySections {
@@ -382,6 +393,10 @@ export struct WhyPage {
         Column({ space: CARD_GAP }) {
           if (hasScore(this.report)) {
             this.headerCard()
+            Text(this.profileLine())
+              .attributeModifier(CAPTION)
+              .padding({ left: 4, right: 4 })
+              .id('fw_why_profile')
             this.scoredSection(WHY_STRONGEST, false, 'fw_why_strongest')
             this.scoredSection(WHY_IMPROVE, true, 'fw_why_improve')
             this.whatIfCard()

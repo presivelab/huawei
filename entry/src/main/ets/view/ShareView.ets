@@ -7,6 +7,7 @@ import {
   logTimeText,
   PersonaReport,
   ShareOffer,
+  shareProfileLine,
   shareOffer,
   tokenLengthLine
 } from 'common';
@@ -153,6 +154,9 @@ export struct ShareView {
             .fontColor($r('sys.color.font_primary'))
             .id('fw_share_tier_line')
           Text(PERIOD_PREFIX + claimPeriodText(this.offer().periodIso)).attributeModifier(CAPTION)
+          Text(shareProfileLine())
+            .attributeModifier(CAPTION)
+            .id('fw_share_profile')
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)

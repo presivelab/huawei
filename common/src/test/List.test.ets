@@ -14,6 +14,7 @@ import hesFuzzTest from './HesFuzz.test';
 import wearMonthTest from './WearMonth.test';
 import reportTest from './Report.test';
 import engineReportsTest from './EngineReports.test';
+import profileReportsTest from './ProfileReports.test';
 import tourContentTest from './TourContent.test';
 import evidenceCalendarTest from './EvidenceCalendar.test';
 import whySectionsTest from './WhySections.test';
@@ -36,6 +37,7 @@ export default function testsuite() {
   wearMonthTest();
   reportTest();
   engineReportsTest();
+  profileReportsTest();
   tourContentTest();
   evidenceCalendarTest();
   whySectionsTest();

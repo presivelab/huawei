@@ -1,4 +1,4 @@
-import { DayDetail, LiveNow, PersonaRef, PersonaReport, previewPersonas, previewReport } from 'common';
+import { DayDetail, HesProfile, LiveNow, PersonaRef, PersonaReport, previewPersonas, previewReport } from 'common';
 
 /*
  * Where the phone screens get the monthly report from. Two implementations: the scoring engine
@@ -9,8 +9,14 @@ export interface ReportService {
   /** The personas the demo switcher lists. */
   personas(): PersonaRef[];
 
-  /** The report of one persona; an unknown id gives the default persona. */
+  /** The report of one persona; an unknown id gives the default persona. Always for health insurance. */
   report(id: string): PersonaReport;
+
+  /**
+   * The same report with the weights of `profile`, on the same completed days. For the Report tab and
+   * "Why this tier" only: Share, the partner, the home-screen card and speech use `report(id)`.
+   */
+  reportFor(id: string, profile: HesProfile): PersonaReport;
 
   /** Sets the live readings of the running day for one persona (demo controls). Shown, never scored. */
   liveSet(id: string, hr: number, steps: number): void;
@@ -66,6 +72,11 @@ export class PreviewReportService implements ReportService {
       whatIf: base.whatIf
     };
     return copy;
+  }
+
+  // The preview is fixed: it has one set of results, whatever the profile.
+  reportFor(id: string, profile: HesProfile): PersonaReport {
+    return this.report(id);
   }
 
   liveSet(id: string, hr: number, steps: number): void {
