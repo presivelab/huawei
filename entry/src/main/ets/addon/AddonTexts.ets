@@ -5,6 +5,10 @@ import { HealthScope, healthSourceLabel, HealthStatus } from 'common';
 export const ROUTE_PLATFORM_CONSENT: string = 'consent-platform';
 export const ROUTE_DATA_CONSENT: string = 'consent-data';
 export const ROUTE_SETTINGS: string = 'settings';
+export const ROUTE_VERIFICATION: string = 'verification-details';
+
+export const VERIFICATION_LABEL: string = 'Verification details';
+export const VERIFICATION_HINT: string = 'Watch key, sequence numbers, chain and sync log';
 
 export const BRAND: string = 'HUAWEI Health';
 export const CONNECT_LABEL: string = 'Connect HUAWEI Health';

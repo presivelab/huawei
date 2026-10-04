@@ -5,8 +5,11 @@ import {
   NO_RECORDS_VALUE,
   NO_SCORE_SENTENCE,
   NO_SCORE_TITLE,
+  ROUTE_VERIFICATION,
   scopeLabel,
-  signalsHeading
+  signalsHeading,
+  VERIFICATION_HINT,
+  VERIFICATION_LABEL
 } from '../addon/AddonTexts';
 import { DataSourceCard, SourceStatusLine } from './SourceParts';
 import { WatchDaysCard, WatchLinkCard } from './WatchLinkCard';
@@ -41,6 +44,7 @@ struct ValueRow {
 // Until HES-Lite is part of the build the tier, score and coverage are "—", never a number.
 @Component
 export struct DashboardView {
+  @Consume('fwNav') nav: NavPathStack;
   @StorageProp(KEY_STATUS) status: string = HealthStatus.NOT_AUTHORIZED;
   @StorageProp(KEY_REVISION) revision: number = 0;
 
@@ -111,6 +115,19 @@ export struct DashboardView {
         WatchLinkCard()
 
         WatchDaysCard()
+
+        // Everything technical about the watch link sits behind this one button.
+        Column({ space: 8 }) {
+          Button(VERIFICATION_LABEL)
+            .buttonStyle(ButtonStyleMode.NORMAL)
+            .width('100%')
+            .id('fw_link_details')
+            .onClick(() => {
+              this.nav.pushPathByName(ROUTE_VERIFICATION, null);
+            })
+          Text(VERIFICATION_HINT).attributeModifier(CAPTION)
+        }
+        .width('100%')
       }
       .alignItems(HorizontalAlign.Start)
       .padding({

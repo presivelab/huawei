@@ -1,102 +1,226 @@
-import { BreakContext, PhoneLinkView, SyncLogEntry, WatchDayFacts } from 'common';
+import {
+  BreakContext,
+  breakText,
+  DAY_NOT_RECEIVED,
+  dayOfMonth,
+  dayTitle,
+  demoDayLabel,
+  durationParts,
+  durationText,
+  isVerifiedDay,
+  lastSyncText,
+  listedWearParts,
+  missingSummary,
+  NOT_SYNCED,
+  observedMinutes,
+  PhoneLinkView,
+  stripDays,
+  verifiedDayCount,
+  verifiedSummary,
+  WatchDayFacts,
+  WearPart,
+  weekdayShort
+} from 'common';
+import { DayStrip, DayStripItem } from '../ui/kit/DayStrip';
+import { EmptyState } from '../ui/kit/EmptyState';
+import { SYMBOL_STEPS, SYMBOL_VERIFIED, SYMBOL_WATCH, wearColor } from '../ui/kit/KitTokens';
+import { RingStat } from '../ui/kit/RingStat';
+import { SectionCard } from '../ui/kit/SectionCard';
+import { StatusPill } from '../ui/kit/StatusPill';
+import { ValueUnit, ValueWithUnit } from '../ui/kit/ValueWithUnit';
+import { WearBar, WearLegend } from '../ui/kit/WearBar';
 import { KEY_LINK_REVISION, WatchLinkService } from '../watchlink/WatchLinkService';
-import { BODY, BODY_SECONDARY, CAPTION, CARD, LABEL, TITLE } from './Styles';
+import { CAPTION } from './Styles';
 
-const CLOCK_REAL = 'REAL';
-const LOG_LINES = 4;
+const LINKED: string = 'Linked';
+const NOT_LINKED: string = 'Not linked';
+const PAIR_WAITING: string = 'Waiting for you';
+const VERIFIED: string = 'Verified';
+const MISSING: string = 'Missing';
+const NOT_LINKED_SENTENCE: string = 'No watch linked. On the watch, open FairWear and choose Pair phone.';
+const LINKED_NO_DAYS_SENTENCE: string = 'Watch linked. Its first day appears after the watch closes it and syncs.';
+const NO_DAYS_SENTENCE: string = 'No day received yet.';
+const LINK_EXPLAINED: string =
+  'The watch signs one summary per day. This phone checks every signature, so a day cannot be edited or ' +
+    'removed without it showing.';
+const NOTHING_OBSERVED: string = 'The watch recorded nothing on this day.';
+const MISSING_EXPLAINED: string =
+  'The watch closed this day, but it never reached this phone. It is shown as missing, not as zero.';
 
-function hoursText(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h} h ${m < 10 ? '0' : ''}${m} min`;
-}
-
-function clockText(minuteOfDay: number): string {
-  const total = ((minuteOfDay % 1440) + 1440) % 1440;
-  const h = Math.floor(total / 60);
-  const m = total % 60;
-  return `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}`;
-}
-
-function logText(entry: SyncLogEntry): string {
-  const head = entry.seq > 0 ? `#${entry.seq} · ` : '';
-  return entry.note.length > 0 ? `${head}${entry.message} · ${entry.note}` : `${head}${entry.message}`;
-}
-
-@Component
-struct LinkRow {
-  @Prop label: string = '';
-  @Prop value: string = '';
-
-  build() {
-    Row() {
-      Text(this.label).attributeModifier(BODY).layoutWeight(1)
-      Text(this.value).attributeModifier(BODY_SECONDARY)
-    }
-    .width('100%')
-    .constraintSize({ minHeight: 36 })
+// A duration as the value-and-unit pairs the kit draws: "19 h 20 min", "24 h", "35 min".
+function durationValue(minutes: number): ValueUnit {
+  const d = durationParts(minutes);
+  if (d.hours.length > 0) {
+    return { value: d.hours, unit: 'h', extraValue: d.minutes, extraUnit: d.minutes.length > 0 ? 'min' : '' };
   }
+  return { value: d.minutes, unit: 'min' };
 }
 
-// Watch link: the paired watch, the state of its chain of signed day packets, and the last sync messages.
+// 12480 -> "12,480".
+function grouped(n: number): string {
+  let text = `${Math.floor(n)}`;
+  let out = '';
+  while (text.length > 3) {
+    out = `,${text.substring(text.length - 3)}${out}`;
+    text = text.substring(0, text.length - 3);
+  }
+  return text + out;
+}
+
+function spokenDay(day: WatchDayFacts): string {
+  const parts = listedWearParts(day);
+  const words: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    words.push(`${parts[i].label} ${durationText(parts[i].minutes)}`);
+  }
+  return `${dayTitle(day.date)}: ${words.join(', ')}`;
+}
+
+function stripItems(daysNewestFirst: WatchDayFacts[]): DayStripItem[] {
+  const days = stripDays(daysNewestFirst);
+  const out: DayStripItem[] = [];
+  for (let i = 0; i < days.length; i++) {
+    const day = days[i];
+    const item = new DayStripItem();
+    item.key = `${day.seq}|${day.received}`;
+    if (day.received) {
+      item.top = weekdayShort(day.date);
+      item.bottom = dayOfMonth(day.date);
+      item.spoken = spokenDay(day);
+      item.worn = day.wornMin;
+      item.charging = day.chargingMin;
+      item.off = day.offMin;
+      item.unobserved = day.notObservedMin;
+    } else {
+      item.missing = true;
+      item.top = MISSING;
+      item.spoken = DAY_NOT_RECEIVED;
+    }
+    out.push(item);
+  }
+  return out;
+}
+
+// Watch link: is a watch linked, when did it last sync, and how many of its days were verified.
+// Keys, sequence numbers, the chain and the sync log are on "Verification details".
 @Component
 export struct WatchLinkCard {
   @StorageProp(KEY_LINK_REVISION) revision: number = 0;
+  private daysRevision: number = -1;
+  private daysCache: WatchDayFacts[] = [];
 
   // `revision` is a parameter so the card is rebuilt whenever the service state changes.
   private state(revision: number): PhoneLinkView {
     return WatchLinkService.shared().view();
   }
 
-  private recentLog(revision: number): SyncLogEntry[] {
-    return WatchLinkService.shared().view().log.slice(0, LOG_LINES);
+  // The days are read from files, so one read serves a whole build.
+  private days(revision: number): WatchDayFacts[] {
+    if (this.daysRevision !== revision) {
+      this.daysCache = WatchLinkService.shared().days();
+      this.daysRevision = revision;
+    }
+    return this.daysCache;
   }
 
-  private lastDay(view: PhoneLinkView): string {
-    return view.lastSeq > 0 ? `${view.lastDate} · #${view.lastSeq}` : 'none yet';
+  private verified(revision: number): number {
+    return verifiedDayCount(this.days(revision));
+  }
+
+  private pillText(view: PhoneLinkView): string {
+    if (view.paired) {
+      return LINKED;
+    }
+    return view.pendingPairKid.length > 0 ? PAIR_WAITING : NOT_LINKED;
+  }
+
+  private pillColor(view: PhoneLinkView): Resource {
+    if (view.paired) {
+      return $r('sys.color.confirm');
+    }
+    return view.pendingPairKid.length > 0 ? $r('sys.color.brand') : $r('sys.color.font_tertiary');
+  }
+
+  private syncLine(view: PhoneLinkView): string {
+    const text = lastSyncText(view.log, Date.now());
+    return text === NOT_SYNCED ? text : `Last synced: ${text}`;
   }
 
   build() {
-    Column({ space: 4 }) {
-      Text('Watch link').attributeModifier(TITLE)
-      Text(this.state(this.revision).pairLine)
-        .attributeModifier(BODY)
-        .id('fw_link_pair')
-
+    SectionCard({
+      title: 'Watch link',
+      status: this.pillText(this.state(this.revision)),
+      statusColor: this.pillColor(this.state(this.revision)),
+      statusId: 'fw_link_pair'
+    }) {
       if (this.state(this.revision).pendingPairKid.length > 0) {
         Column({ space: 8 }) {
           Text(`Pair watch ${this.state(this.revision).pendingPairKid}?`)
-            .attributeModifier(TITLE)
+            .fontSize($r('sys.float.Subtitle_M'))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('sys.color.font_primary'))
             .id('fw_link_pair_prompt')
           Text('Confirm only if the watch shows the same code.').attributeModifier(CAPTION)
           Row({ space: 12 }) {
             Button('Confirm')
+              .layoutWeight(1)
               .id('fw_link_confirm')
               .onClick(() => {
                 WatchLinkService.shared().confirmPair();
               })
             Button('Not now')
               .buttonStyle(ButtonStyleMode.NORMAL)
+              .layoutWeight(1)
               .onClick(() => {
                 WatchLinkService.shared().declinePair();
               })
           }
+          .width('100%')
+          .margin({ top: 4 })
         }
+        .width('100%')
         .alignItems(HorizontalAlign.Start)
-        .margin({ top: 4, bottom: 4 })
+        .padding(12)
+        .backgroundColor($r('sys.color.comp_background_tertiary'))
+        .borderRadius($r('sys.float.corner_radius_level6'))
       }
 
-      if (this.state(this.revision).paired) {
-        Divider().color($r('sys.color.comp_divider')).margin({ top: 4, bottom: 4 })
-        LinkRow({ label: 'Last received day', value: this.lastDay(this.state(this.revision)) })
-        if (this.state(this.revision).chainLine.length > 0) {
-          LinkRow({ label: 'Chain', value: this.state(this.revision).chainLine })
+      if (!this.state(this.revision).paired) {
+        EmptyState({ symbol: SYMBOL_WATCH, sentence: NOT_LINKED_SENTENCE })
+      } else if (this.days(this.revision).length === 0) {
+        EmptyState({ symbol: SYMBOL_WATCH, sentence: LINKED_NO_DAYS_SENTENCE })
+      } else {
+        Row({ space: 16 }) {
+          RingStat({
+            value: this.verified(this.revision),
+            total: this.days(this.revision).length,
+            valueText: `${this.verified(this.revision)}`,
+            unit: this.verified(this.revision) === 1 ? 'day' : 'days'
+          })
+          Column({ space: 4 }) {
+            Text(verifiedSummary(this.verified(this.revision), this.days(this.revision).length))
+              .fontSize($r('sys.float.Subtitle_M'))
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('sys.color.font_primary'))
+            Text(this.syncLine(this.state(this.revision)))
+              .fontSize($r('sys.float.Body_M'))
+              .fontColor($r('sys.color.font_secondary'))
+            if (this.state(this.revision).missingCount > 0) {
+              Text(missingSummary(this.state(this.revision).missingCount))
+                .fontSize($r('sys.float.Body_M'))
+                .fontColor($r('sys.color.warning'))
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
         }
-        LinkRow({ label: 'Transport', value: this.state(this.revision).transport })
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
       }
 
       Row({ space: 12 }) {
         Button('Sync now')
+          .layoutWeight(1)
           .id('fw_link_sync')
           .onClick(() => {
             WatchLinkService.shared().syncNow();
@@ -104,80 +228,133 @@ export struct WatchLinkCard {
         if (this.state(this.revision).paired) {
           Button('Forget watch')
             .buttonStyle(ButtonStyleMode.NORMAL)
+            .layoutWeight(1)
             .id('fw_link_forget')
             .onClick(() => {
               WatchLinkService.shared().forget();
             })
         }
       }
-      .margin({ top: 8 })
+      .width('100%')
 
-      if (this.recentLog(this.revision).length > 0) {
-        Text('Last sync').attributeModifier(LABEL).margin({ top: 8 })
-        ForEach(this.recentLog(this.revision), (entry: SyncLogEntry) => {
-          Text(logText(entry)).attributeModifier(CAPTION)
-        }, (entry: SyncLogEntry, index: number) => `${index}|${entry.atMs}|${entry.seq}|${entry.message}`)
-      }
-
-      Text('The watch records what its sensors saw and signs one summary per day. This phone checks the ' +
-        'signature and the chain, so a day cannot be removed or edited without it showing.')
-        .attributeModifier(CAPTION)
-        .margin({ top: 8 })
+      Text(LINK_EXPLAINED).attributeModifier(CAPTION)
     }
-    .attributeModifier(CARD)
   }
 }
 
-// Days received from the watch, newest first: what the watch measured, where it came from, nothing judged.
+// Days received from the watch: a strip of the last seven, then one row per day, newest first, with the
+// day as a bar and the hours in each state. What the watch measured; nothing is judged here.
 @Component
 export struct WatchDaysCard {
   @StorageProp(KEY_LINK_REVISION) revision: number = 0;
+  private daysRevision: number = -1;
+  private daysCache: WatchDayFacts[] = [];
 
   private days(revision: number): WatchDayFacts[] {
-    return WatchLinkService.shared().days();
+    if (this.daysRevision !== revision) {
+      this.daysCache = WatchLinkService.shared().days();
+      this.daysRevision = revision;
+    }
+    return this.daysCache;
   }
 
   @Builder
-  dayRows(day: WatchDayFacts) {
-    Column({ space: 2 }) {
+  partItem(part: WearPart) {
+    Row({ space: 4 }) {
+      Circle()
+        .width(8)
+        .height(8)
+        .fill(wearColor(part.state))
+      Text(part.label)
+        .fontSize($r('sys.float.Body_M'))
+        .fontColor($r('sys.color.font_secondary'))
+      ValueWithUnit(durationValue(part.minutes))
+    }
+    .alignItems(VerticalAlign.Center)
+    .margin({ right: 16, bottom: 4 })
+  }
+
+  @Builder
+  dayRow(day: WatchDayFacts) {
+    Column({ space: 8 }) {
+      Row({ space: 8 }) {
+        Text(day.received ? dayTitle(day.date) : DAY_NOT_RECEIVED)
+          .fontSize($r('sys.float.Body_L'))
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('sys.color.font_primary'))
+          .layoutWeight(1)
+        if (isVerifiedDay(day)) {
+          StatusPill({ text: VERIFIED, dot: $r('sys.color.confirm'), symbol: SYMBOL_VERIFIED, compact: true })
+        } else {
+          StatusPill({ text: MISSING, dot: $r('sys.color.warning'), compact: true })
+        }
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+
       if (day.received) {
-        Text(`${day.date} · #${day.seq}`).attributeModifier(BODY)
-        Text(day.sourceLine).attributeModifier(CAPTION)
-        Text(`Worn ${hoursText(day.wornMin)} · charging ${hoursText(day.chargingMin)} · off-wrist ` +
-          `${hoursText(day.offMin)} · not observed ${hoursText(day.notObservedMin)}`)
-          .attributeModifier(CAPTION)
-        Text(`Night 00:00–06:00: worn ${hoursText(day.nightWornMin)} · steps ${day.steps}`)
-          .attributeModifier(CAPTION)
+        WearBar({
+          worn: day.wornMin,
+          charging: day.chargingMin,
+          off: day.offMin,
+          unobserved: day.notObservedMin
+        })
+        Flex({ wrap: FlexWrap.Wrap, alignItems: ItemAlign.Center }) {
+          ForEach(listedWearParts(day), (part: WearPart) => {
+            this.partItem(part)
+          }, (part: WearPart) => part.state)
+          if (day.steps > 0) {
+            Row({ space: 4 }) {
+              SymbolGlyph(SYMBOL_STEPS)
+                .fontSize(14)
+                .fontColor([$r('sys.color.icon_secondary')])
+              ValueWithUnit({ value: grouped(day.steps), unit: 'steps' })
+            }
+            .alignItems(VerticalAlign.Center)
+            .margin({ right: 16, bottom: 4 })
+          }
+        }
+        .width('100%')
+
         ForEach(day.breaks, (b: BreakContext) => {
-          Text(`Break ${b.startMin < 0 ? 'from the day before ' : ''}${clockText(b.startMin)}–` +
-            `${clockText(b.endMin)} · heart-rate slots in the 24 h before: ${b.hrSlots24hBefore}`)
-            .attributeModifier(CAPTION)
+          Text(breakText(b)).attributeModifier(CAPTION)
         }, (b: BreakContext) => `${b.startMin}|${b.endMin}`)
-        if (day.clock !== CLOCK_REAL) {
-          Text('Recorded on the watch demo clock: simulated time.')
-            .attributeModifier(CAPTION)
-            .fontColor($r('sys.color.warning'))
+        if (observedMinutes(day) === 0) {
+          Text(NOTHING_OBSERVED).attributeModifier(CAPTION)
+        }
+        if (demoDayLabel(day).length > 0) {
+          Row({ space: 4 }) {
+            Circle()
+              .width(6)
+              .height(6)
+              .fill($r('sys.color.brand'))
+            Text(demoDayLabel(day)).attributeModifier(CAPTION)
+          }
+          .alignItems(VerticalAlign.Center)
         }
       } else {
-        Text(`#${day.seq} · not received`).attributeModifier(BODY)
-        Text(day.reason).attributeModifier(CAPTION)
+        Text(MISSING_EXPLAINED).attributeModifier(CAPTION)
       }
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)
-    .padding({ top: 6, bottom: 6 })
   }
 
   build() {
-    Column({ space: 4 }) {
-      Text('Days from the watch').attributeModifier(TITLE)
+    SectionCard({ title: 'Days from the watch' }) {
       if (this.days(this.revision).length === 0) {
-        Text('No day received yet.').attributeModifier(BODY_SECONDARY)
+        EmptyState({ symbol: $r('sys.symbol.calendar'), sentence: NO_DAYS_SENTENCE })
+      } else {
+        DayStrip({ items: stripItems(this.days(this.revision)) })
+        WearLegend()
+        ForEach(this.days(this.revision), (day: WatchDayFacts) => {
+          Column({ space: 12 }) {
+            Divider().color($r('sys.color.comp_divider'))
+            this.dayRow(day)
+          }
+          .width('100%')
+        }, (day: WatchDayFacts) => `${day.seq}|${day.received}|${day.date}`)
       }
-      ForEach(this.days(this.revision), (day: WatchDayFacts) => {
-        this.dayRows(day)
-      }, (day: WatchDayFacts) => `${day.seq}|${day.received}|${day.date}`)
     }
-    .attributeModifier(CARD)
   }
 }

@@ -1,13 +1,19 @@
 import { SymbolGlyphModifier } from '@kit.ArkUI';
 import { FwTarget, HealthStatus } from 'common';
 import { AddonSession, KEY_REVISION, KEY_STATUS } from '../addon/AddonSession';
-import { ROUTE_DATA_CONSENT, ROUTE_PLATFORM_CONSENT, ROUTE_SETTINGS } from '../addon/AddonTexts';
+import {
+  ROUTE_DATA_CONSENT,
+  ROUTE_PLATFORM_CONSENT,
+  ROUTE_SETTINGS,
+  ROUTE_VERIFICATION
+} from '../addon/AddonTexts';
 import { syncCard } from '../nav/CardSync';
 import { KEY_ENTRY_TARGET, KEY_ENTRY_TARGET_SEQ, openTarget } from '../nav/EntryRouter';
 import { DashboardView } from '../view/DashboardView';
 import { DataConsentPage } from '../view/DataConsentPage';
 import { PlatformConsentPage } from '../view/PlatformConsentPage';
 import { SettingsPage } from '../view/SettingsPage';
+import { VerificationDetailsPage } from '../view/VerificationDetailsPage';
 import { WelcomeView } from '../view/WelcomeView';
 
 // The single start page of FairWear on the phone. Every screen of the add-on is reached from here.
@@ -45,6 +51,8 @@ struct Index {
       DataConsentPage()
     } else if (name === ROUTE_SETTINGS) {
       SettingsPage()
+    } else if (name === ROUTE_VERIFICATION) {
+      VerificationDetailsPage()
     }
   }
 
