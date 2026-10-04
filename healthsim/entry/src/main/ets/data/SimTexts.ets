@@ -4,6 +4,7 @@ export const APP_TITLE: string = 'Health Sim';
 export const BANNER: string = 'SIMULATED DATA · stands in for HUAWEI Health';
 
 export const TAB_HEALTH: string = 'Health';
+export const TAB_HISTORY: string = 'History';
 export const TAB_ME: string = 'Me';
 
 export const PERSON_LABEL: string = 'Demo person';
@@ -11,23 +12,38 @@ export const PERSON_NOTE: string =
   'Only in this demo: choose whose simulated days Health Sim shows.';
 export const ACTIVITY_TITLE: string = 'Activity records';
 export const HEALTH_NOTE: string =
-  'The newest completed day of this person in the simulation. — means not measured; it is never shown as zero.';
-export const HISTORY_TITLE: string = 'Last 30 days';
+  'Today is the running day of this person in the simulation. — means not measured; it is never shown as zero.';
+export const HISTORY_TITLE: string = 'Completed days';
 export const HISTORY_NOTE: string = '— means not measured that day. It is never shown as zero.';
 export const BACK: string = 'Back';
 
 export const LABEL_STEPS: string = 'Steps';
 export const LABEL_EXERCISE: string = 'Exercise';
 export const LABEL_HEART: string = 'Heart rate';
+export const LABEL_RESTING: string = 'Resting heart rate';
 export const LABEL_SLEEP: string = 'Sleep';
 export const LABEL_VO2MAX: string = 'VO₂max';
 export const LABEL_HRV: string = 'HRV';
-export const SUB_HEART: string = 'Resting';
+export const SUB_HEART: string = 'Live';
 export const SUB_SLEEP: string = 'Last night';
 export const SUB_STEPS: string = 'Day total';
 export const SUB_EXERCISE: string = 'Moderate + vigorous';
 export const SUB_FITNESS: string = 'Newest day';
+export const SUB_RESTING: string = 'Resting';
 
+export const HISTORY_SCREEN_TITLE: string = 'History';
+export const HISTORY_DAYS_TITLE: string = 'Completed days';
+export const HISTORY_DAYS_NOTE: string =
+  'Newest first. — means not measured that day; it is never shown as zero.';
+export const CRF_TITLE: string = 'VO₂max estimates';
+export const HRR_TITLE: string = 'Heart-rate recovery tests';
+export const CRF_EMPTY: string = 'No VO₂max estimates for this person.';
+export const HRR_EMPTY: string = 'No heart-rate recovery tests for this person.';
+export const SCENARIO_TITLE: string = 'Scenario';
+export const SCENARIO_TAG: string = 'Developer tool';
+export const SCENARIO_NOTE: string =
+  'For whoever runs the simulator: pick a person above and see what the history of that person gives FairWear. ' +
+    'Nothing here is part of the app a user sees.';
 export const APPS_TITLE: string = 'Connected apps';
 export const FAIRWEAR_NAME: string = 'FairWear';
 export const FAIRWEAR_LINE: string = 'Signed tier for your partner';

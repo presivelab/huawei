@@ -2,6 +2,7 @@ import {
   METRIC_EXERCISE,
   METRIC_HEART,
   METRIC_HRV,
+  METRIC_RESTING,
   METRIC_SLEEP,
   METRIC_STEPS,
   METRIC_VO2MAX
@@ -10,12 +11,14 @@ import {
   LABEL_EXERCISE,
   LABEL_HEART,
   LABEL_HRV,
+  LABEL_RESTING,
   LABEL_SLEEP,
   LABEL_STEPS,
   LABEL_VO2MAX,
   SUB_EXERCISE,
   SUB_FITNESS,
   SUB_HEART,
+  SUB_RESTING,
   SUB_SLEEP,
   SUB_STEPS
 } from '../data/SimTexts';
@@ -32,7 +35,7 @@ export function metricColor(metric: string): Resource {
   if (metric === METRIC_EXERCISE) {
     return $r('app.color.hs_metric_exercise');
   }
-  if (metric === METRIC_HEART) {
+  if (metric === METRIC_HEART || metric === METRIC_RESTING) {
     return $r('app.color.hs_metric_heart');
   }
   if (metric === METRIC_SLEEP) {
@@ -48,7 +51,7 @@ export function metricSymbol(metric: string): Resource {
   if (metric === METRIC_EXERCISE) {
     return $r('sys.symbol.flame');
   }
-  if (metric === METRIC_HEART) {
+  if (metric === METRIC_HEART || metric === METRIC_RESTING) {
     return $r('sys.symbol.heart');
   }
   if (metric === METRIC_SLEEP) {
@@ -66,6 +69,9 @@ export function metricSymbol(metric: string): Resource {
 export function metricLabel(metric: string): string {
   if (metric === METRIC_EXERCISE) {
     return LABEL_EXERCISE;
+  }
+  if (metric === METRIC_RESTING) {
+    return LABEL_RESTING;
   }
   if (metric === METRIC_HEART) {
     return LABEL_HEART;
@@ -86,6 +92,9 @@ export function metricLabel(metric: string): string {
 export function metricSub(metric: string): string {
   if (metric === METRIC_EXERCISE) {
     return SUB_EXERCISE;
+  }
+  if (metric === METRIC_RESTING) {
+    return SUB_RESTING;
   }
   if (metric === METRIC_HEART) {
     return SUB_HEART;

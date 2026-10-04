@@ -1,5 +1,4 @@
 import {
-  HISTORY_DAYS,
   METRIC_STEPS,
   metricUnit,
   NO_VALUE,
@@ -130,7 +129,7 @@ struct MetricPage {
           .attributeModifier(CARD)
           .id('hs_history')
 
-          Text(`${HISTORY_NOTE} ${HISTORY_DAYS} days are kept.`)
+          Text(`${HISTORY_NOTE} ${this.rows.length} entries.`)
             .fontSize($r('sys.float.Body_S'))
             .fontColor($r('sys.color.font_secondary'))
             .padding({ left: 4, right: 4 })

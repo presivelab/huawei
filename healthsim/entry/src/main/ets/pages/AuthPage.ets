@@ -1,11 +1,13 @@
 import { common } from '@kit.AbilityKit';
-import { ALL_HEALTH_SCOPES, HealthScope } from '../fw/health/HealthConnection';
 import {
+  ALL_HEALTH_SCOPES,
   encodeHealthSimPayload,
   HEALTH_SIM_PARAM,
+  HealthScope,
   healthSimPayloadFromPersonas,
+  HES_PERSONA_TODAY,
   withScopes
-} from '../fw/health/HealthSimPayload';
+} from 'common';
 import { scopeLabel, scopeOf } from '../data/SimData';
 import {
   AUTH_ALLOW,
@@ -93,8 +95,9 @@ struct AuthPage {
     const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
     const parameters: Record<string, Object> = {};
     if (allow) {
-      parameters[HEALTH_SIM_PARAM] =
-        encodeHealthSimPayload(withScopes(healthSimPayloadFromPersonas(), this.allowedScopes()));
+      // The clock is read here, in the UI layer; the payload builder in common takes it as an argument.
+      const payload = healthSimPayloadFromPersonas(HES_PERSONA_TODAY, new Date().toISOString());
+      parameters[HEALTH_SIM_PARAM] = encodeHealthSimPayload(withScopes(payload, this.allowedScopes()));
     }
     try {
       context.terminateSelfWithResult({

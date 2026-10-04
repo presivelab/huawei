@@ -23,5 +23,7 @@ node_modules/
 watch/src/main/resources/rawfile/local.json
 entry/src/main/resources/rawfile/local.json
 _relay/
-healthsim/tools/logic-tests/src/
-healthsim/tools/logic-tests/out/
+# Health Sim takes the shared logic as a HAR built by tools/sync-common-har.sh
+healthsim/libs/*.har
+# Their lock files carry the hash of that HAR, which changes with every build
+healthsim/*/oh-package-lock.json5

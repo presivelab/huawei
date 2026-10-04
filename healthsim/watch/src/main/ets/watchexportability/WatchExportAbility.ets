@@ -8,7 +8,7 @@ import { AbilityConstant, common, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { BUILT_IN_SCRIPT, encodeWatchScript, HEALTH_SIM_WATCH_PARAM } from '../fw/watchlink/DemoFeed';
+import { BUILT_IN_SCRIPT, encodeWatchScript, HEALTH_SIM_WATCH_PARAM } from 'common';
 
 const DOMAIN: number = 0x0000;
 const TAG: string = 'HealthSimWatch';

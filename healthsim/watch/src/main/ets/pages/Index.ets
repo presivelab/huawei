@@ -5,7 +5,7 @@
  *      and off-wrist time.
  * Nothing here is measured. FairWear on this watch asks WatchExportAbility for the same script.
  */
-import { BUILT_IN_SCRIPT, FeedStretch, MINUTES_PER_DAY } from '../fw/watchlink/DemoFeed';
+import { BUILT_IN_SCRIPT, FeedStretch, FEED_MINUTES_PER_DAY as MINUTES_PER_DAY } from 'common';
 import {
   arcsOf,
   DayArc,

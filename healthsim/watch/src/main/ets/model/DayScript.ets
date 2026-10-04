@@ -3,7 +3,7 @@
 // The script itself is FairWear's (fw/watchlink/DemoFeed.ets, an unchanged copy): this file only reads it.
 // A stretch on the charger is "charging", a stretch with a heart rate is "worn", anything else is
 // "off wrist". The same reading FairWear's wear rule makes of the scripted values.
-import { FeedStretch, MINUTES_PER_DAY } from '../fw/watchlink/DemoFeed';
+import { FeedStretch, FEED_MINUTES_PER_DAY as MINUTES_PER_DAY } from 'common';
 
 export const KIND_WORN: string = 'W';
 export const KIND_CHARGING: string = 'C';

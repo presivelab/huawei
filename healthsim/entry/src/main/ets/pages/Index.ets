@@ -1,11 +1,12 @@
+import { hesThousands } from 'common';
 import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI';
 import { common, Want } from '@kit.AbilityKit';
 import {
   EXERCISE_GOAL_MIN,
-  grouped,
   METRIC_EXERCISE,
   METRIC_HEART,
   METRIC_HRV,
+  METRIC_RESTING,
   METRIC_SLEEP,
   METRIC_STEPS,
   METRIC_VO2MAX,
@@ -13,11 +14,11 @@ import {
   NO_VALUE,
   simActivity,
   SimActivity,
-  simMetricToday,
+  simCard,
+  SimCard,
   simPeople,
   SimPerson,
   simPersonName,
-  simRecentBars,
   STEPS_GOAL
 } from '../data/SimData';
 import {
@@ -38,42 +39,39 @@ import {
   OPEN_FAIRWEAR,
   PERSON_LABEL,
   PERSON_NOTE,
+  SCENARIO_NOTE,
+  SCENARIO_TAG,
+  SCENARIO_TITLE,
   TAB_HEALTH,
+  TAB_HISTORY,
   TAB_ME
 } from '../data/SimTexts';
 import { CARD, SimBanner } from '../ui/SimBanner';
-import { DEFAULT_PERSON, KEY_METRIC, KEY_PERSON, metricColor, metricLabel, metricSub, metricSymbol } from '../ui/SimMetric';
+import { HistoryView } from '../ui/HistoryView';
+import { ReadinessView } from '../ui/ReadinessView';
+import { DEFAULT_PERSON, KEY_METRIC, KEY_PERSON, metricColor, metricLabel, metricSymbol } from '../ui/SimMetric';
 
 const CARD_GAP: number = 14;
 const FAIRWEAR_BUNDLE: string = 'com.fairwear.app';
-const TAB_INDEX_ME: number = 1;
+const TAB_INDEX_ME: number = 3;
 const RING_OUTER: number = 132;
 const RING_INNER: number = 92;
 const RING_STROKE: number = 14;
 const BAR_HEIGHT: number = 36;
 const BAR_MIN: number = 4;
 
-// One metric as a card of the Health tab: the newest value and the last seven days as small bars.
-interface MetricCard {
-  metric: string;
-  value: string;
-  bars: number[];
-}
-
-function cardOf(personId: string, metric: string): MetricCard {
-  return { metric: metric, value: simMetricToday(personId, metric), bars: simRecentBars(personId, metric) };
-}
-
-// The start page of Health Sim: the banner and two tabs. Health shows the newest day of the demo person
-// ("Activity records" with two rings, then one card per metric; a card opens that metric's 30 days). Me
-// holds the demo-person picker and the connected apps, where the FairWear card opens FairWear as an add-on.
+// The start page of Health Sim: the banner and four tabs. Health shows the running day of the demo person
+// ("Activity records" with two rings, then one card per metric; a card opens that metric over the completed
+// days). History lists the completed days, the VO2max estimates and the heart-rate recovery tests. Me holds
+// the demo-person picker, the Scenario tool (a developer tool) and the connected apps, where the FairWear
+// card opens FairWear as an add-on.
 @Entry
 @Component
 struct Index {
   @StorageLink(KEY_PERSON) personId: string = DEFAULT_PERSON;
-  @State activity: SimActivity | null = simActivity(DEFAULT_PERSON);
-  @State cards: MetricCard[] = [];
-  @State tiles: MetricCard[] = [];
+  @State activity: SimActivity = simActivity(DEFAULT_PERSON);
+  @State cards: SimCard[] = [];
+  @State tiles: SimCard[] = [];
   @State tab: number = 0;
   @State openError: string = '';
 
@@ -83,8 +81,9 @@ struct Index {
 
   private load(id: string): void {
     this.activity = simActivity(id);
-    this.cards = [cardOf(id, METRIC_HEART), cardOf(id, METRIC_SLEEP), cardOf(id, METRIC_STEPS)];
-    this.tiles = [cardOf(id, METRIC_VO2MAX), cardOf(id, METRIC_HRV)];
+    this.cards = [simCard(id, METRIC_HEART), simCard(id, METRIC_RESTING), simCard(id, METRIC_SLEEP),
+      simCard(id, METRIC_EXERCISE)];
+    this.tiles = [simCard(id, METRIC_VO2MAX), simCard(id, METRIC_HRV)];
   }
 
   private pick(id: string): void {
@@ -161,7 +160,7 @@ struct Index {
           .fontWeight(600)
           .fontColor($r('sys.color.font_primary'))
           .layoutWeight(1)
-        Text(this.activity === null ? NO_VALUE : this.activity.title)
+        Text(this.activity.title)
           .fontSize($r('sys.float.Body_S'))
           .fontColor($r('sys.color.font_secondary'))
           .id('hs_today_date')
@@ -172,7 +171,7 @@ struct Index {
       Row({ space: 20 }) {
         Stack() {
           Progress({
-            value: this.activity === null ? 0 : this.activity.stepsShare,
+            value: this.activity.stepsShare,
             total: 100,
             type: ProgressType.Ring
           })
@@ -182,7 +181,7 @@ struct Index {
             .color(metricColor(METRIC_STEPS))
             .backgroundColor($r('app.color.hs_track'))
           Progress({
-            value: this.activity === null ? 0 : this.activity.exerciseShare,
+            value: this.activity.exerciseShare,
             total: 100,
             type: ProgressType.Ring
           })
@@ -197,10 +196,9 @@ struct Index {
         .accessibilityLevel('no')
 
         Column({ space: 14 }) {
-          this.ringLine(METRIC_STEPS, LABEL_STEPS, this.activity === null ? NO_VALUE : this.activity.steps,
-            `${grouped(STEPS_GOAL)} ${metricUnit(METRIC_STEPS)}`)
-          this.ringLine(METRIC_EXERCISE, LABEL_EXERCISE,
-            this.activity === null ? NO_VALUE : this.activity.exercise,
+          this.ringLine(METRIC_STEPS, LABEL_STEPS, this.activity.steps,
+            `${hesThousands(STEPS_GOAL)} ${metricUnit(METRIC_STEPS)}`)
+          this.ringLine(METRIC_EXERCISE, LABEL_EXERCISE, this.activity.exercise,
             `${EXERCISE_GOAL_MIN} ${metricUnit(METRIC_EXERCISE)}`)
         }
         .alignItems(HorizontalAlign.Start)
@@ -217,7 +215,7 @@ struct Index {
   }
 
   @Builder
-  valueText(card: MetricCard) {
+  valueText(card: SimCard) {
     Text() {
       Span(card.value)
         .fontSize(24)
@@ -231,7 +229,7 @@ struct Index {
   }
 
   @Builder
-  cardHead(metric: string) {
+  cardHead(metric: string, opens: boolean) {
     Row({ space: 8 }) {
       SymbolGlyph(metricSymbol(metric))
         .fontSize(20)
@@ -241,22 +239,24 @@ struct Index {
         .fontWeight(600)
         .fontColor($r('sys.color.font_primary'))
         .layoutWeight(1)
-      SymbolGlyph($r('sys.symbol.chevron_right'))
-        .fontSize(16)
-        .fontColor([$r('sys.color.font_tertiary')])
+      if (opens) {
+        SymbolGlyph($r('sys.symbol.chevron_right'))
+          .fontSize(16)
+          .fontColor([$r('sys.color.font_tertiary')])
+      }
     }
     .width('100%')
     .alignItems(VerticalAlign.Center)
   }
 
   @Builder
-  metricCard(card: MetricCard) {
+  metricCard(card: SimCard) {
     Column({ space: 10 }) {
-      this.cardHead(card.metric)
+      this.cardHead(card.metric, true)
       Row({ space: 12 }) {
         Column({ space: 2 }) {
           this.valueText(card)
-          Text(metricSub(card.metric))
+          Text(card.sub)
             .fontSize($r('sys.float.Body_S'))
             .fontColor($r('sys.color.font_secondary'))
         }
@@ -284,16 +284,16 @@ struct Index {
     .accessibilityGroup(true)
     .accessibilityText(this.spoken(card.metric, card.value))
     .onClick(() => {
-      this.openMetric(card.metric);
+      this.openMetric(card.metric === METRIC_HEART ? METRIC_RESTING : card.metric);
     })
   }
 
   @Builder
-  metricTile(card: MetricCard) {
+  metricTile(card: SimCard) {
     Column({ space: 8 }) {
-      this.cardHead(card.metric)
+      this.cardHead(card.metric, true)
       this.valueText(card)
-      Text(metricSub(card.metric))
+      Text(card.sub)
         .fontSize($r('sys.float.Body_S'))
         .fontColor($r('sys.color.font_secondary'))
     }
@@ -303,7 +303,7 @@ struct Index {
     .accessibilityGroup(true)
     .accessibilityText(this.spoken(card.metric, card.value))
     .onClick(() => {
-      this.openMetric(card.metric);
+      this.openMetric(card.metric === METRIC_HEART ? METRIC_RESTING : card.metric);
     })
   }
 
@@ -313,14 +313,14 @@ struct Index {
       Column({ space: CARD_GAP }) {
         this.activityCard()
 
-        ForEach(this.cards, (card: MetricCard) => {
+        ForEach(this.cards, (card: SimCard) => {
           this.metricCard(card)
-        }, (card: MetricCard) => `${this.personId}|${card.metric}|${card.value}`)
+        }, (card: SimCard) => `${this.personId}|${card.metric}|${card.value}`)
 
         Row({ space: CARD_GAP }) {
-          ForEach(this.tiles, (card: MetricCard) => {
+          ForEach(this.tiles, (card: SimCard) => {
             this.metricTile(card)
-          }, (card: MetricCard) => `${this.personId}|${card.metric}|${card.value}`)
+          }, (card: SimCard) => `${this.personId}|${card.metric}|${card.value}`)
         }
         .width('100%')
         .alignItems(VerticalAlign.Top)
@@ -372,6 +372,27 @@ struct Index {
         }
         .attributeModifier(CARD)
         .id('hs_person')
+
+        Row({ space: 8 }) {
+          Text(SCENARIO_TITLE)
+            .fontSize($r('sys.float.Subtitle_M'))
+            .fontWeight(600)
+            .fontColor($r('sys.color.font_primary'))
+          Text(SCENARIO_TAG)
+            .fontSize($r('sys.float.Body_S'))
+            .fontColor($r('sys.color.font_primary'))
+            .padding({ left: 8, right: 8, top: 2, bottom: 2 })
+            .borderRadius(10)
+            .backgroundColor($r('sys.color.comp_background_tertiary'))
+            .id('hs_scenario_tag')
+        }
+        .padding({ left: 4, top: 6 })
+        .alignItems(VerticalAlign.Center)
+        Text(SCENARIO_NOTE)
+          .fontSize($r('sys.float.Body_S'))
+          .fontColor($r('sys.color.font_secondary'))
+          .padding({ left: 4, right: 4 })
+        ReadinessView({ personId: this.personId })
 
         Text(APPS_TITLE)
           .fontSize($r('sys.float.Subtitle_M'))
@@ -490,6 +511,11 @@ struct Index {
           this.healthTab()
         }
         .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.heart')) }, TAB_HEALTH))
+
+        TabContent() {
+          HistoryView({ personId: this.personId })
+        }
+        .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.clock')) }, TAB_HISTORY))
 
         TabContent() {
           this.meTab()
