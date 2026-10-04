@@ -10,6 +10,7 @@ import watchDayPresentTest from './WatchDayPresent.test';
 import hesTest from './Hes.test';
 import hesPersonasTest from './HesPersonas.test';
 import hesSessionTest from './HesSession.test';
+import hesFuzzTest from './HesFuzz.test';
 import wearMonthTest from './WearMonth.test';
 import reportTest from './Report.test';
 import engineReportsTest from './EngineReports.test';
@@ -31,6 +32,7 @@ export default function testsuite() {
   hesTest();
   hesPersonasTest();
   hesSessionTest();
+  hesFuzzTest();
   wearMonthTest();
   reportTest();
   engineReportsTest();

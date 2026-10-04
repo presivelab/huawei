@@ -7,7 +7,9 @@
 //   - a night is valid for sleep duration when its total sleep time is above zero, and valid for sleep
 //     timing when both clock times are present;
 //   - percentiles are valid from 0 to 100; a heart-rate recovery is valid when it is above zero;
-//   - HRV counts nights in its own window, the recent 14 nights (HES vNext).
+//   - HRV counts nights in its own window, the recent 14 nights (HES vNext);
+//   - a reading that is not a finite number (NaN, Infinity) is no reading (HES vNext section 16). The
+//     range checks already refuse NaN; Infinity would pass "above zero", so it is refused by name.
 import { HesComponentDefinition, HesComponentId, HesDay } from './HesTypes';
 
 const MAX_CLOCK_MIN: number = 1439;
@@ -21,8 +23,18 @@ export function windowOf(history: HesDay[], windowDays: number): HesDay[] {
   return history.slice(history.length - windowDays);
 }
 
+/** A finite number at or above `min`. NaN and Infinity are never a reading. */
+function isFiniteFrom(value: number, min: number): boolean {
+  return Number.isFinite(value) && value >= min;
+}
+
+/** A finite number above zero. */
+function isFinitePositive(value: number): boolean {
+  return Number.isFinite(value) && value > 0;
+}
+
 function isClockTime(value: number): boolean {
-  return value >= 0 && value <= MAX_CLOCK_MIN;
+  return Number.isFinite(value) && value >= 0 && value <= MAX_CLOCK_MIN;
 }
 
 function isPercentile(value: number): boolean {
@@ -35,19 +47,19 @@ export function isValidFor(id: HesComponentId, day: HesDay): boolean {
     case HesComponentId.CRF:
       return isPercentile(day.vo2maxPercentile);
     case HesComponentId.RHR:
-      return day.restingHeartRate > 0;
+      return isFinitePositive(day.restingHeartRate);
     case HesComponentId.MVPA:
-      return day.moderateMinutes >= 0 && day.vigorousMinutes >= 0;
+      return isFiniteFrom(day.moderateMinutes, 0) && isFiniteFrom(day.vigorousMinutes, 0);
     case HesComponentId.SLEEP_REGULARITY:
       return isClockTime(day.sleepStartMin) && isClockTime(day.sleepEndMin);
     case HesComponentId.STEPS:
-      return day.steps >= 0;
+      return isFiniteFrom(day.steps, 0);
     case HesComponentId.SLEEP_DURATION:
-      return day.sleepMinutes > 0;
+      return isFinitePositive(day.sleepMinutes);
     case HesComponentId.HRV:
       return isPercentile(day.hrvPercentile);
     case HesComponentId.HRR:
-      return day.hrr1 > 0;
+      return isFinitePositive(day.hrr1);
     default:
       return false;
   }
