@@ -10,7 +10,12 @@ import {
   HealthStatus,
   withScopes
 } from 'common';
-import { HealthSimAnswer, HealthSimAnswerKind, HealthSimClient } from '../platform/HealthSimClient';
+import {
+  HEALTH_SIM_ERROR_TEXT,
+  HealthSimAnswer,
+  HealthSimAnswerKind,
+  HealthSimClient
+} from '../platform/HealthSimClient';
 import { HuaweiHealthSource } from '../platform/HuaweiHealthSource';
 import { clearHealthSim, useHealthSim } from '../report/ServiceLocator';
 
@@ -38,6 +43,8 @@ export class AddonSession {
   private pendingHealthSim: HealthSimPayload | null = null;
   // Why the built-in demo placeholder is shown instead of Health Sim's consent screen; empty when it is not.
   private fallbackNote: string = '';
+  // Number of the latest request to Health Sim; an answer to an older or abandoned request is ignored.
+  private askSeq: number = 0;
 
   private constructor() {
     // The adapter for HUAWEI Health is a stub in this build (UNAVAILABLE), so the connection runs on the
@@ -69,11 +76,18 @@ export class AddonSession {
    * emulators shows its own consent screen. Returns the kind of its answer (HealthSimAnswerKind):
    *   OK             step 1 is granted and the data waits for step 2;
    *   REFUSED        step 1 is refused;
-   *   NOT_INSTALLED, ERROR   nothing is recorded: the caller shows the built-in demo placeholder.
-   * Never rejects.
+   *   NOT_INSTALLED, ERROR   nothing is recorded: the caller shows the built-in demo placeholder;
+   *   STALE          the request was abandoned meanwhile (abandonHealthSim): nothing is recorded.
+   * Never rejects. It may never resolve: when the user cancels the system's own question about opening
+   * another app, the system reports nothing back, so the caller must offer a way out while it waits.
    */
   async askHealthSim(context: common.UIAbilityContext): Promise<string> {
+    this.askSeq += 1;
+    const seq: number = this.askSeq;
     const answer: HealthSimAnswer = await HealthSimClient.request(context, ALL_HEALTH_SCOPES);
+    if (seq !== this.askSeq) {
+      return HealthSimAnswerKind.STALE;
+    }
     this.fallbackNote = '';
     if (answer.kind === HealthSimAnswerKind.OK && answer.payload !== null) {
       this.recordPlatformConsent(true);
@@ -85,6 +99,14 @@ export class AddonSession {
       this.fallbackNote = answer.text;
     }
     return answer.kind;
+  }
+
+  // Gives up the request that is waiting for Health Sim: a late answer to it is ignored and the built-in
+  // demo placeholder says why it is shown.
+  abandonHealthSim(): void {
+    this.askSeq += 1;
+    this.pendingHealthSim = null;
+    this.fallbackNote = HEALTH_SIM_ERROR_TEXT;
   }
 
   // One sentence for the placeholder: why Health Sim was not used. Empty when it was not asked.

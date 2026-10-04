@@ -2,8 +2,10 @@ import { common } from '@kit.AbilityKit';
 import { ALL_HEALTH_SCOPES, HealthScope, HealthStatus } from 'common';
 import { AddonSession } from '../addon/AddonSession';
 import {
+  HEALTH_SIM_ASK_AGAIN,
   HEALTH_SIM_ASKING,
   HEALTH_SIM_ASKING_BODY,
+  HEALTH_SIM_USE_BUILT_IN,
   HEALTH_SIM_SENTENCE,
   ROUTE_DATA_CONSENT,
   scopeLabel
@@ -26,10 +28,18 @@ export struct PlatformConsentPage {
   @Consume('fwNav') nav: NavPathStack;
   @State phase: string = PHASE_ASKING;
   @State note: string = '';
+  private answered: boolean = false;
   private unavailable: boolean = AddonSession.shared().platformStatus() === HealthStatus.UNAVAILABLE;
 
   aboutToAppear(): void {
     this.askHealthSim();
+  }
+
+  // Leaving the page while Health Sim has not answered gives the request up, so a late answer changes nothing.
+  aboutToDisappear(): void {
+    if (this.phase === PHASE_ASKING && !this.answered) {
+      AddonSession.shared().abandonHealthSim();
+    }
   }
 
   private showPlaceholder(): void {
@@ -44,6 +54,10 @@ export struct PlatformConsentPage {
       return;
     }
     AddonSession.shared().askHealthSim(context as common.UIAbilityContext).then((kind: string) => {
+      if (kind === HealthSimAnswerKind.STALE) {
+        return;
+      }
+      this.answered = true;
       if (kind === HealthSimAnswerKind.OK) {
         this.nav.replacePathByName(ROUTE_DATA_CONSENT, null);
       } else if (kind === HealthSimAnswerKind.REFUSED) {
@@ -146,6 +160,25 @@ export struct PlatformConsentPage {
           .width('100%')
           .alignItems(HorizontalAlign.Start)
 
+          if (this.phase === PHASE_ASKING) {
+            // Health Sim's screen covers these while it is open. They matter when it never opens: the system
+            // asks first whether FairWear may open another app, and a Cancel there reports nothing back.
+            Button(HEALTH_SIM_ASK_AGAIN)
+              .buttonStyle(ButtonStyleMode.NORMAL)
+              .width('100%')
+              .id('fw_healthsim_again')
+              .onClick(() => {
+                this.askHealthSim();
+              })
+            Button(HEALTH_SIM_USE_BUILT_IN)
+              .buttonStyle(ButtonStyleMode.TEXTUAL)
+              .width('100%')
+              .id('fw_healthsim_built_in')
+              .onClick(() => {
+                AddonSession.shared().abandonHealthSim();
+                this.showPlaceholder();
+              })
+          }
           if (this.phase === PHASE_PLACEHOLDER) {
             Button('Simulate consent')
               .buttonStyle(ButtonStyleMode.EMPHASIZED)

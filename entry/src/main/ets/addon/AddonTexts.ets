@@ -56,6 +56,8 @@ export const HEALTH_SIM_ASKING: string = 'Asking Health Sim for access…';
 export const HEALTH_SIM_ASKING_BODY: string =
   'Health Sim shows its own consent screen. FairWear does not reproduce it and gets nothing until you allow ' +
     'it there.';
+export const HEALTH_SIM_ASK_AGAIN: string = 'Ask Health Sim again';
+export const HEALTH_SIM_USE_BUILT_IN: string = 'Continue with built-in demo data';
 export const HEALTH_SIM_READS_SENTENCE: string =
   'Reads the simulated data Health Sim handed over after your consent. ' + HEALTH_SIM_SENTENCE;
 

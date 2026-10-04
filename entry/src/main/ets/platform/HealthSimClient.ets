@@ -35,6 +35,8 @@ export class HealthSimAnswerKind {
   static readonly REFUSED: string = 'REFUSED';
   static readonly NOT_INSTALLED: string = 'NOT_INSTALLED';
   static readonly ERROR: string = 'ERROR';
+  // Not an answer of Health Sim: the request was given up before this answer came (see AddonSession).
+  static readonly STALE: string = 'STALE';
 }
 
 export interface HealthSimAnswer {
