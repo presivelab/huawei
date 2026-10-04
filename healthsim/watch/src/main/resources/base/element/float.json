@@ -1,0 +1,20 @@
+{
+  "float": [
+    {
+      "name": "banner_font_size",
+      "value": "10fp"
+    },
+    {
+      "name": "title_font_size",
+      "value": "18fp"
+    },
+    {
+      "name": "label_font_size",
+      "value": "12fp"
+    },
+    {
+      "name": "note_font_size",
+      "value": "10fp"
+    }
+  ]
+}
