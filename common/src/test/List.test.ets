@@ -6,6 +6,7 @@ import cardDigestTest from './CardDigest.test';
 import healthStatusLabelTest from './HealthStatusLabel.test';
 import demoFeedTest from './DemoFeed.test';
 import claimHardeningTest from './ClaimHardening.test';
+import watchDayPresentTest from './WatchDayPresent.test';
 
 export default function testsuite() {
   claimTest();
@@ -16,4 +17,5 @@ export default function testsuite() {
   healthStatusLabelTest();
   demoFeedTest();
   claimHardeningTest();
+  watchDayPresentTest();
 }

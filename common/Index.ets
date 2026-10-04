@@ -167,6 +167,43 @@ export {
   WatchDayFacts
 } from './src/main/ets/watchlink/PhoneLinkEngine';
 export { PAIR_ACK_SEQ } from './src/main/ets/watchlink/DayPacketCodec';
+// How watch days are worded on the phone. Pure functions; no verdict.
+export {
+  breakText,
+  DAY_NOT_RECEIVED,
+  demoDayLabel,
+  durationParts,
+  DurationParts,
+  durationText,
+  dayOfMonth,
+  dayTitle,
+  isDemoDay,
+  isVerifiedDay,
+  lastSyncText,
+  listedWearParts,
+  logLineText,
+  logTimeText,
+  minuteClock,
+  missingSummary,
+  NOT_SYNCED,
+  observedMinutes,
+  STRIP_DAYS,
+  stripDays,
+  transportLabel,
+  verifiedDayCount,
+  verifiedSummary,
+  WEAR_CHARGING,
+  WEAR_LABEL_CHARGING,
+  WEAR_LABEL_OFF,
+  WEAR_LABEL_UNOBSERVED,
+  WEAR_LABEL_WORN,
+  WEAR_OFF,
+  WEAR_UNOBSERVED,
+  WEAR_WORN,
+  WearPart,
+  wearParts,
+  weekdayShort
+} from './src/main/ets/present/WatchDayPresent';
 export {
   CLOCK_FEED_SUFFIX,
   demoFeedAt,
