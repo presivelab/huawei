@@ -67,6 +67,25 @@ The home-screen card takes its source line from `ServiceLocator.reportSourceLabe
 from Health Sim (`CardSync` → `buildCardDigest(status, coverage, ready, label)`); the label is used only while
 connected.
 
+**Visits (`common/src/main/ets/visits/`)** — a path of its own next to the tier claim; no system-kit imports,
+dates and the hash come in from outside. `MedicalReceipt` and its QR text (`ReceiptCodec`); `ReceiptVerifier`
+(port) with `MockReceiptVerifier` over the demo register; `DemoVisits` (five fictional receipts counted back
+from the demo date, the demo transcript T1); `RuleBasedNotesExtractor` (one note per sentence, each with its
+source segment); `FollowUp.adherence` (from the due date kept on the visit, so deleting the recording does
+not change it); `VisitClaim` (exactly nine keys, token marker `fv1`, signed through the same `Signer` port
+and device key as the tier claim; `EMERGENCY` and `INPATIENT` are never shared); `VisitVerifier` (format →
+claim type → key → signature → nonce → replay → one receipt once); `VisitBook` (the list of visits as pure
+logic). On the phone: `entry/src/main/ets/visits/VisitService.ets` (state in memory, the demo partner),
+`VisitReminder.ets`, and the pages `VisitsPage`, `AddReceiptPage`, `VisitDetailsPage`, `VisitSharePage`,
+`VisitCheckPage` on the `fwNav` stack. On the watch: `VisitRecordAbility` with `pages/VisitRecord.ets`.
+`TierClaim` (seven keys) and `PartnerVerifier` are unchanged. Details: `docs/VISITS.md`.
+
+**Day dial (`common/src/main/ets/present/DayDialModel.ets`)** — pure geometry: the newest completed day
+(`HesDay`), the slot runs of the newest watch day and the local minute become arcs in degrees, the angle of
+the "now" marker and the centre text. `entry/src/main/ets/view/DayDialCard.ets` draws it on the Report tab.
+It reads the persona's starting history (`engineSession(id).history()`), not the running session, so "Close
+the day" and Health Sim data do not move it. Shown, never scored.
+
 ## Health source layer (`common/src/main/ets/health/`)
 
 - `HealthRecords.ets`: records in the native units HUAWEI Health reports, and `HealthStatus`

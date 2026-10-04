@@ -70,6 +70,30 @@ with the older of two unsent days as `<seq>` → "… of … days verified" and 
 Close the day per persona, for a longer demo: Tomek reaches A on the fourth closed day; Ania stays A; Marek
 stays flagged; Ola does not reach a score (she wears the watch too rarely at night). Reset after each.
 
+**Visits (Ewa, tier C, no benefit this month)**
+
+1. Report → choose **Ewa** → scroll to **Visits** → "Open visits". Two visits: the check-up of 3 Sep and the
+   follow-up of 30 Sep, both "Verified receipt", both "Follow-up on time". Say: the receipts were checked at
+   their source; in the demo the source is a register inside the app.
+2. Open **Check-up**. "Proof" shows the clinic, the date and the amount, marked "Only you see this".
+   "Visit notes" were taken from the conversation by fixed rules: three recommendations, vitamin D as it was
+   said, the lipid panel, "Come back in 4 weeks" with "Due by 1 Oct 2026" and "Follow-up done on time".
+   Tap "Lipid panel": the sentence it came from, with its time.
+3. Back → **Add receipt** → **Tampered**: "Receipt data doesn't match the issuer's record · Nothing was
+   added". The same receipt with another date is refused, and the real visit stays verified.
+4. Back → open **Outpatient visit** → **Share with partner**. "What the partner will see": visit type, date,
+   "Follow-up on time". "Never shared: amount, clinic name, transcript, notes." The QR code is signed with
+   the same device key as the tier code.
+5. **Open partner check** → "Use the code from this phone": "Signature valid", seven checks passed.
+   **Change visit date** → "Invalid signature · stopped at: signature". **Show the same code again** →
+   "Already used". **New code from the same receipt** → "Receipt already claimed".
+
+**Day dial (any persona)**
+
+6. Report → the card "24-hour day": the night as an arc through 00:00, the steps of the day in the middle,
+   the wear of the newest watch day on the outer ring, and a marker at the time now. "Before launch: demo
+   data"; nothing on this card is scored.
+
 ### Plan B (live demo fails)
 
 - Health Sim is not installed, or does not answer: nothing breaks. On the phone the Connect page says

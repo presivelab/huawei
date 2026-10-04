@@ -29,7 +29,7 @@ technology, digital wellbeing).
 | --- | --- |
 | Originality | Selective non-wear: Marek and Kasia wear the watch on the same 26 of 30 days, but only Marek's breaks follow a raised resting heart rate and fewer steps, so only he is flagged. The partner gets a signed, single-use A/B/C tier and nothing else. `common/src/main/ets/wear/`, `docs/screenshots/final/a2-evidence-marek-*` |
 | Usefulness | For people in a programme that rewards activity and sleep habits, and for the partner that runs it: a benefit without handing over raw health data, a reason for every day and an appeal. Benefits only, never a penalty. "Who it is for" above, `docs/DEMO_SCRIPT.md` |
-| Technical execution | 380 logic tests in `common` and 6 in `watch` <!-- A3-TODO after merge: test counts --> (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
+| Technical execution | 458 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
 | Platform capabilities | Sensor Service Kit on the watch, HUKS keys on the phone and the watch, Crypto Architecture Kit, Ability Kit between two apps (Health Sim), Form Kit card, icon shortcut, phone and wearable built from one `common` module. Table "Platform capabilities" below |
 | Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
 | Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
@@ -142,6 +142,14 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
   the app sandbox with its exact text. A persona without a score gets no code.
 - "What left this phone" (link on the Share tab) lists every code the phone has shown, newest first, with its
   exact text and size.
+- Visits (demo data for Ewa only): receipts checked against a demo register, visit notes taken from a demo
+  transcript by fixed rules, follow-up adherence, and a signed visit claim (nine keys, token `fv1`) with its
+  own partner check. A separate path: it does not touch the tier claim, the partner verifier of the tier or
+  the score. Visit codes are not written to the ledger behind "What left this phone". On the watch a second
+  entry, "Visit notes", records a visit after the doctor's consent into the watch sandbox; nothing is sent to
+  the phone. Description: `docs/VISITS.md`.
+- Day dial: the card "24-hour day" on the Report tab, the night as an arc through 00:00, the steps of the day
+  and the wear of the newest watch day. Shown, never scored.
 - Not built: export and deletion of the data, a camera scan of the QR code (the partner view takes the code
   from the same phone).
 - The screens get their data in one place, `entry/src/main/ets/report/ServiceLocator.ets`, from the engine
@@ -161,6 +169,12 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 | Watch days                        | **Real** recording and signing on the watch while the app is open; on the emulator the recorded days came from the labelled demo feed (the emulator sends heart rate 0). Verified watch days are shown, **not scored**. |
 | Claim signature                   | **Real** ECDSA P-256; the key is in HUKS. The last field of the token (`HUKS` or `SOFTWARE`) is not signed and is informational: the partner shows the key source from its own registry (`common/src/main/ets/claim/SignedClaimToken.ets`). A software-key fallback, labelled in the UI, exists for devices without HUKS; HUKS worked on both emulators, so it was not exercised.                    |
 | Partner                           | A screen in the same app, not a separate system.                                                                                                                                                             |
+| Receipt verification | **Simulated**: a demo register in the app stands in for the national e-receipt verification platform (`MockReceiptVerifier`). The production verifier is the `ReceiptVerifier` interface only. |
+| VisitClaim signing and verification | **Real**: ECDSA P-256 with the same device key as tier claims (HUKS, or the labelled software fallback), checked by `VisitVerifier`. |
+| Visit notes | **Real** rule-based code on the phone (`RuleBasedNotesExtractor`); the transcript is a demo transcript and is labelled so. |
+| Follow-up reminder | **Real** system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead. The demo dates are in the past, so the demo sets none; not exercised on the emulator. |
+| Watch recording | **Real** microphone capture on the watch after the doctor agreed, kept in the watch sandbox; "Demo recording" where there is no capture or no permission. Nothing is sent from the watch to the phone. |
+| Day dial | **Real** drawing from the newest completed day of the persona's starting history and the newest watch day; demo data before launch. "Close the day" and Health Sim data do not move the dial. Shown, **never scored**. |
 
 **Health Sim is not a HUAWEI app.** Its layout stays close to HUAWEI Health's so the demo reads naturally:
 bottom tabs "Health" and "Me", an "Activity records" card with Steps and Exercise rings, metric cards and a metric
@@ -199,6 +213,9 @@ node tools/logic-tests/runner.js "$HOME/fw-ts/node_modules/typescript" "$PWD" wa
 | Flag rule (one never, three always, two above 30% of breaks) | `WearMonth.test.ets`, `Claim.test.ets` |
 | HES-Lite specification, persona results | `Hes.test.ets`, `HesPersonas.test.ets`, `EngineReports.test.ets` |
 | Close the day and reset | `HesSession.test.ets`, `EngineReports.test.ets` |
+| Consent switches on both paths and after "Close the day" | `ConsentScopes.test.ets` |
+| Receipts, visit notes, follow-up, the visit claim and its checks | `Visits.test.ets`, `VisitClaim.test.ets` (real ECDSA) |
+| Day dial geometry | `DayDial.test.ets` |
 | Changed, repeated or held-back watch day; pause; forget | `WatchLink.test.ets`, `WatchLinkFlow.test.ets`, `LinkProbe.test.ets` |
 | Heart rate 0 or out of range | `LiveWear.test.ets` |
 
