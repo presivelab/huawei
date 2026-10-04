@@ -1,0 +1,8 @@
+{
+  "modelVersion": "6.1.1",
+  "description": "Health Sim: a simulator that stands in for HUAWEI Health on the emulator, for the FairWear demo.",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
