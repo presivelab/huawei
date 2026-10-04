@@ -1,4 +1,5 @@
 import { ClaimLine, keySourceLabel, tokenLengthLine, Visit, VISIT_NEVER_SHARED, visitClaimLines, visitShareBlock } from 'common';
+import { ShareService } from '../share/ShareService';
 import { EmptyState } from '../ui/kit/EmptyState';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
@@ -18,7 +19,6 @@ import {
   SHARE_FAILED,
   SHARE_INTRO,
   SHARE_NEW_CODE,
-  SHARE_NOT_IN_LEDGER,
   SHARE_OPEN_CHECK,
   SHARE_QR_SPOKEN,
   SHARE_SIGNING,
@@ -37,7 +37,7 @@ interface LineParams {
 // "Share visit" (route ROUTE_VISIT_SHARE): the visit claim signed with the device key, as a QR code, and
 // what it says in plain words. The nonce comes from the demo partner. A visit that may not be shared
 // (emergency or inpatient care, or a receipt that did not verify) gets no code: the button is off and the
-// screen says why.
+// screen says why. Every code is written to the ledger ("What left this phone") before it is shown.
 @Component
 export struct VisitSharePage {
   @Consume('fwNav') nav: NavPathStack;
@@ -49,6 +49,10 @@ export struct VisitSharePage {
   @State pending: number = 0;
 
   aboutToAppear(): void {
+    const context = this.getUIContext().getHostContext();
+    if (context !== undefined) {
+      ShareService.shared().attach(context.filesDir);
+    }
     VisitService.shared().ready().then((): void => {
       const visit: Visit | null = VisitService.shared().visit(this.visitId);
       this.block = visit === null ? SHARE_DISABLED_LABEL : visitShareBlock(visit);
@@ -61,7 +65,11 @@ export struct VisitSharePage {
 
   syncCode(): void {
     const have = VisitService.shared().current();
-    this.code = have !== null && have.visitId === this.visitId ? have : null;
+    const mine: VisitCode | null = have !== null && have.visitId === this.visitId ? have : null;
+    if (mine !== null) {
+      ShareService.shared().recordVisitCode(mine.token);
+    }
+    this.code = mine;
   }
 
   private request(fresh: boolean): void {
@@ -157,10 +165,6 @@ export struct VisitSharePage {
               .id('fw_visit_share_key')
           }
           .alignItems(VerticalAlign.Center)
-
-          Text(SHARE_NOT_IN_LEDGER)
-            .attributeModifier(CAPTION)
-            .textAlign(TextAlign.Center)
         } else if (this.failure.length > 0) {
           EmptyState({ symbol: SYMBOL_INFO, sentence: this.failure })
         } else {

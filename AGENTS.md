@@ -131,7 +131,7 @@ two disagree.
   receipts checked against a demo register, visit notes taken from a demo transcript by fixed rules,
   follow-up adherence, and the `VisitClaim` (nine keys, token `fv1`) signed with the device key and checked by
   `VisitVerifier`. Demo data for Ewa only. A separate path: it does not touch `TierClaim`, `PartnerVerifier`
-  or the score. Visit codes are not written to the ledger. Description: `docs/VISITS.md`.
+  or the score. A visit code is written to the ledger before it is shown. Description: `docs/VISITS.md`.
 - Day dial: `common/src/main/ets/present/DayDialModel.ets` and `view/DayDialCard.ets` on the Report tab. It
   reads the persona's starting history, not the running demo session.
 - Watch: a second ability, `VisitRecordAbility` ("Visit notes"), records a visit after the doctor's consent

@@ -31,8 +31,7 @@ and the text in the middle.
 - Without a day from the watch the card says "Wear segments appear when the watch sends a day".
 - The marker and the arcs are shown and never scored. The card is labelled "Before launch: demo data".
 
-Limit: the dial reads the persona's starting history. A day closed with "Close day" in the demo controls
-moves the score, not the dial.
+The dial shows the newest completed day of the session the score uses.
 
 ## Visits: the two flows
 
@@ -123,10 +122,10 @@ signed it. The receipt of such a visit can still be verified and kept on the pho
 | Receipt verification                | simulated: a demo register in the app stands in for the national e-receipt verification platform (`MockReceiptVerifier`); the production verifier is the `ReceiptVerifier` interface only |
 | VisitClaim signing and verification | real: ECDSA P-256 with the same device key as tier claims; checked by `VisitVerifier`                                                                                                     |
 | Visit notes                         | real rule-based code on the phone; the transcript is a demo transcript                                                                                                                    |
-| Follow-up reminder                  | real system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead; the demo dates are in the past, so the demo sets none          |
+| Follow-up reminder                  | real system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead; the demo dates are in the past, so the demo sets none. Follow-up reminder: checked by a logic test, not run on the emulator |
 | Watch recording | real microphone capture on the watch after the doctor agreed (`VisitRecord.ets`, app "Visit notes"), kept in the watch sandbox; "Demo recording" where there is no capture or no permission; no transfer from the watch to the phone, so the notes on the phone come from the demo transcript |
 | Day dial                            | real drawing from the newest completed day; demo data before launch                                                                                                                       |
-| Ledger "What left this phone"       | visit codes are not written to the ledger in this build                                                                                                                                   |
+| Ledger "What left this phone"       | visit codes are written to the ledger before they are shown                                                                                                                                   |
 
 ## Code and tests
 

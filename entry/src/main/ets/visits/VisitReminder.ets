@@ -1,6 +1,6 @@
 import { reminderAgentManager } from '@kit.BackgroundTasksKit';
 import { common } from '@kit.AbilityKit';
-import { isoDateMs } from 'common';
+import { REMINDER_HOUR, reminderMomentAhead } from 'common';
 import { REMINDER_CONTENT, REMINDER_IN_APP, REMINDER_PAST, REMINDER_SET, REMINDER_TITLE } from './VisitTexts';
 
 /*
@@ -8,10 +8,9 @@ import { REMINDER_CONTENT, REMINDER_IN_APP, REMINDER_PAST, REMINDER_SET, REMINDE
  * day the follow-up is due. It is set only when that moment is still ahead of the device's own clock; the
  * demo dates are counted back from the demo day, so most of them are in the past and set nothing.
  * When the system refuses (no permission, notifications off, an emulator without the service) the date
- * is still shown in the app and the screen says "Reminder saved in app".
+ * is still shown in the app and the screen says "Reminder saved in app". The moment itself is worked out
+ * in `common` (`reminderMomentAhead`), where a logic test checks it.
  */
-
-const REMINDER_HOUR: number = 9;
 
 export class ReminderOutcome {
   /** True when the system accepted the reminder. */
@@ -20,21 +19,10 @@ export class ReminderOutcome {
   line: string = REMINDER_IN_APP;
 }
 
-/** 09:00 local time on the due date, as epoch ms; -1 when the text is not a date. */
-export function reminderMoment(dueDate: string): number {
-  if (isoDateMs(dueDate) < 0) {
-    return -1;
-  }
-  const y = Number.parseInt(dueDate.substring(0, 4), 10);
-  const m = Number.parseInt(dueDate.substring(5, 7), 10);
-  const d = Number.parseInt(dueDate.substring(8, 10), 10);
-  return new Date(y, m - 1, d, REMINDER_HOUR, 0, 0).getTime();
-}
-
 export async function setFollowUpReminder(context: Context | undefined, dueDate: string): Promise<ReminderOutcome> {
   const outcome = new ReminderOutcome();
-  const at = reminderMoment(dueDate);
-  if (at < 0 || at <= Date.now()) {
+  const at = reminderMomentAhead(dueDate, Date.now());
+  if (at < 0) {
     outcome.line = REMINDER_PAST;
     return outcome;
   }

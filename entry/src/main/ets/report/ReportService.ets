@@ -1,4 +1,4 @@
-import { DayDetail, HesProfile, PersonaRef, PersonaReport } from 'common';
+import { DayDetail, HesDay, HesProfile, PersonaRef, PersonaReport } from 'common';
 
 /*
  * Where the phone screens get the monthly report from: the scoring engine (EngineReportService). The fixed
@@ -34,4 +34,7 @@ export interface ReportService {
 
   /** True while the values are fixed preview values and not calculated: the screens then say so. */
   isPreview(): boolean;
+
+  /** The completed days of the persona's session as it stands now (closed days, Health Sim data and consent included), oldest first. */
+  dayHistory(id: string): HesDay[];
 }

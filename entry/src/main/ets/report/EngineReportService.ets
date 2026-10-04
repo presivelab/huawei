@@ -15,6 +15,7 @@ import {
   HealthSimPerson,
   healthSimPerson,
   HealthScope,
+  HesDay,
   HesPersonas,
   HesProfile,
   HesSession,
@@ -136,5 +137,10 @@ export class EngineReportService implements ReportService {
 
   isPreview(): boolean {
     return false;
+  }
+
+  // The same session report() reads: closed days, Health Sim data and the consent are in it.
+  dayHistory(id: string): HesDay[] {
+    return this.session(this.known(id)).history();
   }
 }

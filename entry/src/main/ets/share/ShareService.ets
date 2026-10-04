@@ -8,6 +8,7 @@ import {
   KEY_SOURCE_SOFTWARE,
   KeySigner,
   KeySource,
+  LEDGER_KIND_VISIT,
   LedgerEntry,
   mintClaimToken,
   NONCE_TTL_MS,
@@ -18,7 +19,8 @@ import {
   SystemClock,
   TierClaim,
   tokenClaim,
-  VerifyResult
+  VerifyResult,
+  visitLedgerEntry
 } from 'common';
 
 /*
@@ -161,6 +163,21 @@ export class ShareService {
     this.code = made;
     this.bump();
     return made;
+  }
+
+  /*
+   * The ledger line of a visit code. The share screen of a visit calls this before it shows the code. The
+   * same token a second time adds nothing, so one shown code is one ledger line.
+   */
+  recordVisitCode(token: string): void {
+    for (let i = 0; i < this.ledger.length; i++) {
+      if (this.ledger[i].kind === LEDGER_KIND_VISIT && this.ledger[i].payload === token) {
+        return;
+      }
+    }
+    this.ledger.push(visitLedgerEntry(token, this.clock.nowMs()));
+    this.saveLedger();
+    this.bump();
   }
 
   private saveLedger(): void {

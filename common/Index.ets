@@ -514,7 +514,10 @@ export {
   tamperTargetTier,
   tokenClaim,
   tokenLengthLine,
-  verdictLine
+  verdictLine,
+  LEDGER_KIND_VISIT,
+  LEDGER_DESTINATION_VISIT,
+  visitLedgerEntry
 } from './src/main/ets/claim/ShareFlow';
 // The days of the wear month in detail: worn time, breaks and the reason of each day as text.
 export { DayBreak, DayDetail, dayDetailOf, engineDayDetails } from './src/main/ets/report/EngineReports';
@@ -606,7 +609,10 @@ export {
   followUpVisitOf,
   visitAdherence,
   visitById,
-  visitDateOf
+  visitDateOf,
+  REMINDER_HOUR,
+  reminderMoment,
+  reminderMomentAhead
 } from './src/main/ets/visits/FollowUp';
 export {
   adherenceLabel,

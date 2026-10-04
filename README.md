@@ -148,7 +148,7 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 - Visits (demo data for Ewa only): receipts checked against a demo register, visit notes taken from a demo
   transcript by fixed rules, follow-up adherence, and a signed visit claim (nine keys, token `fv1`) with its
   own partner check. A separate path: it does not touch the tier claim, the partner verifier of the tier or
-  the score. Visit codes are not written to the ledger behind "What left this phone". On the watch a second
+  the score. A visit code is written to the ledger behind "What left this phone" before it is shown. On the watch a second
   entry, "Visit notes", records a visit after the doctor's consent into the watch sandbox; nothing is sent to
   the phone. Description: `docs/VISITS.md`.
 - Day dial: the card "24-hour day" on the Report tab, the night as an arc through 00:00, the steps of the day
@@ -175,9 +175,9 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 | Receipt verification | **Simulated**: a demo register in the app stands in for the national e-receipt verification platform (`MockReceiptVerifier`). The production verifier is the `ReceiptVerifier` interface only. |
 | VisitClaim signing and verification | **Real**: ECDSA P-256 with the same device key as tier claims (HUKS, or the labelled software fallback), checked by `VisitVerifier`. |
 | Visit notes | **Real** rule-based code on the phone (`RuleBasedNotesExtractor`); the transcript is a demo transcript and is labelled so. |
-| Follow-up reminder | **Real** system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead. The demo dates are in the past, so the demo sets none; not exercised on the emulator. |
+| Follow-up reminder | **Real** system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead. The demo dates are in the past, so the demo sets none. Follow-up reminder: checked by a logic test, not run on the emulator. |
 | Watch recording | **Real** microphone capture on the watch after the doctor agreed, kept in the watch sandbox; "Demo recording" where there is no capture or no permission. Nothing is sent from the watch to the phone. |
-| Day dial | **Real** drawing from the newest completed day of the persona's starting history and the newest watch day; demo data before launch. "Close the day" and Health Sim data do not move the dial. Shown, **never scored**. |
+| Day dial | **Real** drawing from the newest completed day of the session the score uses and the newest watch day; demo data before launch. Shown, **never scored**. |
 
 **Health Sim is not a HUAWEI app.** Its layout stays close to HUAWEI Health's so the demo reads naturally:
 bottom tabs "Health" and "Me", an "Activity records" card with Steps and Exercise rings, metric cards and a metric

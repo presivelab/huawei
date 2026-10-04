@@ -14,11 +14,10 @@ import {
   dialKindLabel,
   DialSegment,
   dialSegmentsOfRuns,
-  engineSession,
   HesDay,
   slotRuns
 } from 'common';
-import { DEFAULT_PERSONA_ID } from '../report/ServiceLocator';
+import { DEFAULT_PERSONA_ID, KEY_REPORT_REVISION, reportService } from '../report/ServiceLocator';
 import { InfoChip } from '../ui/kit/InfoChip';
 import { COLOR_CHARGING, COLOR_NOTE_TEXT, COLOR_NOTE_TINT, COLOR_OFF, COLOR_SLEEP, COLOR_WORN } from '../ui/kit/KitTokens';
 import { KEY_LINK_REVISION, WatchLinkService } from '../watchlink/WatchLinkService';
@@ -51,17 +50,18 @@ function localMinuteNow(): number {
 }
 
 function newestDay(personaId: string): HesDay | null {
-  const days: HesDay[] = engineSession(personaId).history();
+  const days: HesDay[] = reportService().dayHistory(personaId);
   return days.length === 0 ? null : days[days.length - 1];
 }
 
-// The 24-hour dial of the Report tab: the newest completed day of the persona's history (sleep as an arc,
+// The 24-hour dial of the Report tab: the newest completed day of the session the score uses (sleep as an arc,
 // the day's steps in the middle), the wear segments of the newest day the watch sent, when the phone has
 // one, and a marker at the time now. A picture of facts already held; nothing here reaches the score.
 @Component
 export struct DayDialCard {
   @Prop @Watch('reload') personaId: string = DEFAULT_PERSONA_ID;
   @StorageProp(KEY_LINK_REVISION) @Watch('reload') linkRevision: number = 0;
+  @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @State dial: DayDial = new DayDial();
   @State dayDate: string = '';
   @State watchDate: string = '';

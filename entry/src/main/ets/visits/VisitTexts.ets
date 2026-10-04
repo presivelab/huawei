@@ -98,7 +98,6 @@ export const SHARE_NEW_CODE: string = 'New code';
 export const SHARE_OPEN_CHECK: string = 'Open partner check';
 export const SHARE_QR_SPOKEN: string = 'QR code with the signed visit claim';
 export const SHARE_DISABLED_LABEL: string = 'Sharing is off for this visit';
-export const SHARE_NOT_IN_LEDGER: string = 'Demo: shown on this screen only.';
 
 // Partner check.
 export const CHECK_TITLE: string = 'Partner check · visit';
