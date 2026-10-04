@@ -49,6 +49,7 @@ The recorded demo follows `docs/DEMO_SCRIPT.md` (part A, about four minutes):
 
 - In scope: the `common` HAR (data contract, HES-Lite and the six personas, wear month and the selective non-wear flag, report view models, claim codec and verifier, Watch Link logic of both sides), the phone screens, the watch screens with live sensors and the Watch Link recorder, tests, submission documents.
 - Out of scope: reading real HUAWEI Health data (Health Service Kit needs Huawei's approval; the adapter is a stub); Wear Engine on paired devices (not run); a separate partner system; QR scanning with a camera; penalties of any kind (benefits only); an actuarial model; `conductor-dev`.
+- Health Sim: our own simulator app (`healthsim/`) stands in for HUAWEI Health on the emulators. FairWear asks it for data with `startAbilityForResult` after its consent, on the phone (histories of the six people) and on the watch (the script of the demo day); without it FairWear uses its built-in demo data.
 - Mocked or simulated behavior:
 
 | Element                                   | Status                                                                                                 |

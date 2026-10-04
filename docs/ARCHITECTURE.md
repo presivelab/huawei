@@ -9,6 +9,38 @@ WATCH 5 → HUAWEI Health (phone) → [Health Service Kit + user authorization]
 FairWear watch app → live heart rate + wear state (not part of HES)
 ```
 
+On the emulators HUAWEI Health is not available to the app, so its place is taken by **Health Sim**
+(`healthsim/`, bundle `com.fairwear.healthsim`): our own simulator app with the same six people. It is not
+HUAWEI Health and does not look like it; every screen says "SIMULATED DATA".
+
+```
+Phone:  FairWear ── startAbilityForResult(AuthAbility, fwScopes) ──▶ Health Sim: its own consent screen
+        FairWear ◀── resultCode 0 + parameters['fwhs1'] (histories and wear months, JSON) ── "Allow"
+        FairWear: its own consent (GDPR Art. 9) → strict decode → HES-Lite and wear rules → report
+        Health Sim card "FairWear" ── startAbility ──▶ FairWear (opens it the way an add-on is opened)
+
+Watch:  FairWear watch ── startAbilityForResult(WatchExportAbility) ──▶ Health Sim watch
+        FairWear watch ◀── resultCode 0 + parameters['fwhsw1'] (the script of the demo day, JSON)
+        FairWear watch: strict decode → the demo feed plays that script → recorder → signed day packet
+```
+
+- The platform capability used here is **Ability Kit**: one app starts an ability of another and gets a
+  result back (`UIAbilityContext.startAbilityForResult`, `terminateSelfWithResult`). It is the same call
+  a real integration with a host app would use; no permission is needed for it.
+- What crosses: on the phone, completed days of the six people and their wear months, only the data types
+  the user allowed in Health Sim (a type that was not allowed arrives as "no value"); on the watch, the
+  script of one demo day. Nothing else is shared between the two apps: no shared files, no network.
+- Both texts are decoded strictly (`common/src/main/ets/health/HealthSimPayload.ets`,
+  `common/src/main/ets/watchlink/DemoFeed.ets`): a wrong version, an unknown person, a wrong row length, a
+  value that is not a number or a text over the size limit gives nothing, never an exception.
+- **Fallback.** When Health Sim is not installed, refuses or sends something that does not decode, FairWear
+  works as before: the built-in demo histories with the source line "HUAWEI Health · Demo data" on the
+  phone, and the built-in day script on the watch ("Health Sim not on this watch · built-in script").
+- The report built from Health Sim data equals the built-in one for all six people
+  (`common/src/test/HealthSimPayload.test.ets`); the source line then reads "Health Sim · Simulated data".
+- Health Sim carries unchanged copies of the shared logic it needs (`healthsim/*/src/main/ets/fw/`); a Node
+  test keeps them identical to `common` (`common/src/test/HealthSimCopies.test.ets`).
+
 FairWear is an add-on for HUAWEI Health users: with their permission it reads what HUAWEI Health already
 measures, scores it on the phone, and shares only a signed tier.
 
@@ -37,7 +69,7 @@ measures, scores it on the phone, and shares only a signed tier.
 
 | Part                                                                  | State                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| HUAWEI Health connection                                              | Stub. Access to sensitive data through Health Service Kit needs Huawei's approval for the app; it was not granted during the hackathon.                                                                                                                                                                                                                                                                              |
+| HUAWEI Health connection                                              | Stub for the real kit: access to sensitive data through Health Service Kit needs Huawei's approval for the app; it was not granted during the hackathon. On the emulators Health Sim, our own simulator app, stands in for HUAWEI Health and hands FairWear the data after its own consent (Data flow above); without it, built-in demo data.                                                                                                                                                                                                                                                                              |
 | HUAWEI Health authorization screen                                    | Not shown. A DEMO placeholder stands in its place; FairWear does not copy Huawei's screen.                                                                                                                                                                                                                                                                                                                           |
 | Consent logic, status transitions, per-data-type switches             | Real, covered by tests (`common/src/test/Health.test.ets`).                                                                                                                                                                                                                                                                                                                                                          |
 | Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not built. The demo personas are generated as completed days for the score (`hes/HesPersonas.ets`) and do not pass through the health source layer, whose demo source is empty.                                                                                                                                                                                                                                      |
