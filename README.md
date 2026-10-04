@@ -13,6 +13,26 @@ follow a raised resting heart rate and fewer steps), lets the user see and appea
 partner only a signed, single-use A/B/C tier. Lead challenge theme: Human-Centric Technology (responsible
 technology, digital wellbeing).
 
+**Demo video:** (link before submission) · **HAP packages:** (link before submission)
+
+<p>
+<img src="docs/screenshots/final/a1-report-ania-healthsim-light.jpeg" width="190" alt="Report: Ania, 92 · A, full benefit, on Health Sim data">
+<img src="docs/screenshots/final/a2-evidence-marek-day-appeal-light.jpeg" width="190" alt="Evidence: Marek's suspicious break with its reason, and an appeal">
+<img src="docs/screenshots/final/a4-partner-ania-cheat-light.jpeg" width="190" alt="Partner view: a code whose tier was changed is refused">
+<img src="docs/screenshots/final/a3-watch-dial-feed.jpeg" width="190" alt="Watch dial: heart rate, steps and wear state from the labelled demo feed">
+</p>
+
+## For the jury
+
+| Criterion | Where to see it |
+| --- | --- |
+| Originality | Selective non-wear: Marek and Kasia wear the watch on the same 26 of 30 days, but only Marek's breaks follow a raised resting heart rate and fewer steps, so only he is flagged. The partner gets a signed, single-use A/B/C tier and nothing else. `common/src/main/ets/wear/`, `docs/screenshots/final/a2-evidence-marek-*` |
+| Usefulness | For people in a programme that rewards activity and sleep habits, and for the partner that runs it: a benefit without handing over raw health data, a reason for every day and an appeal. Benefits only, never a penalty. "Who it is for" above, `docs/DEMO_SCRIPT.md` |
+| Technical execution | 380 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
+| Platform capabilities | Sensor Service Kit on the watch, HUKS keys on the phone and the watch, Crypto Architecture Kit, Ability Kit between two apps (Health Sim), Form Kit card, icon shortcut, phone and wearable built from one `common` module. Table "Platform capabilities" below |
+| Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
+| Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
+
 ## FairWear as a component
 
 **What it does.** FairWear takes the health history a person already has, turns it into an A/B/C tier on
