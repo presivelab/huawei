@@ -199,6 +199,20 @@ function periodText(periodIso: string): string {
   return `${shortDate(periodIso.substring(0, cut))} – ${shortDate(periodIso.substring(cut + 2))}`;
 }
 
+// The wear month as read on screen. When "Close the day" has scored days after the month, the last scored
+// day is added: "4 Sep – 3 Oct · score to 5 Oct". The claim keeps the wear month (periodIso).
+export const SCORE_TO: string = ' · score to ';
+
+function periodLine(periodIso: string, history: HesDay[]): string {
+  const text = periodText(periodIso);
+  const cut = periodIso.indexOf('..');
+  if (cut < 0 || history.length === 0) {
+    return text;
+  }
+  const last: string = history[history.length - 1].date;
+  return last > periodIso.substring(cut + 2) ? `${text}${SCORE_TO}${shortDate(last)}` : text;
+}
+
 class RawText {
   raw: string = '';
   unit: string = '';
@@ -416,7 +430,7 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
   return {
     id: id,
     name: HesPersonas.displayName(id),
-    period: periodText(month.period),
+    period: periodLine(month.period, history),
     periodIso: month.period,
     hes: scored ? result.score : HES_NONE,
     tier: result.tier,

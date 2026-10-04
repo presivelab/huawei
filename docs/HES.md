@@ -25,7 +25,7 @@ All weights, curves, thresholds and minimum counts are prototype product assumpt
 | `HesTier.ets`                     | 9                | A from 80, B from 60 to 79, C below 60; labels; points to the next tier                                                              |
 | `HesWhy.ets`                      | 11               | strongest factors, improvement opportunities, missing evidence                                                                       |
 | `HesEngine.ets`                   | 14               | `computeHes(history)`: the whole flow                                                                                                |
-| `HesSession.ets`                  | 10               | live heart rate and today's steps (shown, not scored), close the day, reset                                                          |
+| `HesSession.ets`                  | 10               | live heart rate (never stored), today's steps (stored when the day closes), close the day, reset                                                          |
 | `HesPrng.ets`, `HesPersonas.ets`  | 16               | the seeded generator and the six personas                                                                                            |
 
 The wear month is next to it, in `common/src/main/ets/wear/`: `WearMonth.ets` (the rules) and `WearPersonas.ets`
@@ -198,8 +198,9 @@ implementation of the same interface; it is not in use.
 34. **`DayDetail.breaks` holds only what the rule counts as a break** (at least 120 minutes off the wrist and
     not on the charger). A day the watch did not observe has no breaks and 0 worn and charging minutes.
 35. **Close the day and reset work per persona.** Each persona has its own session; closing a day for one
-    does not touch another. One closed day moves Ewa from C / 59 to B / 64; reset gives C / 59 again. A live
-    heart rate or step count never changes a score, before or after a closed day.
+    does not touch another. One closed day moves Ewa from C / 59 to B / 64; reset gives C / 59 again. The live
+    heart rate never changes a score and is never stored. Today's step count changes nothing until the day is
+    closed; closing the day stores it as that day's steps (decision 18), so a closed day can move the score.
 
 ## What this is not
 

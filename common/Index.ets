@@ -442,7 +442,8 @@ export {
   engineWhatIf,
   EngineWhatIf,
   nextTierOf,
-  reportComponentId
+  reportComponentId,
+  SCORE_TO
 } from './src/main/ets/report/EngineReports';
 // The Evidence calendar and the "Why this tier" sections, from the rows of a report.
 export {
