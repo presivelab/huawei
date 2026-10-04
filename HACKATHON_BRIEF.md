@@ -10,7 +10,7 @@ Source of the decisions below: `IMPLEMENTATION.md` in the project root. Where th
 
 **Desired demonstration:** A native ArkTS/ArkUI app in two modules. The watch (wearable emulator) turns simulated heart rate and step count into today's wear compliance. The phone (phone emulator) shows 90 days of history, detects selective non-wear, computes a tier A/B/C, and produces a package for the insurer signed with a HUKS key. Raw data never leaves the device.
 
-**Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing). Secondary: Intelligent Experiences (AI-written explanations of the result).
+**Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing).
 
 **Distinctive platform capability:** One capability end to end: watch sensors (Sensor Service Kit: heart rate, pedometer, wear detection) → on-device compliance engine → signed tier. HUKS (Universal Keystore Kit) is the trust link in that same chain, not a separate feature. Only kits available in OpenHarmony are used.
 
@@ -31,9 +31,8 @@ Demo flow from `IMPLEMENTATION.md`. It is fixed; optional extras must not change
 4. Phone, Dashboard: persona Ania (labelled "Synthetic data") shows Tier A and a 15% discount with the wear-compliance ring.
 5. Phone: switch between Marek and Kasia. Both have about 87% wear compliance; only Marek is flagged for selective non-wear and gets 0%.
 6. Phone, Why and Wear calendar: factors with points, and the suspicious gaps in red with their explanation.
-7. Phone, Share: fetch a nonce, build and sign the claim, show the JSON, the shortened signature and the HUKS/SOFTWARE key badge.
-8. Phone, Insurer view: sees only tier, compliance %, eligibility, period and verification status. "Tamper payload" turns the result into INVALID SIGNATURE.
-9. Phone, Settings: the `minDailyHours` and `minMonthlyPct` sliders recalculate the result live.
+7. Phone, Share: the partner side issues a single-use nonce (in the demo the partner verifier runs inside the same app), the phone signs the seven-key claim over it with its HUKS key and shows the token as a QR code, next to "What the partner sees". Every code shown is recorded with its exact text in "What left this phone". A persona without a score gets no code.
+8. Phone, Partner view (demo): takes the code from the same phone (the emulator has no camera) and sees only tier, eligibility, period and the verification status. Verifying the same code again gives "Already used"; changing the tier gives "Invalid signature".
 
 **Approved UI direction:** sections 12 (phone UI, `entry`) and 13 (watch UI, `watch`) of `IMPLEMENTATION.md` are the UI direction approved by the team. Implement screens from those sections without asking about each screen; ask only where they leave a decision open.
 
@@ -43,12 +42,11 @@ Demo flow from `IMPLEMENTATION.md`. It is fixed; optional extras must not change
 - [ ] On the wearable emulator, changing simulated heart rate and steps changes the watch screen; 60 s without a heart-rate reading switches the wear state to not worn.
 - [ ] Ania: Tier A, 15%. Kasia: Tier B, 8%, no flag. Marek: flagged for selective non-wear, not eligible, 0%.
 - [ ] A signed claim verifies in the Insurer view; a tampered payload, a reused nonce and a malformed key are rejected without a crash.
-- [ ] The explanation falls back to the deterministic template on invalid model output, timeout or no network, and the UI labels the source.
 - [ ] Hypium tests from section 14 of `IMPLEMENTATION.md` pass.
 
 ## Scope boundaries
 
-- In scope: steps K0–K9 of `IMPLEMENTATION.md` — `common` HAR (data contract, synthetic generator, day aggregation, wear compliance, selective non-wear detector, risk scorer, discount policy, report builder, HUKS/software attestor, claim verifier, explanation service), phone UI, watch UI with live sensors, tests, submission documents. Optional extras K11–K17 only after the K4–K5 tests are green and only until the feature freeze.
+- In scope: steps K0–K9 of `IMPLEMENTATION.md` — `common` HAR (data contract, synthetic generator, day aggregation, wear compliance, selective non-wear detector, risk scorer, discount policy, report builder, HUKS/software attestor, claim verifier), phone UI, watch UI with live sensors, tests, submission documents. Optional extras K11–K17 only after the K4–K5 tests are green and only until the feature freeze.
 - Out of scope: watch-to-phone synchronisation (emulators have no distributed features); HarmonyOS-only kits (Scan Kit, Health Service Kit, Live View); a separate insurer system; QR scanning with a camera; penalties of any kind (discount only); an actuarial model; `conductor-dev`.
 - Mocked or simulated behavior:
 
@@ -61,7 +59,6 @@ Demo flow from `IMPLEMENTATION.md`. It is fixed; optional extras must not change
 | Watch-to-phone synchronisation              | Not on the emulator (no distributed features); described in ARCHITECTURE                       |
 | Claim signature                             | Real ECDSA; key in HUKS or a software key, labelled in the UI                                  |
 | Insurer                                     | A screen in the same app, not a separate system                                                |
-| AI summary                                  | Real model call on aggregates only; template on failure                                        |
 | Discount amounts                            | Illustrative, not actuarial                                                                    |
 
 ## First-minute narrative

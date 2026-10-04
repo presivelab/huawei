@@ -25,7 +25,8 @@ they were not used at all; from then on they are read as documents from the chec
 
 - `AGENTS.md` — repository-wide hackathon constraints and working agreement.
 - `IMPLEMENTATION.md` — the team's implementation plan, written with Claude (claude.ai) and used as the standing instruction for the coding agent: ArkTS rules, data contract, steps K0–K9, approved UI direction (sections 12–13), tests, and the list of what is real and what is simulated.
-- [Summarize the important project prompt or reusable instruction. Include the full public-safe text when practical.]
+- The team's later briefs, each written by a team member and handed to a coding-agent session as its standing instruction: the change of direction (FairWear as an add-on for HUAWEI Health users), the Watch Link brief, the security brief, the single plan that replaced the earlier briefs, the HES-Lite specification the score was rebuilt from, and the four briefs of the last night (engine, screens, watch, share). Each of the four names the session's files, the values nobody may change (the seven claim keys, the thresholds, the persona results), the checks after every step and the times at which the branches are merged. These briefs are not in this repository.
+- `.claude/skills/fairwear-ui/SKILL.md` — the look and wording rules every session reads before it changes a screen.
 
 ## AI-assisted work log
 
@@ -38,39 +39,75 @@ they were not used at all; from then on they are read as documents from the chec
 | 2026-10-04 | Claude Code / Claude Opus 5.5            | Watch Link brief, Phases 2–4: watch recorder and dial, transports, dev relay, phone verification and cards                                                                                                                                                                                                                                                                                                               | `common/src/main/ets/watchlink/{WatchLinkEngine,PhoneLinkEngine,RecorderClock,DayTransport}.ets`, `common/src/main/ets/platform/` (signing helpers moved from `entry`, `FileTextStore`, `DeviceCrypto`), `watch/src/main/ets/watchlink/`, `watch/src/main/ets/pages/Index.ets`, `watch/src/main/ets/sensors/LiveSensors.ets`, `entry/src/main/ets/watchlink/`, `entry/src/main/ets/view/WatchLinkCard.ets`, `tools/watch-phone-relay.mjs`, `common/src/test/WatchLinkFlow.test.ets`                                                          | Agent-run only: logic tests 66/66 (`common`) and 6/6 (`watch`); `hvigorw assembleHap` for `watch` and `entry` BUILD SUCCESSFUL; both HAPs installed on the emulators; pairing, day import, `--tamper` and `--drop` run across the two emulators with `uitest` taps (screenshots `docs/screenshots/watchlink-*.jpeg`). Not run: a non-zero heart rate on the emulator, Wear Engine on paired devices. The scoring module is not in this checkout, so watch days are shown and not scored. Not yet reviewed by a team member.                                                                                                                                                            |
 | 2026-10-04 | Claude Code / Claude Opus 5.5            | Watch Link brief, Phase 5: documents                                                                                                                                                                                                                                                                                                                                                                                     | `docs/WATCH_LINK.md`, Watch Link sections in `README.md` and `docs/ARCHITECTURE.md`, `docs/test-results.txt`                                                                                                                                                                                                                                                                                                                                                                                                                                 | Written from what was run; every unchecked path is listed as not run. Not yet reviewed by a team member.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 2026-10-04 | Claude Code / Claude Opus 5.5            | Team's correction brief and security brief: check `feature/integration` and fast-forward `main`; security blocks S0–S2 (repo hygiene, permissions, logs); one wear rule on the watch                                                                                                                                                                                                                                     | `tools/hooks/pre-commit`, `.gitignore`, `oh-package-lock.json5` (three files), `README.md` ("Security & privacy", clone step, watch paragraph), `watch/src/main/ets/sensors/LiveSensors.ets` (log summary without health values; charging and wear sensor fed to the wear rule), `common/src/main/ets/live/LiveWearState.ets` (now an adapter over `WearStateMachine`), `common/src/test/LiveWear.test.ets`, `watch/src/main/ets/pages/Index.ets`, `docs/test-results.txt`                                                                   | A team member chose the scope and the branch and decided the merge condition (green tests and builds). Agent-run: logic tests 85/85 (`common`) and 6/6 (`watch`) and both `assembleHap` builds after each block; history scan for secrets with 0 hits; the hook on 7 cases; the watch HAP on the wearable emulator (screen and log line). Not run: a non-zero heart rate, the charging state. Changed test assertions are listed in `docs/test-results.txt`. Not yet reviewed by a team member.                                                                                                                                                                                        |
+| 2026-10-04 | Claude Code / Claude Opus 5.5 (subagent) | HES-Lite v1.0: the package that was to contain the score did not arrive, so the team had the score rebuilt from its written specification; six demo personas with fixed expected results; the wear month                                                                                                                                                                                                                 | `common/src/main/ets/hes/` (curves, sufficiency, components, composite, confidence, tiering, "why", session, seeded persona generator), `common/src/main/ets/wear/`, four test files, `docs/HES.md`                                                                                                                                                                                                                                                                                                                                          | A team member set the expected persona results and the rule that only persona parameters may be tuned, never weights, curves or thresholds. Agent-run: logic tests 265/265 (`common`), every line of the specification's test list as its own test; the six personas equal the fixed table; `assembleHar` and both `assembleHap` builds; lint 0 errors. Not run on an emulator. Decisions where the specification is silent are listed in `docs/HES.md`. Not yet reviewed by a team member.                                                                                                                                                                                            |
+| 2026-10-04 | Claude Code / Claude Opus 5.5 (subagent) | Phone screens, part 1: navigation with three tabs, the Report screen, the demo persona switcher, the UI kit parts they need                                                                                                                                                                                                                                                                                              | `entry/src/main/ets/view/` (`MainTabs`, `ReportView`, `PersonaChip`), `entry/src/main/ets/ui/kit/`, `entry/src/main/ets/report/`, `common/src/main/ets/report/` (view models, benefit rule, fixed preview, spoken texts), `common/src/test/Report.test.ets`                                                                                                                                                                                                                                                                                  | Agent-run: logic tests 162/162 at that point; both builds; lint 0 errors; wording check 0 hits; Report for Ania, Tomek, Marek and Ola on the phone emulator in light and dark mode with screenshots (`docs/screenshots/design/phone-*`). Not done at that point: Why, the Evidence calendar, Share, Partner. Not yet reviewed by a team member.                                                                                                                                                                                                                                                                                                                                        |
+| 2026-10-04 | Claude Code / Claude Opus 5.5            | Engine reports: the phone's report built from the score, then put in use in place of the fixed preview; "Close the day", reset; the details of each day of the wear month with its reason as text                                                                                                                                                                                                                        | `common/src/main/ets/report/EngineReports.ets`, `common/src/test/EngineReports.test.ets`, `entry/src/main/ets/report/EngineReportService.ets`, `ReportService.ets`, `ServiceLocator.ets`, `docs/HES.md`                                                                                                                                                                                                                                                                                                                                      | A team member wrote the contract into the brief: the method names, the fields of a day, the two example texts and the two test cases (Marek on 17 September, Kasia's break with 8 heart-rate readings). Agent-run: logic tests 336/336 (`common`), 6/6 (`watch`); both builds; lint 0 errors; wording check 0 hits; the Report tab for all six personas on the phone emulator, read from the layout dump, with screenshots (`docs/screenshots/final/a1-report-*`). Not run on the emulator at that point: Close the day, reset and the day details (no screen called them yet). Not yet reviewed by a team member.                                                                     |
+| 2026-10-04 | Claude Code / Claude Opus 5.5            | Documents brought in line with the code: no AI feature in the product, what is real and what is simulated, the flag rule                                                                                                                                                                                                                                                                                                 | `HACKATHON_BRIEF.md`, `README.md`, `AI_WORKFLOW.md`, `docs/HES.md`, `docs/ARCHITECTURE.md`, `docs/REQUIREMENTS_CHECK.md`, `common/src/main/ets/model/types.ets` (one comment)                                                                                                                                                                                                                                                                                                                                                                | A team member decided what to remove (the AI-written explanation, its table row and acceptance check, the threshold sliders, `'LLM'` as a ledger kind) and listed the rows of the real-and-simulated table. Wording check 0 hits after the change. Not yet reviewed by a team member.                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## Workflow
 
 ### Ideation and architecture
 
-[Describe how AI influenced the product idea, scope, architecture, and platform-capability choice.]
+The team used Claude (claude.ai) for research, to evaluate the idea and to write the first implementation
+plan. The product decisions were the team's: the user problem, the lead theme, the change of direction to an
+add-on for HUAWEI Health users, the seven-key claim, the thresholds, the expected results of the six personas,
+and which parts are shown as real and which as simulated. The platform capabilities (watch sensors, HUKS
+signing, the home-screen card) were chosen in that plan and checked against the SDK's `.d.ts` files before use.
 
 ### Implementation
 
-[Describe the AI-assisted coding workflow and how generated output was reviewed before acceptance.]
+The code was written by Claude Code sessions, each from a written brief of the team. During the last night
+four sessions worked at once, each in its own git worktree on its own branch, with a list of the files it
+owns; shared files could only be appended to. One commit per step, no squash. One session merges the branches
+at the times the briefs set; merging into `main` is done by a person. Each row of the work log above says
+what a team member decided or read, and says "not yet reviewed" where no team member read the code.
 
 ### Testing and debugging
 
-[Record builds, linting, tests, device/emulator runs, UI inspection, logs, screenshots, and manual checks.]
+- Pure logic: `tools/run-logic-tests.sh` compiles the `.ets` files of `common` and `watch` as strict
+  TypeScript with the compiler bundled in DevEco Studio and runs them under Node against a small hypium
+  stand-in. It checks the logic, not the ArkTS rules.
+- ArkTS: `hvigorw assembleHar` / `assembleHap` for every module that changed (`tools/deploy.sh`).
+- Lint: `tools/lint.sh` (DevEco CLI code linter). Text: `tools/check-wording.sh`.
+- Emulators (Phone and Wearable, API 24): install with `hdc`, taps with `uitest`, texts read from the layout
+  dump, screenshots with `tools/shot.sh`, logs with `hilog`.
+- Every run is recorded in `docs/test-results.txt`, with a "not run" list next to what was run.
 
 ## Unsuccessful approaches
 
-- [What was tried, why it failed, and what changed afterward.]
+- The first briefs assumed a package with the score engine and its screens. It never arrived on the
+  development machine, and several blocks waited for it. The team then had the score rebuilt from its written
+  specification, and the screens drawn on the project's own UI kit.
+- The hackathon agent skills were not installed as agent skills, so the sessions did not load them. From
+  2026-10-04 01:30 they are read as documents from a checkout of the challenge repository.
+- Several sessions used one phone emulator at the same time; taps of one session moved the screen under
+  another, and a check could not be trusted. The sessions now take turns with a lock file per emulator.
+- `tools/deploy.sh` installs the previous HAP when the build fails. The BUILD line has to be read before a
+  result on the emulator is believed.
+- The wearable emulator sends a heart rate of 0 about six times a second and has no wear-detection sensor, so
+  a day recorded from its sensors is empty. A labelled demo feed was added for the demonstration.
 
 ## Known limitations
 
-- [Product, platform, model, data, testing, or tooling limitation.]
+- Most agent-written code was not read line by line by a team member; the work log says where.
+- The Node test run is not the ArkTS compiler and not a device: the hypium run on a device was not made.
+- The score runs on synthetic persona histories. The HUAWEI Health adapter is a stub, the Wear Engine
+  transport was not run, and no real heart rate was read on an emulator (`README.md`, "What is real and what
+  is simulated").
+- Screens were checked on one phone emulator size and one round watch size.
 
 ## Lessons learned
 
-- [Concise lesson that would help reproduce or improve the work.]
+- A brief that names the contract (method names, fields, example texts, the test cases) lets sessions work in
+  parallel: the screens were drawn against the report interface while the engine behind it changed.
+- One place that chooses where the data comes from (`ServiceLocator.ets`) let the engine replace the fixed
+  preview without a change in any screen.
+- Fixed expected results, pinned in tests, kept tuning honest: only persona parameters were changed to reach
+  them.
+- Writing down what was not run is as useful as what was.
 
 ## AI feature disclosure
 
-Complete this section only if AI is part of the product itself; otherwise write "Not applicable."
-
-- Model or service: [Name/version/provider]
-- Inference flow: [On-device, remote, or hybrid; inputs and outputs]
-- Data handling and privacy: [What leaves the device, retention, consent, and safeguards]
-- Failure and fallback behavior: [How errors, latency, offline use, and unsafe output are handled]
-- Evaluation: [Test cases, quality measures, human review, and known model limitations]
+Not applicable. FairWear has no AI feature: the score, the tier, the wear rules and the reasons shown to the
+user are deterministic rules and curves calculated on the phone. The app makes no model call and no network
+call, and the phone app declares no permission.

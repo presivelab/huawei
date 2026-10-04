@@ -114,9 +114,12 @@ two disagree.
 
 **What is NOT in the repository yet**
 
-- The content of "Why this tier", the Evidence calendar and the ledger screen are still being built. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
-  that chooses between the fixed preview (`PreviewReports`) and the engine (`engineReport` /
-  `engineReportOf`). While the preview is shown it is labelled as preview on screen.
+- The screens Share, the partner view, "Why this tier", the Evidence calendar and the ledger are in the tree,
+  merged on 2026-10-04 from feature branches that were still in progress; they have not been checked together
+  on the emulator. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
+  that chooses where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per
+  persona), with `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and
+  `selectedDayDetails()`. The fixed preview (`PreviewReportService`) is still in the code and not in use.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
   histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
   this repository; check `docs/HES.md` and the code.
