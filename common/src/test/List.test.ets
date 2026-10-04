@@ -17,6 +17,7 @@ import tourContentTest from './TourContent.test';
 import evidenceCalendarTest from './EvidenceCalendar.test';
 import whySectionsTest from './WhySections.test';
 import healthSimPayloadTest from './HealthSimPayload.test';
+import consentScopesTest from './ConsentScopes.test';
 
 export default function testsuite() {
   claimTest();
@@ -38,4 +39,5 @@ export default function testsuite() {
   evidenceCalendarTest();
   whySectionsTest();
   healthSimPayloadTest();
+  consentScopesTest();
 }

@@ -31,15 +31,16 @@
  *     shorter moments off the wrist are not listed.
  */
 import { TIER_A, TIER_B, TIER_C } from '../claim/ClaimValidation';
+import { ALL_HEALTH_SCOPES, HealthScope } from '../health/HealthConnection';
 import { HealthStatus } from '../health/HealthRecords';
-import { HealthSimPerson } from '../health/HealthSimPayload';
+import { dayWithScopes, HealthSimPerson } from '../health/HealthSimPayload';
 import { healthSourceLabel } from '../health/HealthStatusLabel';
 import { componentScore, equivalentMvpa } from '../hes/HesComponents';
 import { hesDefinition, HES_DAYS_PER_WEEK, HES_TIER_A_MIN, HES_TIER_B_MIN } from '../hes/HesCurves';
 import { composeHes, computeHes } from '../hes/HesEngine';
 import { hesMean, hesRound, sleepRelativeMinutes, sleepTimingSd } from '../hes/HesMath';
-import { HesPersonas } from '../hes/HesPersonas';
-import { HesSession } from '../hes/HesSession';
+import { generatePersonaDay, generatePersonaHistory, HesPersonas, HesPersonaSpec } from '../hes/HesPersonas';
+import { HesDaySource, HesSession } from '../hes/HesSession';
 import { isValidFor, validDays } from '../hes/HesSufficiency';
 import { pointsToNextTier } from '../hes/HesTier';
 import {
@@ -638,9 +639,41 @@ export function enginePersonas(): PersonaRef[] {
   return out;
 }
 
-/** A demo session of a persona: live values, close the day, reset. An unknown id gives the default one. */
-export function engineSession(id: string): HesSession {
-  return HesPersonas.session(knownId(id));
+// The days "Close the day" adds, with the consent applied: a data type that is switched off stays missing in
+// every new day, the same way it is missing in the starting history.
+class ScopedPersonaDays implements HesDaySource {
+  private spec: HesPersonaSpec;
+  private scopes: HealthScope[];
+
+  constructor(spec: HesPersonaSpec, scopes: HealthScope[]) {
+    this.spec = spec;
+    this.scopes = scopes;
+  }
+
+  dayAfter(closedDays: number): HesDay {
+    return dayWithScopes(generatePersonaDay(this.spec, closedDays), this.scopes);
+  }
+}
+
+function daysWithScopes(days: HesDay[], scopes: HealthScope[]): HesDay[] {
+  const out: HesDay[] = [];
+  for (let i = 0; i < days.length; i++) {
+    out.push(dayWithScopes(days[i], scopes));
+  }
+  return out;
+}
+
+/**
+ * A demo session of a persona: live values, close the day, reset. An unknown id gives the default one.
+ * `scopes` are the data types the person agreed to: the fields of every other type are missing in the
+ * starting history and in each day that is closed later. With no argument every type is used.
+ */
+export function engineSession(id: string, scopes: HealthScope[] = ALL_HEALTH_SCOPES): HesSession {
+  const spec = HesPersonas.spec(knownId(id));
+  if (spec === null) {
+    return new HesSession([], null);
+  }
+  return new HesSession(daysWithScopes(generatePersonaHistory(spec), scopes), new ScopedPersonaDays(spec, scopes));
 }
 
 /**
@@ -675,10 +708,13 @@ export function engineReports(): PersonaReport[] {
 
 /**
  * A demo session that starts from the days Health Sim sent for this person. Closing a day continues the
- * persona's own seeded series. An unknown id gives the default persona's session.
+ * persona's own seeded series. An unknown id gives the default persona's session. `scopes` are applied to
+ * the days received and to every day closed later, as in `engineSession`.
  */
-export function engineSessionFrom(person: HealthSimPerson): HesSession {
-  return HesPersonas.sessionFrom(knownId(person.id), person.days);
+export function engineSessionFrom(person: HealthSimPerson, scopes: HealthScope[] = ALL_HEALTH_SCOPES): HesSession {
+  const spec = HesPersonas.spec(knownId(person.id));
+  return new HesSession(daysWithScopes(person.days, scopes),
+    spec === null ? null : new ScopedPersonaDays(spec, scopes));
 }
 
 /** The wear month of the days Health Sim sent, under the default thresholds, with no sick days. */

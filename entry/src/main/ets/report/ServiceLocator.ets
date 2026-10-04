@@ -1,10 +1,12 @@
 import {
+  ALL_HEALTH_SCOPES,
   DayDetail,
   decodeHealthSimPayload,
   encodeHealthSimPayload,
   FileTextStore,
   HEALTH_SIM_LABEL,
   HealthSimPayload,
+  HealthScope,
   healthSourceLabel,
   HealthStatus,
   PersonaReport,
@@ -38,7 +40,71 @@ let revision: number = 0;
 
 // Health Sim: the data it sent after the user's consent is kept in the app sandbox, so a restart keeps it.
 const HEALTH_SIM_FILE: string = 'healthsim/fwhs1.json';
+// The data types of FairWear's own consent, as a JSON array of HealthScope names. Kept next to the data so a
+// restart does not bring a switched-off type back when a day is closed.
+const SCOPES_FILE: string = 'healthsim/scopes.json';
 let store: FileTextStore | null = null;
+
+// The stored consent, read strictly: an array of known names with no repeats. Anything else gives null.
+function decodeScopes(text: string): HealthScope[] | null {
+  try {
+    const parsed: Object | null = JSON.parse(text) as Object | null;
+    if (parsed === null || !Array.isArray(parsed)) {
+      return null;
+    }
+    const items: Object[] = parsed as Object[];
+    const out: HealthScope[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item: Object = items[i];
+      if (typeof item !== 'string') {
+        return null;
+      }
+      let found: HealthScope | null = null;
+      for (let k = 0; k < ALL_HEALTH_SCOPES.length; k++) {
+        if (ALL_HEALTH_SCOPES[k] === item) {
+          found = ALL_HEALTH_SCOPES[k];
+        }
+      }
+      if (found === null || out.indexOf(found) >= 0) {
+        return null;
+      }
+      out.push(found);
+    }
+    return out;
+  } catch (e) {
+    return null;
+  }
+}
+
+function encodeScopes(scopes: HealthScope[]): string {
+  const names: string[] = [];
+  for (let i = 0; i < scopes.length; i++) {
+    names.push(scopes[i]);
+  }
+  return JSON.stringify(names);
+}
+
+function storeScopes(scopes: HealthScope[]): void {
+  const s = store;
+  if (s !== null) {
+    try {
+      s.writeAtomic(SCOPES_FILE, encodeScopes(scopes));
+    } catch (e) {
+      // The consent stays in memory for this session.
+    }
+  }
+}
+
+function removeStored(path: string): void {
+  const s = store;
+  if (s !== null) {
+    try {
+      s.remove(path);
+    } catch (e) {
+      // Nothing to remove.
+    }
+  }
+}
 
 // Tells the screens that the content of a report changed (see the @Watch above).
 function bumpRevision(): void {
@@ -86,8 +152,9 @@ export function resetSelected(): void {
 }
 
 /**
- * Gives the reports their folder in the app sandbox and puts back the Health Sim data an earlier session
- * received. Call once at start (EntryAbility.onCreate) with the context's filesDir.
+ * Gives the reports their folder in the app sandbox and puts back what an earlier session left there: the
+ * data types of the consent and the Health Sim data. A consent file that does not read as a list of known
+ * data types counts as every type. Call once at start (EntryAbility.onCreate) with the context's filesDir.
  */
 export function attachReportStore(filesDir: string): void {
   if (store !== null || filesDir.length === 0) {
@@ -95,20 +162,34 @@ export function attachReportStore(filesDir: string): void {
   }
   const s = new FileTextStore(filesDir);
   store = s;
-  const text = s.read(HEALTH_SIM_FILE);
-  if (text === null) {
-    return;
+  let changed = false;
+  const scopesText = s.read(SCOPES_FILE);
+  if (scopesText !== null) {
+    const scopes = decodeScopes(scopesText);
+    engine.useScopes(scopes === null ? ALL_HEALTH_SCOPES : scopes);
+    changed = true;
   }
-  const payload = decodeHealthSimPayload(text);
-  if (payload !== null) {
-    engine.useHealthSim(payload);
+  const text = s.read(HEALTH_SIM_FILE);
+  if (text !== null) {
+    const payload = decodeHealthSimPayload(text);
+    if (payload !== null) {
+      engine.useHealthSim(payload);
+      changed = true;
+    }
+  }
+  if (changed) {
     bumpRevision();
   }
 }
 
-/** Reports now come from the data Health Sim sent (after both consents). Kept across restarts. */
-export function useHealthSim(payload: HealthSimPayload): void {
+/**
+ * Reports now come from the data Health Sim sent (after both consents). `scopes` are the data types the
+ * user left switched on: they also apply to every day closed later. Kept across restarts.
+ */
+export function useHealthSim(payload: HealthSimPayload, scopes: HealthScope[] = ALL_HEALTH_SCOPES): void {
   engine.useHealthSim(payload);
+  engine.useScopes(scopes);
+  storeScopes(scopes);
   const s = store;
   if (s !== null) {
     try {
@@ -120,17 +201,27 @@ export function useHealthSim(payload: HealthSimPayload): void {
   bumpRevision();
 }
 
-/** "Disconnect": the Health Sim data is forgotten and the built-in demo histories are used again. */
+/**
+ * Consent without Health Sim: the built-in demo histories with the data types the user left switched on.
+ * Any Health Sim data from an earlier session is forgotten. Kept across restarts.
+ */
+export function useBuiltIn(scopes: HealthScope[]): void {
+  engine.useHealthSim(null);
+  engine.useScopes(scopes);
+  removeStored(HEALTH_SIM_FILE);
+  storeScopes(scopes);
+  bumpRevision();
+}
+
+/**
+ * "Disconnect": the Health Sim data and the consent are forgotten; the built-in demo histories are used
+ * again with every data type, until the next consent.
+ */
 export function clearHealthSim(): void {
   engine.useHealthSim(null);
-  const s = store;
-  if (s !== null) {
-    try {
-      s.remove(HEALTH_SIM_FILE);
-    } catch (e) {
-      // Nothing to remove.
-    }
-  }
+  engine.useScopes(ALL_HEALTH_SCOPES);
+  removeStored(HEALTH_SIM_FILE);
+  removeStored(SCOPES_FILE);
   bumpRevision();
 }
 

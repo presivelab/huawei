@@ -460,6 +460,7 @@ export {
   wearMonthFrom
 } from './src/main/ets/report/EngineReports';
 // Health Sim: the simulator app that stands in for HUAWEI Health hands its data over in this format.
+export { dayWithScopes } from './src/main/ets/health/HealthSimPayload';
 export {
   decodeHealthSimPayload,
   encodeHealthSimPayload,

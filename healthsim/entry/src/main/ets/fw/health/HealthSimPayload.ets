@@ -309,7 +309,11 @@ export function healthSimPerson(p: HealthSimPayload, id: string): HealthSimPerso
   return null;
 }
 
-function blanked(day: HesDay, scopes: HealthScope[]): HesDay {
+/**
+ * One day as the consent allows it: every field of a data type that is not in `scopes` becomes HES_MISSING.
+ * The day passed in is not changed.
+ */
+export function dayWithScopes(day: HesDay, scopes: HealthScope[]): HesDay {
   const d = copyHesDay(day);
   if (scopes.indexOf(HealthScope.STEPS) < 0) {
     d.steps = HES_MISSING;
@@ -353,7 +357,7 @@ export function withScopes(p: HealthSimPayload, scopes: HealthScope[]): HealthSi
     person.id = src.id;
     person.name = src.name;
     for (let j = 0; j < src.days.length; j++) {
-      person.days.push(blanked(src.days[j], scopes));
+      person.days.push(dayWithScopes(src.days[j], scopes));
     }
     person.wear = src.wear;
     out.people.push(person);

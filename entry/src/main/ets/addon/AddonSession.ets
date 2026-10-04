@@ -17,7 +17,7 @@ import {
   HealthSimClient
 } from '../platform/HealthSimClient';
 import { HuaweiHealthSource } from '../platform/HuaweiHealthSource';
-import { clearHealthSim, useHealthSim } from '../report/ServiceLocator';
+import { clearHealthSim, useBuiltIn, useHealthSim } from '../report/ServiceLocator';
 
 // AppStorage keys the screens bind to. AddonSession.publish() is the only writer.
 export const KEY_STATUS: string = 'fwSourceStatus';       // HealthStatus value
@@ -128,11 +128,12 @@ export class AddonSession {
       this.wasConnected = true;
       // The reports change their source before the screens hear about the new status: Health Sim's data
       // with the switched-off types removed, or the built-in demo histories when Health Sim was not used.
+      // Either way the same types stay missing in every day that is closed later.
       const payload: HealthSimPayload | null = this.pendingHealthSim;
       if (payload !== null) {
-        useHealthSim(withScopes(payload, scopes));
+        useHealthSim(withScopes(payload, scopes), scopes);
       } else {
-        clearHealthSim();
+        useBuiltIn(scopes);
       }
       this.pendingHealthSim = null;
     }
