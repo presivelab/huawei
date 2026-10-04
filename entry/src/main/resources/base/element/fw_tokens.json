@@ -1,0 +1,18 @@
+{
+  "color": [
+    { "name": "fw_metric_steps", "value": "#2F9E44" },
+    { "name": "fw_metric_heart", "value": "#D4365C" },
+    { "name": "fw_metric_sleep", "value": "#4763D8" },
+    { "name": "fw_metric_activity", "value": "#E0701A" },
+    { "name": "fw_metric_vo2max", "value": "#0A8FB8" },
+    { "name": "fw_metric_hrv", "value": "#8E4FD0" },
+    { "name": "fw_metric_workout", "value": "#C93C8E" },
+    { "name": "fw_wear_worn", "value": "#0E9282" },
+    { "name": "fw_wear_charging", "value": "#C98200" },
+    { "name": "fw_wear_off", "value": "#CB5A3C" },
+    { "name": "fw_wear_unobserved", "value": "#B4BAC6" },
+    { "name": "fw_tier_a", "value": "#12936A" },
+    { "name": "fw_tier_b", "value": "#B98300" },
+    { "name": "fw_tier_c", "value": "#A8623A" }
+  ]
+}
