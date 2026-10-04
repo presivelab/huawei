@@ -8,7 +8,7 @@ State on 2026-10-04, branch `feature/hes-vnext` (base `merge/final-into-main` 6d
 product screen: the Health Sim connect path, Report, "Why this tier", Evidence, Share, the partner view and
 "What left this phone" on the Phone emulator; the dial, the recorder and "Get today from Health Sim" on the
 Wearable emulator (`docs/screenshots/final/`, `docs/screenshots/`). Earlier versions of this file, written on
-`feature/entry-routing` and `feature/home-card`, are in the git history. The screenshots in `docs/screenshots/final/` were taken before HES vNext; the emulator walk of HES vNext has its own block in `docs/test-results.txt` and its screenshots are in `docs/screenshots/vnext/`. The table below is the current state.
+`feature/entry-routing` and `feature/home-card`, are in the git history. The screenshots in `docs/screenshots/final/` were taken before HES vNext; for HES vNext only the watch label was checked on an emulator (`docs/screenshots/vnext/`); the phone and Health Sim screens of this build were built and not walked, as the block in `docs/test-results.txt` says. The table below is the current state.
 
 ## Status
 

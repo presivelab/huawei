@@ -120,8 +120,8 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
   from a recipe without random numbers (28 completed days, Ola 16); the source pill on the Report tab reads "HUAWEI Health · Demo data". All weights,
   curves, thresholds and minimum counts are prototype product assumptions, not clinically or actuarially validated.
   A profile switch (Health & wellness | Longevity) on the Report and Why screens only explains the other
-  reading; sharing, eligibility and benefit always use the partner's profile. The HES vNext screenshots are in
-  `docs/screenshots/vnext/`. Description, persona results and decisions: `docs/HES.md`.
+  reading; sharing, eligibility and benefit always use the partner's profile. On the emulators only the watch label was
+  checked for this build (`docs/screenshots/vnext/`); the phone screens were built and not walked. Description, persona results and decisions: `docs/HES.md`.
 - Wear rules run next to the score (`common/src/main/ets/wear/`): compliant days, nights, breaks, and the
   selective non-wear flag. One suspicious break never raises the flag, three always do, two only when they
   are more than 30% of all breaks.

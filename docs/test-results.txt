@@ -36,7 +36,16 @@ Derived: with the HRV data type off Ania reads 93 · A with 92.5% coverage on bo
 Payload sizes (Health Sim -> FairWear, contract version 2): six-person export 31,067 characters (Ania alone
   6,993); the reader accepts up to 90,000.
 Emulator walk (HES vNext)
-Recorded by the session after this entry; see the lines below.
+Wearable emulator (127.0.0.1:5555), 08:57-08:58, FairWear watch HAP from 77a0fb4, install -r: the dial page shows
+  "Live · not scored" above the heart rate, inside the round screen; no score, tier or coverage anywhere on the
+  watch. Screenshot: docs/screenshots/vnext/watch-live-not-scored.jpeg.
+  This install went over another session's watch build while its lock was on the emulator: a mistake of this
+  session, reported to that session at once.
+Phone emulator: NOT walked. The phone was in use by other sessions until 09:41 and reserved for the submission
+  regression after that. Not seen on any emulator: the Report card with Evidence coverage and Data confidence, the
+  profile switch, Why this tier, the no-score screens (Ola), the Live card, Share with the profile line, the refusal of
+  an outdated Health Sim answer, light and dark mode of these screens, and all of Health Sim (Today, History,
+  FairWear readiness). The golden values are checked by the logic tests, not on a screen.
 
 2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
 ----------------------------------------------------
