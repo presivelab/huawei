@@ -88,7 +88,8 @@ function contextBefore(two: TwoDays, start: number, end: number): BreakContext {
   return context;
 }
 
-// Breaks that END on the packet day: maximal runs of O (never C, never U) longer than the break minimum.
+// Breaks that END on the packet day: maximal runs of O (never C, never U) of at least the break minimum,
+// the same limit the phone's rule counts with (WearMonth judgeBreak: minutes >= gapMinMinutes).
 // A run still going at the end of the day is not reported here; it is carried into the next day's packet.
 // A run that began the day before has a negative startMin.
 function findBreaks(two: TwoDays, breakMinMinutes: number): BreakContext[] {
@@ -106,7 +107,7 @@ function findBreaks(two: TwoDays, breakMinMinutes: number): BreakContext[] {
     }
     const end = i;   // exclusive
     const endsToday = end >= SLOTS_PER_DAY && end < total;
-    if (endsToday && (end - start) * SLOT_MINUTES > breakMinMinutes && out.length < MAX_BREAKS) {
+    if (endsToday && (end - start) * SLOT_MINUTES >= breakMinMinutes && out.length < MAX_BREAKS) {
       out.push(contextBefore(two, start, end));
     }
   }

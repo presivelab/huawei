@@ -85,7 +85,7 @@ Freshness is measured in real time, never in demo time: 60 s with the real clock
 | `iat`              | int         | epoch seconds                                                                                                                                                                  |
 | `sig`              | string      | ECDSA P-256 / SHA-256, ASN.1 DER, base64url                                                                                                                                    |
 
-A break is a maximal run of `O` (never `C`, never `U`) longer than the break minimum from `defaults.ets` (`gapMinMinutes`, 120). It is reported in the packet of the day it **ends**; a break still running at the end of a day is carried into the next packet.
+A break is a maximal run of `O` (never `C`, never `U`) of at least the break minimum from `defaults.ets` (`gapMinMinutes`, 120), the same limit the phone's break rule counts with. It is reported in the packet of the day it **ends**; a break still running at the end of a day is carried into the next packet.
 
 | break field          | notes                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------- |

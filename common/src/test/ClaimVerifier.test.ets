@@ -382,7 +382,9 @@ export default function claimVerifierTest() {
       }
       const parsed = JSON.parse(signed.claimJson) as Record<string, Object>;
       expect(Object.keys(parsed).length).assertEqual(7);
-      const text = (signed.claimJson + token).toLowerCase();
+      // The decoded fields, not the base64 text: random signature bytes can spell 'hes' or 'hrv' by chance
+      // (this made the test fail now and then).
+      const text = `${signed.claimJson} ${signed.kid} ${signed.keySource}`.toLowerCase();
       const banned = ['hes', 'coverage', 'flag', 'susp', 'reason', 'score', 'heart', 'steps', 'hrv', 'vo2',
         'compliance', 'pseudonym', 'persona'];
       for (let i = 0; i < banned.length; i++) {

@@ -367,7 +367,7 @@ export default function watchLinkTest() {
   });
 
   describe('WatchLink 1.6 DayBuilder', () => {
-    it('6. 25 O slots is one break; 24 is none; 30 C is none; 40 U is none', 0, () => {
+    it('6. 24 O slots (exactly 2 h) is one break, as on the phone; 23 is none; 30 C is none; 40 U is none', 0, () => {
       const a = fullDay(D1, 'W', 60);
       fill(a, 100, 125, 'O');
       const pa = DayBuilder.build(a, null);
@@ -375,8 +375,14 @@ export default function watchLinkTest() {
       expect(pa.breaks[0].startMin).assertEqual(500);
       expect(pa.breaks[0].endMin).assertEqual(625);
 
+      const exact = fullDay(D1, 'W', 60);
+      fill(exact, 100, 124, 'O');
+      const pe = DayBuilder.build(exact, null);
+      expect(pe.breaks.length).assertEqual(1);
+      expect(pe.breaks[0].endMin - pe.breaks[0].startMin).assertEqual(120);
+
       const b = fullDay(D1, 'W', 60);
-      fill(b, 100, 124, 'O');
+      fill(b, 100, 123, 'O');
       expect(DayBuilder.build(b, null).breaks.length).assertEqual(0);
 
       const c = fullDay(D1, 'W', 60);
@@ -404,12 +410,12 @@ export default function watchLinkTest() {
       const yesterday = fullDay(D1, 'W', 60);
       fill(yesterday, 276, 288, 'O');                // from 23:00
       const today = fullDay(D2, 'W', 60);
-      fill(today, 0, 24, 'O');                       // until 02:00
+      fill(today, 0, 23, 'O');                       // until 01:55: under 2 h on its own
       expect(DayBuilder.build(yesterday, null).breaks.length).assertEqual(0);
       const p = DayBuilder.build(today, yesterday);
       expect(p.breaks.length).assertEqual(1);
       expect(p.breaks[0].startMin).assertEqual(-60);
-      expect(p.breaks[0].endMin).assertEqual(120);
+      expect(p.breaks[0].endMin).assertEqual(115);
       // A record that is not the day before is ignored.
       const other = fullDay(D4, 'W', 60);
       fill(other, 276, 288, 'O');
