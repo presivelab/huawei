@@ -14,6 +14,8 @@ import wearMonthTest from './WearMonth.test';
 import reportTest from './Report.test';
 import engineReportsTest from './EngineReports.test';
 import tourContentTest from './TourContent.test';
+import evidenceCalendarTest from './EvidenceCalendar.test';
+import whySectionsTest from './WhySections.test';
 
 export default function testsuite() {
   claimTest();
@@ -32,4 +34,6 @@ export default function testsuite() {
   reportTest();
   engineReportsTest();
   tourContentTest();
+  evidenceCalendarTest();
+  whySectionsTest();
 }
