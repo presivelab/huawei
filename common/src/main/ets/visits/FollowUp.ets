@@ -1,4 +1,4 @@
-import { ADHERENCE_NONE, ADHERENCE_ON_TIME, Adherence, daysBetween, Visit } from './VisitTypes';
+import { ADHERENCE_NONE, ADHERENCE_ON_TIME, Adherence, daysBetween, isoDateMs, Visit } from './VisitTypes';
 
 /*
  * Did the user come back when the doctor asked? One fact, from two dates: the date the follow-up was due
@@ -62,4 +62,24 @@ export function followUpVisitOf(visit: Visit, visits: Visit[]): Visit | null {
 export function followUpDoneOnTime(visit: Visit, visits: Visit[]): boolean {
   const later = followUpVisitOf(visit, visits);
   return later !== null && adherence(visit.followUpDueDate, visitDateOf(later)) === ADHERENCE_ON_TIME;
+}
+
+/** The hour of the day a follow-up reminder is set for. */
+export const REMINDER_HOUR: number = 9;
+
+/** 09:00 local time on the due date, as epoch ms; -1 when the text is not a date. */
+export function reminderMoment(dueDate: string): number {
+  if (isoDateMs(dueDate) < 0) {
+    return -1;
+  }
+  const y = Number.parseInt(dueDate.substring(0, 4), 10);
+  const m = Number.parseInt(dueDate.substring(5, 7), 10);
+  const d = Number.parseInt(dueDate.substring(8, 10), 10);
+  return new Date(y, m - 1, d, REMINDER_HOUR, 0, 0).getTime();
+}
+
+/** The moment a reminder is set for: 09:00 on the due date while that is still ahead of `nowMs`; -1 otherwise. */
+export function reminderMomentAhead(dueDate: string, nowMs: number): number {
+  const at = reminderMoment(dueDate);
+  return at < 0 || at <= nowMs ? -1 : at;
 }

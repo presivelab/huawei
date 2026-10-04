@@ -613,7 +613,10 @@ export {
   followUpVisitOf,
   visitAdherence,
   visitById,
-  visitDateOf
+  visitDateOf,
+  REMINDER_HOUR,
+  reminderMoment,
+  reminderMomentAhead
 } from './src/main/ets/visits/FollowUp';
 export {
   adherenceLabel,

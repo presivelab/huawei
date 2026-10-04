@@ -14,7 +14,14 @@ import {
   DemoVisits,
   VISITS_PERSONA_ID
 } from '../main/ets/visits/DemoVisits';
-import { adherence, followUpDoneOnTime, visitAdherence } from '../main/ets/visits/FollowUp';
+import {
+  adherence,
+  followUpDoneOnTime,
+  REMINDER_HOUR,
+  reminderMoment,
+  reminderMomentAhead,
+  visitAdherence
+} from '../main/ets/visits/FollowUp';
 import {
   followUpDays,
   notesOfKind,
@@ -314,6 +321,28 @@ export default function visitsTest() {
   });
 
   describe('Visits: follow-up adherence', () => {
+    it('the reminder is set for 09:00 on the due day, only while that is still ahead', 0, () => {
+      const at = reminderMoment('2026-10-29');
+      const when = new Date(at);
+      expect(REMINDER_HOUR).assertEqual(9);
+      expect(when.getFullYear()).assertEqual(2026);
+      expect(when.getMonth()).assertEqual(9);
+      expect(when.getDate()).assertEqual(29);
+      expect(when.getHours()).assertEqual(9);
+      expect(when.getMinutes()).assertEqual(0);
+      // A due day ahead of now: 09:00 of that day.
+      expect(reminderMomentAhead('2026-10-29', new Date(2026, 9, 4, 12, 0, 0).getTime())).assertEqual(at);
+      expect(reminderMomentAhead('2026-10-29', at - 1)).assertEqual(at);
+      // The moment itself and anything after it: no reminder.
+      expect(reminderMomentAhead('2026-10-29', at)).assertEqual(-1);
+      expect(reminderMomentAhead('2026-10-01', new Date(2026, 9, 4, 12, 0, 0).getTime())).assertEqual(-1);
+      // Not a date: no reminder.
+      expect(reminderMoment('')).assertEqual(-1);
+      expect(reminderMoment('29 Oct 2026')).assertEqual(-1);
+      expect(reminderMoment('2026-13-40')).assertEqual(-1);
+      expect(reminderMomentAhead('soon', 0)).assertEqual(-1);
+    });
+
     it('a follow-up on or before the due date is on time; later is not', 0, () => {
       // R2 is today-3, R1 was due today-2.
       expect(adherence(addDays(TODAY, -2), addDays(TODAY, -3))).assertEqual(ADHERENCE_ON_TIME);

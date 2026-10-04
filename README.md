@@ -172,7 +172,7 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 | Receipt verification | **Simulated**: a demo register in the app stands in for the national e-receipt verification platform (`MockReceiptVerifier`). The production verifier is the `ReceiptVerifier` interface only. |
 | VisitClaim signing and verification | **Real**: ECDSA P-256 with the same device key as tier claims (HUKS, or the labelled software fallback), checked by `VisitVerifier`. |
 | Visit notes | **Real** rule-based code on the phone (`RuleBasedNotesExtractor`); the transcript is a demo transcript and is labelled so. |
-| Follow-up reminder | **Real** system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead. The demo dates are in the past, so the demo sets none; not exercised on the emulator. |
+| Follow-up reminder | **Real** system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead. The demo dates are in the past, so the demo sets none. Follow-up reminder: checked by a logic test, not run on the emulator. |
 | Watch recording | **Real** microphone capture on the watch after the doctor agreed, kept in the watch sandbox; "Demo recording" where there is no capture or no permission. Nothing is sent from the watch to the phone. |
 | Day dial | **Real** drawing from the newest completed day of the session the score uses and the newest watch day; demo data before launch. Shown, **never scored**. |
 
