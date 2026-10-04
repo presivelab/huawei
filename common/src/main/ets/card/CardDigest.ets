@@ -35,12 +35,19 @@ export function emptyCardDigest(): CardDigest {
   return new CardDigest(cardSourceLabel(HealthStatus.NOT_AUTHORIZED), CARD_COVERAGE_NONE, false);
 }
 
-/** Builds a digest from app state. Without a connection there is never a coverage figure or a result. */
-export function buildCardDigest(status: HealthStatus, coveragePct: number, resultReady: boolean): CardDigest {
+/**
+ * Builds a digest from app state. Without a connection there is never a coverage figure or a result.
+ * `label` names the source the reports really come from ("Health Sim · Simulated data"). It is used only
+ * while connected; a label that is empty or longer than the card allows gives the label of the status.
+ */
+export function buildCardDigest(status: HealthStatus, coveragePct: number, resultReady: boolean,
+  label?: string): CardDigest {
   if (status === HealthStatus.NOT_AUTHORIZED || status === HealthStatus.UNAVAILABLE) {
     return new CardDigest(cardSourceLabel(status), CARD_COVERAGE_NONE, false);
   }
-  return new CardDigest(cardSourceLabel(status), normaliseCoverage(coveragePct), resultReady);
+  const source: string = label !== undefined && label.length > 0 && label.length <= MAX_LABEL_LENGTH ? label :
+    cardSourceLabel(status);
+  return new CardDigest(source, normaliseCoverage(coveragePct), resultReady);
 }
 
 export function cardCoverageText(digest: CardDigest): string {

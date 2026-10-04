@@ -68,6 +68,31 @@ export default function cardDigestTest() {
       }
     });
 
+    it('while connected the card names the source the reports come from', 0, () => {
+      const digest = buildCardDigest(HealthStatus.DEMO, 90, true, 'Health Sim · Simulated data');
+      expect(digest.sourceLabel).assertEqual('Health Sim · Simulated data');
+      expect(cardCoverageText(digest)).assertEqual('90%');
+      expect(cardResultText(digest)).assertEqual('Score ready');
+      // The label survives the stored form the card reads.
+      expect(decodeCardDigest(encodeCardDigest(digest)).sourceLabel).assertEqual('Health Sim · Simulated data');
+    });
+
+    it('a source label never replaces "Not connected" and never brings coverage with it', 0, () => {
+      const refused = buildCardDigest(HealthStatus.NOT_AUTHORIZED, 90, true, 'Health Sim · Simulated data');
+      expect(refused.sourceLabel).assertEqual('HUAWEI Health · Not connected');
+      expect(cardCoverageText(refused)).assertEqual(CARD_NO_VALUE);
+      expect(cardResultText(refused)).assertEqual(CARD_NO_VALUE);
+      const unavailable = buildCardDigest(HealthStatus.UNAVAILABLE, 90, true, 'Health Sim · Simulated data');
+      expect(unavailable.sourceLabel).assertEqual('HUAWEI Health · Unavailable in this build');
+    });
+
+    it('an empty label or one longer than 48 characters gives the label of the status', 0, () => {
+      expect(buildCardDigest(HealthStatus.DEMO, 90, true, '').sourceLabel).assertEqual('HUAWEI Health · Demo data');
+      const long = 'Health Sim · Simulated data · and a remark that does not fit';
+      expect(long.length > 48).assertTrue();
+      expect(buildCardDigest(HealthStatus.DEMO, 90, true, long).sourceLabel).assertEqual('HUAWEI Health · Demo data');
+    });
+
     it('coverage outside 0..100 is clamped or dropped', 0, () => {
       expect(buildCardDigest(HealthStatus.DEMO, 140, true).coveragePct).assertEqual(100);
       expect(buildCardDigest(HealthStatus.DEMO, -5, true).coveragePct).assertEqual(CARD_COVERAGE_NONE);

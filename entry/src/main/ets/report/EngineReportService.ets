@@ -1,4 +1,5 @@
 import {
+  ALL_HEALTH_SCOPES,
   DayDetail,
   ENGINE_DEFAULT_ID,
   engineDayDetails,
@@ -11,6 +12,7 @@ import {
   HealthSimPayload,
   HealthSimPerson,
   healthSimPerson,
+  HealthScope,
   HesPersonas,
   HesSession,
   PersonaRef,
@@ -25,6 +27,9 @@ import { ReportService } from './ReportService';
  * completed days, the live readings of the running day and the score for the completed days. The live
  * readings are shown and never scored; closing the day adds one completed day and the score is calculated
  * again; reset goes back to the persona's starting history. The wear month and the day details do not move.
+ *
+ * The consent is applied here: a data type the user switched off is missing in the starting history and in
+ * every day that is closed later, whether the days are the built-in ones or the ones Health Sim sent.
  */
 export class EngineReportService implements ReportService {
   private sessions: Map<string, HesSession> = new Map<string, HesSession>();
@@ -32,10 +37,19 @@ export class EngineReportService implements ReportService {
   private reports: Map<string, PersonaReport> = new Map<string, PersonaReport>();
   // The data Health Sim sent after the user's consent; null: the built-in persona histories.
   private payload: HealthSimPayload | null = null;
+  // The data types the user agreed to in FairWear's own consent. Every type until a consent says otherwise.
+  private scopes: HealthScope[] = ALL_HEALTH_SCOPES;
 
   /** Reports from now on come from the data Health Sim sent (null: the built-in histories). */
   useHealthSim(payload: HealthSimPayload | null): void {
     this.payload = payload;
+    this.sessions.clear();
+    this.reports.clear();
+  }
+
+  /** The data types the reports may use from now on. Every session starts again with them. */
+  useScopes(scopes: HealthScope[]): void {
+    this.scopes = scopes.slice();
     this.sessions.clear();
     this.reports.clear();
   }
@@ -59,7 +73,7 @@ export class EngineReportService implements ReportService {
     let session: HesSession | undefined = this.sessions.get(known);
     if (session === undefined) {
       const person = this.person(known);
-      session = person === null ? engineSession(known) : engineSessionFrom(person);
+      session = person === null ? engineSession(known, this.scopes) : engineSessionFrom(person, this.scopes);
       this.sessions.set(known, session);
     }
     return session;

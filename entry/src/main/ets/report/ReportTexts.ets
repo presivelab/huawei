@@ -25,10 +25,6 @@ export const EVIDENCE_LABEL: string = 'Evidence';
 export const WEAR_TITLE: string = 'Wear this month';
 export const EVIDENCE_TITLE: string = 'Your evidence';
 export const EVIDENCE_NOTE: string = 'completed days · last 28';
-export const TODAY_TITLE: string = 'Today';
-export const TODAY_CHIP_LIVE: string = 'Live · not scored';
-export const TODAY_CHIP_PREVIEW: string = 'Preview · not scored';
-export const TODAY_NOTE: string = 'Enters your score when the day closes. Your score uses completed days only.';
 export const DISCLAIMER: string =
   'HES is deterministic rules, not a medical device. Weights and curves are prototype assumptions, ' +
     'not clinically tested.';
@@ -54,7 +50,6 @@ export const PERSONA_CHIP_SUFFIX: string = ' · Demo';
 export const SHARE_TAB_TITLE: string = 'Share';
 export const EVIDENCE_TAB_TITLE: string = 'Evidence';
 export const REPORT_TAB_TITLE: string = 'Report';
-export const NEXT_STEP_SENTENCE: string = 'This screen arrives in the next step.';
 
 // The source line of the report: the brand and the readable status, marked as preview while the values
 // are fixed preview values ("HUAWEI Health · Demo data · preview").
@@ -88,9 +83,16 @@ export function tileName(id: string): string {
   return 'Recovery (HRR1)';
 }
 
-// Evidence for sleep is counted in nights, everything else in days.
+// Evidence for sleep is counted in nights, recovery in workouts (one reading per workout), VO₂max in
+// estimates (one per estimate the watch made), everything else in days.
 export function countUnit(id: string): string {
-  return id === ComponentId.SLEEP || id === ComponentId.SLEEP_REGULARITY ? 'nights' : 'days';
+  if (id === ComponentId.SLEEP || id === ComponentId.SLEEP_REGULARITY) {
+    return 'nights';
+  }
+  if (id === ComponentId.HR_RECOVERY) {
+    return 'workouts';
+  }
+  return id === ComponentId.VO2MAX ? 'estimates' : 'days';
 }
 
 // The line next to the tier letter: what the tier means, or how far the next one is.
@@ -145,7 +147,6 @@ export const DAY_CHARGING: string = 'charging';
 export const DAY_NIGHT: string = 'night';
 export const DAY_NIGHT_YES: string = 'Worn';
 export const DAY_NIGHT_NO: string = 'Not worn';
-export const DAY_NOT_OBSERVED: string = '—';
 
 // What a day state means when the day has no recorded details to show.
 export function dayStateNote(state: string): string {

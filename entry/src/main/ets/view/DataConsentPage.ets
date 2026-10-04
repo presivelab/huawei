@@ -76,6 +76,12 @@ export struct DataConsentPage {
             'counted as zero.')
             .attributeModifier(CAPTION)
 
+          // The wear month is not filtered by these switches; the page says so.
+          Text('The wear check always uses when the watch was on the wrist and, around each break, the resting ' +
+            'heart rate and steps of the 24 h before it. It decides eligibility, not the score.')
+            .attributeModifier(CAPTION)
+            .id('fw_consent_wear_note')
+
           Row({ space: 8 }) {
             Checkbox()
               .select(this.agreed)
