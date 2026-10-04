@@ -1,22 +1,19 @@
 # Hackathon requirements: working check
 
-Working notes behind the README table "Hackathon requirements → where to verify".
+Working notes behind the README section "For the jury" (judging criteria → where to see them).
 Source of the requirements: `hackathon_challenge.md` and `FAQ.md` in `onirodeveloper/hackyeah2026-challenge`.
 Every row names its evidence. A row without evidence is marked open.
 
-Checked on 2026-10-04. The table below was written on `feature/entry-routing` (base `main`). On
-`feature/home-card`, which contains `feature/health-addon`, these rows change: B2 is met for the add-on
-screens, the watch live screen, the home-screen card and the shortcut (`docs/screenshots/`); B13 "unknown
-`fwTarget`" is also checked on the Phone emulator; B14 lint is 0 errors and 5 warnings of one performance
-rule (`docs/test-results.txt`); B4, B5, B8 and B9 have a first version in `README.md`, `docs/ARCHITECTURE.md`
-and `docs/DEMO_SCRIPT.md`. The watch permissions are in `docs/ARCHITECTURE.md`.
-
-State on 2026-10-04 04:12, branch `feature/engine-reports` at the G2 merge (`1ec3f81`), from
-`docs/test-results.txt`: logic tests `common` 362/362 and `watch` 6/6; `assembleHap` for `entry` and `watch`
-BUILD SUCCESSFUL; lint 0 errors (7 warnings in `entry`, 2 in `watch`, all one performance rule, 0 issues in
-`common`); wording check 0 hits. B2 is met for the product screens: Report, "Why this tier", Evidence, Share
-and the partner view ran on the Phone emulator and the watch recorder on the Wearable emulator (screenshots
-in `docs/screenshots/final/` and `docs/screenshots/`). The table below is the current state.
+State on 2026-10-04 06:32, branch `feature/engine-reports` at the Health Sim merge (`da5ef1a`; the commits after
+it change documents only), from `docs/test-results.txt`: logic tests `common` 380/380, `watch` 6/6 and
+`HealthSimCopies.test.ets` 2/2; `assembleHap` for `entry` and `watch` of FairWear and of Health Sim BUILD
+SUCCESSFUL; lint 0 errors (7 warnings in `entry`, 2 in `watch`, all one performance rule, 0 issues in
+`common`); wording check 0 hits. The logic tests were also re-run independently on a copy of the tree
+(Linux, Node 22, TypeScript 5.4.5, `tools/logic-tests/runner.js`): 380/380 and 6/6. B2 is met for every
+product screen: the Health Sim connect path, Report, "Why this tier", Evidence, Share, the partner view and
+"What left this phone" on the Phone emulator; the dial, the recorder and "Get today from Health Sim" on the
+Wearable emulator (`docs/screenshots/final/`, `docs/screenshots/`). Earlier versions of this file, written on
+`feature/entry-routing` and `feature/home-card`, are in the git history. The table below is the current state.
 
 ## Status
 
@@ -54,7 +51,7 @@ Root `build-profile.json5`, product `default`:
 | `runtimeOS`            | `HarmonyOS`  |
 | `compatibleSdkVersion` | `6.0.0(20)`  |
 | `targetSdkVersion`     | `6.1.1(24)`  |
-| `compileSdkVersion`    | not declared |
+| `compileSdkVersion`    | not declared: the build uses the SDK bundled with DevEco Studio 6.1.1.280, HarmonyOS 6.1.1 (API 24) |
 
 The module files (`entry/`, `watch/`, `common/build-profile.json5`) declare no SDK versions.
 The build was compiled with DevEco Studio 6.1.1.280 and its bundled SDK, HarmonyOS 6.1.1 (API 24).
