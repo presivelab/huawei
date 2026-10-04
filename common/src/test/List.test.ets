@@ -18,6 +18,8 @@ import evidenceCalendarTest from './EvidenceCalendar.test';
 import whySectionsTest from './WhySections.test';
 import healthSimPayloadTest from './HealthSimPayload.test';
 import consentScopesTest from './ConsentScopes.test';
+import dayDialTest from './DayDial.test';
+import visitsTest from './Visits.test';
 
 export default function testsuite() {
   claimTest();
@@ -40,4 +42,6 @@ export default function testsuite() {
   whySectionsTest();
   healthSimPayloadTest();
   consentScopesTest();
+  dayDialTest();
+  visitsTest();
 }

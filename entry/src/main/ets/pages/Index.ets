@@ -16,6 +16,7 @@ import { KEY_ENTRY_TARGET, KEY_ENTRY_TARGET_SEQ, KEY_TAB, openTarget } from '../
 import { DEFAULT_PERSONA_ID, KEY_PERSONA, KEY_REPORT_REVISION } from '../report/ServiceLocator';
 import { EVIDENCE_TAB_TITLE, SHARE_TAB_TITLE } from '../report/ReportTexts';
 import { SYMBOL_SETTINGS } from '../ui/kit/KitTokens';
+import { AddReceiptPage } from '../view/AddReceiptPage';
 import { DataConsentPage } from '../view/DataConsentPage';
 import { LedgerPage } from '../view/LedgerPage';
 import { MainTabs } from '../view/MainTabs';
@@ -24,9 +25,20 @@ import { PersonaChip } from '../view/PersonaChip';
 import { PlatformConsentPage } from '../view/PlatformConsentPage';
 import { SettingsPage } from '../view/SettingsPage';
 import { VerificationDetailsPage } from '../view/VerificationDetailsPage';
+import { VisitCheckPage } from '../view/VisitCheckPage';
+import { VisitDetailsPage } from '../view/VisitDetailsPage';
+import { VisitSharePage } from '../view/VisitSharePage';
+import { VisitsPage } from '../view/VisitsPage';
 import { WatchLinkTourPage } from '../view/WatchLinkTourPage';
 import { WelcomeView } from '../view/WelcomeView';
 import { WhyPage } from '../view/WhyPage';
+import {
+  ROUTE_ADD_RECEIPT,
+  ROUTE_VISIT_CHECK,
+  ROUTE_VISIT_DETAILS,
+  ROUTE_VISIT_SHARE,
+  ROUTE_VISITS
+} from '../visits/VisitTexts';
 
 const APP_TITLE: string = 'FairWear';
 const TITLE_BAR_HEIGHT: number = 56;
@@ -123,6 +135,16 @@ struct Index {
       LedgerPage()
     } else if (name === ROUTE_TOUR) {
       WatchLinkTourPage()
+    } else if (name === ROUTE_VISITS) {
+      VisitsPage()
+    } else if (name === ROUTE_VISIT_DETAILS) {
+      VisitDetailsPage()
+    } else if (name === ROUTE_ADD_RECEIPT) {
+      AddReceiptPage()
+    } else if (name === ROUTE_VISIT_SHARE) {
+      VisitSharePage()
+    } else if (name === ROUTE_VISIT_CHECK) {
+      VisitCheckPage()
     }
   }
 

@@ -19,6 +19,18 @@
     {
       "name": "reason_steps",
       "value": "FairWear shows the steps counted today on the watch and adds them to the day summary it records."
+    },
+    {
+      "name": "VisitRecordAbility_desc",
+      "value": "Record a visit for your own notes"
+    },
+    {
+      "name": "VisitRecordAbility_label",
+      "value": "Visit notes"
+    },
+    {
+      "name": "reason_microphone",
+      "value": "FairWear records a visit for your own notes after the doctor agreed. The recording stays on this watch."
     }
   ]
 }

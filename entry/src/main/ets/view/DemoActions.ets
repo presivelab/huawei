@@ -1,5 +1,6 @@
 import { hasScore, PersonaReport, withoutAppealsOf } from 'common';
 import { closeSelectedDay, resetSelected, selectedPersonaId, selectedReport, setSelectedLive } from '../report/ServiceLocator';
+import { VisitService } from '../visits/VisitService';
 import { KEY_APPEALS } from './EvidenceDayData';
 
 /*
@@ -23,6 +24,7 @@ export function demoReset(): void {
   const appeals: string[] = AppStorage.get<string[]>(KEY_APPEALS) ?? [];
   AppStorage.setOrCreate<string[]>(KEY_APPEALS, withoutAppealsOf(appeals, selectedPersonaId()));
   resetSelected();
+  VisitService.shared().resetVisits();
 }
 
 // One line about the result of a demo action, for a short toast: the controls sit far below the score, so
