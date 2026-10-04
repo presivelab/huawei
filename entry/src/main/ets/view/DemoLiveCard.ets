@@ -105,29 +105,24 @@ export struct DemoLiveCard {
   }
 
   @Builder
-  sliderHead(label: string, value: string) {
-    Row({ space: 8 }) {
-      Text(label)
-        .fontSize($r('sys.float.Body_M'))
-        .fontColor($r('sys.color.font_primary'))
-        .layoutWeight(1)
-      Text(value)
-        .fontSize($r('sys.float.Body_M'))
-        .fontWeight(FontWeight.Medium)
-        .fontColor($r('sys.color.font_primary'))
-    }
-    .width('100%')
-    .alignItems(VerticalAlign.Center)
-  }
-
-  @Builder
   controlsCard() {
     Column({ space: 12 }) {
       Text(DEMO_TITLE)
         .attributeModifier(HEADING)
 
       Column({ space: 2 }) {
-        this.sliderHead(DEMO_HR_LABEL, this.hrDraft < 0 ? NO_READING : `${this.hrDraft} bpm`)
+        Row({ space: 8 }) {
+          Text(DEMO_HR_LABEL)
+            .fontSize($r('sys.float.Body_M'))
+            .fontColor($r('sys.color.font_primary'))
+            .layoutWeight(1)
+          Text(this.hrDraft < 0 ? NO_READING : `${this.hrDraft} bpm`)
+            .fontSize($r('sys.float.Body_M'))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('sys.color.font_primary'))
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
         Slider({
           value: Math.max(HR_MIN, this.hrDraft),
           min: HR_MIN,
@@ -149,7 +144,18 @@ export struct DemoLiveCard {
       .width('100%')
 
       Column({ space: 2 }) {
-        this.sliderHead(DEMO_STEPS_LABEL, liveText(this.stepsDraft))
+        Row({ space: 8 }) {
+          Text(DEMO_STEPS_LABEL)
+            .fontSize($r('sys.float.Body_M'))
+            .fontColor($r('sys.color.font_primary'))
+            .layoutWeight(1)
+          Text(liveText(this.stepsDraft))
+            .fontSize($r('sys.float.Body_M'))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('sys.color.font_primary'))
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
         Slider({
           value: Math.max(0, this.stepsDraft),
           min: 0,
