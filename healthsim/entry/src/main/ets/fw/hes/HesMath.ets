@@ -60,6 +60,43 @@ export function sleepRelativeMinutes(minutesSinceMidnight: number): number {
   return (minutesSinceMidnight - HES_SLEEP_ANCHOR_MIN + HES_MINUTES_PER_DAY) % HES_MINUTES_PER_DAY;
 }
 
+/**
+ * Clock times (minutes since 18:00, as from sleepRelativeMinutes) as one unbroken run on the 24-hour circle.
+ * The circle is cut at the widest gap between the values, and the values after the cut get one day added.
+ * Times that do not straddle 18:00 come back unchanged (the widest gap is then the one across 18:00), so
+ * usual bedtimes and wake times give exactly the numbers they gave before. Times that do straddle it (17:50 and
+ * 18:10, a night shift) stay 20 minutes apart instead of 23 h 40 min. Only + and - : the same bits everywhere.
+ */
+export function hesUnwrapClock(values: number[]): number[] {
+  const out = values.slice();
+  if (values.length < 2) {
+    return out;
+  }
+  const sorted = values.slice().sort((a: number, b: number): number => a - b);
+  // The gap across 18:00 first: on a tie it wins, so nothing moves.
+  let widest = sorted[0] + HES_MINUTES_PER_DAY - sorted[sorted.length - 1];
+  let cut = sorted[0];
+  for (let i = 0; i + 1 < sorted.length; i++) {
+    const gap = sorted[i + 1] - sorted[i];
+    if (gap > widest) {
+      widest = gap;
+      cut = sorted[i + 1];
+    }
+  }
+  for (let i = 0; i < out.length; i++) {
+    if (out[i] < cut) {
+      out[i] = out[i] + HES_MINUTES_PER_DAY;
+    }
+  }
+  return out;
+}
+
+/** Shortest distance between two clock times on the 24-hour circle, in minutes (0 to 720). */
+export function hesClockDistance(a: number, b: number): number {
+  const d = Math.abs(a - b) % HES_MINUTES_PER_DAY;
+  return d > HES_MINUTES_PER_DAY - d ? HES_MINUTES_PER_DAY - d : d;
+}
+
 /** Timing SD (section 6.4): the root mean square of the bedtime SD and the wake-time SD, in minutes. */
 export function sleepTimingSd(sdBedtime: number, sdWakeTime: number): number {
   return Math.sqrt((sdBedtime * sdBedtime + sdWakeTime * sdWakeTime) / 2);

@@ -12,7 +12,7 @@
 //   - sleep duration is scored in hours (the curve's unit); the history carries minutes;
 //   - component scores are kept unrounded. Only the final score is rounded (section 4.2).
 import { HES_COMPONENTS, HES_DAYS_PER_WEEK } from './HesCurves';
-import { hesMean, hesMedian, hesSampleSd, sleepRelativeMinutes, sleepTimingSd } from './HesMath';
+import { hesMean, hesMedian, hesSampleSd, hesUnwrapClock, sleepRelativeMinutes, sleepTimingSd } from './HesMath';
 import { piecewiseScore } from './HesPiecewise';
 import { isSufficient, quality, validDays } from './HesSufficiency';
 import { HesComponentDefinition, HesComponentId, HesComponentResult, HesDay, HES_MISSING } from './HesTypes';
@@ -65,8 +65,9 @@ function timingSdOf(days: HesDay[]): number {
     bedtimes.push(sleepRelativeMinutes(days[i].sleepStartMin));
     wakeTimes.push(sleepRelativeMinutes(days[i].sleepEndMin));
   }
-  const sdBed = hesSampleSd(bedtimes);
-  const sdWake = hesSampleSd(wakeTimes);
+  // Unwrapped first: nights on both sides of 18:00 are close, not a day apart.
+  const sdBed = hesSampleSd(hesUnwrapClock(bedtimes));
+  const sdWake = hesSampleSd(hesUnwrapClock(wakeTimes));
   if (sdBed < 0 || sdWake < 0) {
     return HES_MISSING;
   }

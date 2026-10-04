@@ -30,7 +30,9 @@ import {
   hesMean,
   hesMedian,
   hesRound,
+  hesClockDistance,
   hesSampleSd,
+  hesUnwrapClock,
   sleepRelativeMinutes,
   sleepTimingSd
 } from '../main/ets/hes/HesMath';
@@ -203,6 +205,43 @@ export default function hesTest() {
 
     it('difference -> 60 min', 0, () => {
       expect(sleepRelativeMinutes(at(0, 30)) - sleepRelativeMinutes(at(23, 30))).assertEqual(60);
+    });
+  });
+
+  describe('HES-Lite: sleep times around 18:00', () => {
+    it('usual bedtimes come back unchanged, so their SD is the same as before', 0, () => {
+      const usual = [at(22, 40), at(23, 30), at(0, 15), at(23, 5), at(1, 0)].map(
+        (m: number): number => sleepRelativeMinutes(m));
+      expect(hesUnwrapClock(usual).join(',')).assertEqual(usual.join(','));
+      expect(hesSampleSd(hesUnwrapClock(usual))).assertEqual(hesSampleSd(usual));
+    });
+
+    it('17:50 and 18:10 are 20 minutes apart, not 23 h 40 min', 0, () => {
+      const around = [at(17, 50), at(18, 10), at(17, 50), at(18, 10)].map(
+        (m: number): number => sleepRelativeMinutes(m));
+      // Before the fix: values 1430 and 10, SD about 820 minutes.
+      expect(hesSampleSd(around)).assertLarger(500);
+      const sd = hesSampleSd(hesUnwrapClock(around));
+      expect(sd).assertLess(12);
+      expect(sd).assertLarger(11);
+    });
+
+    it('a night-shift sleeper with steady times keeps a high regularity score', 0, () => {
+      const steady = history(HISTORY_DAYS, (index: number): HesDay => {
+        const day = fullDay(index);
+        // Sleeps 08:00-17:50 one day, 08:20-18:10 the next: wake times sit on both sides of 18:00.
+        day.sleepStartMin = index % 2 === 0 ? at(8, 0) : at(8, 20);
+        day.sleepEndMin = index % 2 === 0 ? at(17, 50) : at(18, 10);
+        return day;
+      });
+      const regular = evaluateComponent(hesDefinition(HesComponentId.SLEEP_REGULARITY), steady);
+      expect(regular.score).assertLarger(80);
+    });
+
+    it('distance on the circle', 0, () => {
+      expect(hesClockDistance(1430, 10)).assertEqual(20);
+      expect(hesClockDistance(330, 390)).assertEqual(60);
+      expect(hesClockDistance(0, 720)).assertEqual(720);
     });
   });
 
