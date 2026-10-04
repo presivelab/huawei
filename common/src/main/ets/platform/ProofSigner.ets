@@ -72,10 +72,19 @@ export class ProofSigner {
 
   /** Probes HUKS once and fixes the signing key for the whole session. Safe to call repeatedly. */
   ensureKey(): Promise<DeviceKey> {
-    if (this.pending === null) {
-      this.pending = this.chooseKey();
+    const have: Promise<DeviceKey> | null = this.pending;
+    if (have !== null) {
+      return have;
     }
-    return this.pending;
+    const attempt: Promise<DeviceKey> = this.chooseKey();
+    this.pending = attempt;
+    // A failed attempt is not kept: the next call tries again instead of failing until the app restarts.
+    attempt.catch((): void => {
+      if (this.pending === attempt) {
+        this.pending = null;
+      }
+    });
+    return attempt;
   }
 
   async sign(data: Uint8Array): Promise<Uint8Array> {
