@@ -130,7 +130,10 @@ What the watch does with an ACK (`WatchLinkEngine.processAcks`):
 - The pairing answer (`seq = 0`, `ACCEPTED`) whose `ref` is the hash of the pairing request the watch just sent pins the phone key (`phoneKid`, `phonePub` in `state.json`) and pairs. The request's hash is then cleared, so a copy of the answer, or an answer someone else signs for the same request later, never pins another key. The watch shows `Pairing: Paired · phone <phoneKid>`.
 - A day answer is used only when it is signed by the pinned phone key and its `ref` is the hash of the packet in the outbox under that seq. `ACCEPTED` and `DUPLICATE` take the packet out of the outbox. `REJECTED` is shown (`#2: Invalid signature`) and the packet stays; `Unknown watch key` about this very packet unpairs (the phone forgot this watch).
 - Anything else changes nothing: an unsigned version-1 ACK, a signature that does not verify (`Answer ignored: invalid signature`), another phone's key (`Answer ignored: another phone`), another watch, or an answer about another packet.
-- A watch state from before signed ACKs has no phone key: the watch counts as not paired and pairs again (`Pair phone`, `Confirm` on the phone). Its chain and outbox stay.
+- A watch state from before signed ACKs has no phone key: the watch counts as not paired and pairs again (`Pair phone`; a phone that still knows the watch answers without `Confirm`). Its chain and outbox stay.
+- Answers are applied in the order the phone wrote them (`iat`; the pairing answer first within one second), whatever order the file list comes in. An `Unknown watch key` written before the pairing answer that pinned the phone never unpairs.
+- The phone removes an `inbox/` file only after its ACK is on disk, so the relay, which fetches `acks/` once `inbox/` is empty, never takes an old answer for the new one.
+- If HUKS is not available for the phone's Watch Link key, the software fallback makes a new key at every app start; the watch then ignores the answers until it is paired again. HUKS worked on both emulators.
 
 ## Keys
 

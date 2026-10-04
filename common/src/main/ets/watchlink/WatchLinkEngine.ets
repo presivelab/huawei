@@ -22,6 +22,7 @@ import { SlotRecorder } from './SlotRecorder';
 import { Clock, Hasher, Signer, SigVerifier, TextStore } from './WatchLinkPorts';
 import { daySigningString } from './WatchLinkSigning';
 import {
+  AckPacket,
   dateOfDayNumber,
   dayNumberOfDate,
   DayRecord,
@@ -49,6 +50,7 @@ export const STATUS_NOT_PAIRED: string = 'Not paired';
 export const STATUS_SYNCED: string = 'Synced ✓';
 export const ACK_BAD_SIGNATURE: string = 'Answer ignored: invalid signature';
 export const ACK_OTHER_PHONE: string = 'Answer ignored: another phone';
+export const ACK_NOT_PAIRED: string = 'Answer ignored: not paired yet';
 
 const JSON_SUFFIX: string = '.json';
 
@@ -318,8 +320,10 @@ export class WatchLinkEngine {
   }
 
   private async readAcks(): Promise<void> {
+    // All ready answers first, then in the order the phone wrote them (iat; the pairing answer first within
+    // one second). The file list comes back in no particular order on the device.
+    const ready: AckPacket[] = [];
     const names = this.store.list(ACKS_DIR);
-    let changed = false;
     for (let i = 0; i < names.length; i++) {
       const path = `${ACKS_DIR}/${names[i]}`;
       const text = this.store.read(path);
@@ -328,75 +332,94 @@ export class WatchLinkEngine {
         continue;
       }
       this.store.remove(path);
-      if (text === null) {
-        continue;
+      const ack = text === null ? null : AckPacketCodec.fromJson(text).packet;
+      if (ack !== null && ack.watchKid === this.chain.kid) {
+        ready.push(ack);
       }
-      const ack = AckPacketCodec.fromJson(text).packet;
-      if (ack === null || ack.watchKid !== this.chain.kid) {
-        continue;
+    }
+    ready.sort((a: AckPacket, b: AckPacket): number => {
+      if (a.iat !== b.iat) {
+        return a.iat - b.iat;
       }
-      const pinned = this.chain.phoneKid.length > 0;
-      const fromPinned = pinned && ack.phoneKid === this.chain.phoneKid && ack.phonePub === this.chain.phonePub;
-      if (ack.seq !== PAIR_ACK_SEQ && !fromPinned) {
-        this.lastAck = ACK_OTHER_PHONE;
-        continue;
+      if (a.seq === PAIR_ACK_SEQ || b.seq === PAIR_ACK_SEQ) {
+        return a.seq === PAIR_ACK_SEQ ? (b.seq === PAIR_ACK_SEQ ? 0 : -1) : 1;
       }
-      if (!(await AckVerifier.verify(ack, this.verifier, this.hasher))) {
-        this.lastAck = ACK_BAD_SIGNATURE;
-        continue;
-      }
-      if (ack.seq === PAIR_ACK_SEQ) {
-        // An answer to an older request (or to none) changes nothing.
-        if (ack.ref.length === 0 || ack.ref !== this.chain.pairRef) {
-          continue;
-        }
-        if (ack.status !== 'ACCEPTED') {
-          this.lastAck = `Pairing: ${ack.reason}`;
-          continue;
-        }
-        // The request is answered once: its hash is cleared, so a copy of this answer, or an answer someone
-        // else signs for the same request later, can never pin another key.
-        this.chain.phoneKid = ack.phoneKid;
-        this.chain.phonePub = ack.phonePub;
-        this.chain.pairRef = '';
-        this.chain.paired = true;
-        changed = true;
-        this.lastAck = `Pairing: ${ack.reason} · phone ${ack.phoneKid}`;
-        continue;
-      }
-      const outboxPath = `${OUTBOX_DIR}/${ack.seq}${JSON_SUFFIX}`;
-      const packetText = this.store.read(outboxPath);
-      const packet = packetText === null ? null : DayPacketCodec.fromJson(packetText).packet;
-      if (packet === null) {
-        // Delivered before (or never sent): nothing to do.
-        continue;
-      }
-      const answersThisPacket = ack.ref === await this.hasher.sha256B64url(daySigningString(packet));
-      if (ack.status === 'REJECTED') {
-        // Shown also when the phone saw a changed copy (its ref is then the hash of that copy). The packet
-        // stays either way; only an answer about this very packet can unpair.
-        this.lastAck = `#${ack.seq}: ${ack.reason}`;
-        if (answersThisPacket && ack.reason === MSG_UNKNOWN_KEY && this.chain.paired) {
-          this.chain.paired = false;
-          this.chain.phoneKid = '';
-          this.chain.phonePub = '';
-          changed = true;
-        }
-        continue;
-      }
-      if (!answersThisPacket) {
-        continue;
-      }
-      this.lastAck = `#${ack.seq}: ${ack.reason}`;
-      this.store.remove(outboxPath);
-      if (!this.chain.paired) {
-        this.chain.paired = true;
+      return a.seq - b.seq;
+    });
+    let changed = false;
+    for (let i = 0; i < ready.length; i++) {
+      if (await this.applyAck(ready[i])) {
         changed = true;
       }
     }
     if (changed) {
       this.saveState();
     }
+  }
+
+  // One verified-or-dropped answer. Returns true when the chain state changed.
+  private async applyAck(ack: AckPacket): Promise<boolean> {
+    const pinned = this.chain.phoneKid.length > 0;
+    const fromPinned = pinned && ack.phoneKid === this.chain.phoneKid && ack.phonePub === this.chain.phonePub;
+    if (ack.seq !== PAIR_ACK_SEQ && !fromPinned) {
+      this.lastAck = pinned ? ACK_OTHER_PHONE : ACK_NOT_PAIRED;
+      return false;
+    }
+    if (!(await AckVerifier.verify(ack, this.verifier, this.hasher))) {
+      this.lastAck = ACK_BAD_SIGNATURE;
+      return false;
+    }
+    if (ack.seq === PAIR_ACK_SEQ) {
+      // An answer to an older request (or to none) changes nothing.
+      if (ack.ref.length === 0 || ack.ref !== this.chain.pairRef) {
+        return false;
+      }
+      if (ack.status !== 'ACCEPTED') {
+        this.lastAck = `Pairing: ${ack.reason}`;
+        return false;
+      }
+      // The request is answered once: its hash is cleared, so a copy of this answer, or an answer someone
+      // else signs for the same request later, can never pin another key.
+      this.chain.phoneKid = ack.phoneKid;
+      this.chain.phonePub = ack.phonePub;
+      this.chain.pairRef = '';
+      this.chain.pairedIat = ack.iat;
+      this.chain.paired = true;
+      this.lastAck = `Pairing: ${ack.reason} · phone ${ack.phoneKid}`;
+      return true;
+    }
+    const outboxPath = `${OUTBOX_DIR}/${ack.seq}${JSON_SUFFIX}`;
+    const packetText = this.store.read(outboxPath);
+    const packet = packetText === null ? null : DayPacketCodec.fromJson(packetText).packet;
+    if (packet === null) {
+      // Delivered before (or never sent): nothing to do.
+      return false;
+    }
+    const answersThisPacket = ack.ref === await this.hasher.sha256B64url(daySigningString(packet));
+    if (ack.status === 'REJECTED') {
+      // Shown also when the phone saw a changed copy (its ref is then the hash of that copy). The packet
+      // stays either way; only an answer about this very packet, written after the pairing, can unpair.
+      this.lastAck = `#${ack.seq}: ${ack.reason}`;
+      if (answersThisPacket && ack.reason === MSG_UNKNOWN_KEY && this.chain.paired &&
+        ack.iat > this.chain.pairedIat) {
+        this.chain.paired = false;
+        this.chain.phoneKid = '';
+        this.chain.phonePub = '';
+        this.chain.pairedIat = 0;
+        return true;
+      }
+      return false;
+    }
+    if (!answersThisPacket) {
+      return false;
+    }
+    this.lastAck = `#${ack.seq}: ${ack.reason}`;
+    this.store.remove(outboxPath);
+    if (!this.chain.paired) {
+      this.chain.paired = true;
+      return true;
+    }
+    return false;
   }
 
   pendingCount(): number {

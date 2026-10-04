@@ -55,6 +55,7 @@ class FlakyStore implements TextStore {
   inner: FsTextStore;
   failing: boolean = false;
   prefix: string;
+  ops: string[] = [];
 
   constructor(inner: FsTextStore, prefix: string) {
     this.inner = inner;
@@ -69,11 +70,38 @@ class FlakyStore implements TextStore {
     if (this.failing && path.startsWith(this.prefix)) {
       throw new Error('write failed');
     }
+    this.ops.push(`write ${path}`);
     this.inner.writeAtomic(path, text);
   }
 
   list(dir: string): string[] {
     return this.inner.list(dir);
+  }
+
+  remove(path: string): void {
+    this.ops.push(`remove ${path}`);
+    this.inner.remove(path);
+  }
+}
+
+// The device lists files in no particular order; this store lists them newest name first.
+class ReversedListStore implements TextStore {
+  inner: FsTextStore;
+
+  constructor(inner: FsTextStore) {
+    this.inner = inner;
+  }
+
+  read(path: string): string | null {
+    return this.inner.read(path);
+  }
+
+  writeAtomic(path: string, text: string): void {
+    this.inner.writeAtomic(path, text);
+  }
+
+  list(dir: string): string[] {
+    return this.inner.list(dir).slice().sort().reverse();
   }
 
   remove(path: string): void {
@@ -120,7 +148,7 @@ class Rig {
 class Bench {
   watchDir: string = makeTempDir();
   phoneDir: string = makeTempDir();
-  watchStore: FsTextStore;
+  watchStore: TextStore;
   phoneFs: FsTextStore;
   phoneStore: FlakyStore;
   clock: StepClock = new StepClock(slotStartMs(dayNumberOfDate(D4), 0, TZ) + 12 * 3600 * 1000);
@@ -129,8 +157,9 @@ class Bench {
   watch: WatchLinkEngine;
   phone: PhoneLinkEngine;
 
-  constructor() {
-    this.watchStore = new FsTextStore(this.watchDir);
+  constructor(reversedWatchList: boolean = false) {
+    const watchFs = new FsTextStore(this.watchDir);
+    this.watchStore = reversedWatchList ? new ReversedListStore(watchFs) : watchFs;
     this.phoneFs = new FsTextStore(this.phoneDir);
     this.phoneStore = new FlakyStore(this.phoneFs, 'watchlink/days');
     this.watch = new WatchLinkEngine(this.watchStore, this.signer, new NodeHasher(), this.clock, TZ,
@@ -176,6 +205,11 @@ class Bench {
         this.watchStore.writeAtomic(`acks/${acks[i]}`, text);
       }
     }
+  }
+
+  newWatch(): void {
+    this.watch = new WatchLinkEngine(this.watchStore, this.signer, new NodeHasher(), this.clock, TZ,
+      new NodeSigVerifier());
   }
 
   async paired(): Promise<void> {
@@ -319,6 +353,66 @@ export default function watchLinkSecurityTest() {
       expect(b.watch.view().paired).assertFalse();
       expect(b.watch.view().statusLine).assertEqual(STATUS_NOT_PAIRED);
       expect(b.watch.pendingCount()).assertEqual(1);
+      b.dispose();
+    });
+  });
+
+  describe('WatchLink security: order of answers', () => {
+    it('the phone removes an inbox file only after its ACK is written', 0, async () => {
+      const b = new Bench();
+      await b.paired();
+      await b.oneDay();
+      b.phoneStore.ops = [];
+      b.phoneStore.writeAtomic('inbox/1.json', b.watchStore.read('outbox/1.json') as string);
+      await b.phone.scanInbox();
+      const wrote = b.phoneStore.ops.indexOf('write acks/1.json');
+      const removed = b.phoneStore.ops.indexOf('remove inbox/1.json');
+      expect(wrote >= 0 && removed > wrote).assertTrue();
+      b.dispose();
+    });
+
+    it('answers listed in any order: the pairing answer is applied before a day answer', 0, async () => {
+      const b = new Bench(true);
+      await b.paired();
+      await b.oneDay();
+      // A state written by an older build: no phone key, so the watch is not paired; packet 1 waits.
+      const st = JSON.parse(b.watchStore.read('state.json') as string) as Record<string, Object>;
+      b.watchStore.writeAtomic('state.json',
+        `{"kid":"${st['kid']}","seq":${st['seq']},"lastHash":"${st['lastHash']}","paired":true}`);
+      b.newWatch();
+      await b.watch.start();
+      expect(b.watch.view().paired).assertFalse();
+      await b.watch.pair();
+      // One relay run carries 0.json (pairing) and 1.json (day); the watch lists 1.json first.
+      await b.relay();
+      expect(b.watch.view().paired).assertTrue();
+      expect(b.watch.pendingCount()).assertEqual(0);
+      b.dispose();
+    });
+
+    it('an older "Unknown watch key" delivered with a new pairing does not unpair', 0, async () => {
+      const b = new Bench();
+      await b.paired();
+      await b.oneDay();
+      // The phone forgets the watch and answers day 1 with "Unknown watch key"; the answer is not delivered yet.
+      b.phone.forget();
+      b.phoneStore.writeAtomic('inbox/1.json', b.watchStore.read('outbox/1.json') as string);
+      await b.phone.scanInbox();
+      const stale = b.phoneStore.read('acks/1.json') as string;
+      // Pairing again, a few seconds later.
+      b.clock.ms += 5000;
+      await b.watch.pair();
+      b.phoneStore.writeAtomic('inbox/pair.json', b.watchStore.read('pair.json') as string);
+      await b.phone.scanInbox();
+      await b.phone.confirmPair();
+      // Both answers reach the watch in one batch (0.json is listed first).
+      b.watchStore.writeAtomic('acks/1.json', stale);
+      b.watchStore.writeAtomic('acks/0.json', b.phoneStore.read('acks/0.json') as string);
+      await b.watch.processAcks();
+      expect(b.watch.view().paired).assertTrue();
+      // And the next relay delivers day 1.
+      await b.relay();
+      expect(b.watch.pendingCount()).assertEqual(0);
       b.dispose();
     });
   });

@@ -4,8 +4,11 @@ FairWear test results
 2026-10-04 08:05 CEDT  branch fix/review-findings  (review fixes on main bd4c970; Claude, cloud session)
 ----------------------------------------------------
 Run: Linux, Node 22, TypeScript 5.4.5, tools/logic-tests/runner.js (the runner itself, without DevEco).
-  common 398/398 (was 380: 11 Watch Link security, 2 partner registry, 4 sleep times around 18:00,
+  common 401/401 (was 380: 14 Watch Link security, 2 partner registry, 4 sleep times around 18:00,
   1 Health Sim date run; NaN cases and the 2 h break added to existing tests), watch 6/6.
+  Independent review of the branch diff by a separate agent: no ArkTS strict-mode issue found; it found the
+  relay could fetch acks/ before the new ACK was written and that the watch applied answers in file-list
+  order (unsorted on the device). Both fixed, each with a test that fails without the fix.
   HealthSimCopies.test.ets passes: the copies under healthsim/*/src/main/ets/fw are identical to common.
   ClaimVerifier S-17 run three times in a row after its fix (it searched random base64 for words before).
 tools/check-wording.sh: 0 hits.

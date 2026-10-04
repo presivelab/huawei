@@ -35,7 +35,13 @@ import { HealthStatus } from '../health/HealthRecords';
 import { HealthSimPerson } from '../health/HealthSimPayload';
 import { healthSourceLabel } from '../health/HealthStatusLabel';
 import { componentScore, equivalentMvpa } from '../hes/HesComponents';
-import { hesDefinition, HES_DAYS_PER_WEEK, HES_MINUTES_PER_DAY, HES_TIER_A_MIN, HES_TIER_B_MIN } from '../hes/HesCurves';
+import {
+  hesDefinition,
+  HES_DAYS_PER_WEEK,
+  HES_MINUTES_PER_DAY,
+  HES_TIER_A_MIN,
+  HES_TIER_B_MIN
+} from '../hes/HesCurves';
 import { composeHes, computeHes } from '../hes/HesEngine';
 import {
   hesClockDistance,

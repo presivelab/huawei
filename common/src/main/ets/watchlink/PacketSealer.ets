@@ -15,6 +15,7 @@ export interface WatchChainState {
   pairRef: string;    // hash of the last pairing request sent; '' before the first
   phoneKid: string;   // the phone key pinned when the pairing was accepted; '' while not paired
   phonePub: string;
+  pairedIat: number;  // iat of the pairing answer that pinned it: an older "Unknown watch key" never unpairs
 }
 
 export class SealedPair {
@@ -47,7 +48,8 @@ export function newChainState(kid: string): WatchChainState {
     paired: false,
     pairRef: '',
     phoneKid: '',
-    phonePub: ''
+    phonePub: '',
+    pairedIat: 0
   };
   return state;
 }
@@ -78,6 +80,7 @@ export function chainStateFromJson(text: string | null, kid: string): WatchChain
   const pairRef = readString(o, 'pairRef');
   const phoneKid = readString(o, 'phoneKid');
   const phonePub = readString(o, 'phonePub');
+  const pairedIat = readInt(o, 'pairedIat');
   const hasPhone = phoneKid !== null && phonePub !== null && phoneKid.length > 0 && phonePub.length > 0;
   const state: WatchChainState = {
     kid: storedKid,
@@ -86,7 +89,8 @@ export function chainStateFromJson(text: string | null, kid: string): WatchChain
     paired: paired && hasPhone,
     pairRef: pairRef === null ? '' : pairRef,
     phoneKid: hasPhone && phoneKid !== null ? phoneKid : '',
-    phonePub: hasPhone && phonePub !== null ? phonePub : ''
+    phonePub: hasPhone && phonePub !== null ? phonePub : '',
+    pairedIat: hasPhone && pairedIat !== null && pairedIat > 0 ? pairedIat : 0
   };
   return state;
 }

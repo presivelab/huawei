@@ -261,10 +261,14 @@ export class PhoneLinkEngine {
         const text = this.store.read(path);
         // A file the relay is still writing is left for the next look (see SettleGate).
         if (this.inboxGate.ready(PAIR_NAME, text)) {
-          this.store.remove(path);
-          if (text !== null) {
-            report.processed++;
-            report.pairRequested = await this.receivePair(text, TRANSPORT_RELAY);
+          // Removed only after the answer is written: the relay fetches acks/ once inbox/ is empty.
+          try {
+            if (text !== null) {
+              report.processed++;
+              report.pairRequested = await this.receivePair(text, TRANSPORT_RELAY);
+            }
+          } finally {
+            this.store.remove(path);
           }
         }
       }
@@ -276,12 +280,18 @@ export class PhoneLinkEngine {
         if (!this.inboxGate.ready(name, text)) {
           continue;
         }
-        this.store.remove(path);
         if (text === null) {
+          this.store.remove(path);
           continue;
         }
         report.processed++;
-        const out = await this.receiveDay(text, seqs[i], TRANSPORT_RELAY);
+        // As above: the file goes only once the ACK is on disk (or the attempt failed).
+        let out: VerifyOutcome = new VerifyOutcome();
+        try {
+          out = await this.receiveDay(text, seqs[i], TRANSPORT_RELAY);
+        } finally {
+          this.store.remove(path);
+        }
         if (out.status === 'REJECTED') {
           report.rejected++;
         } else if (out.status === 'ACCEPTED') {
@@ -394,8 +404,13 @@ export class PhoneLinkEngine {
     const seq = p === null ? fileSeq : p.seq;
     if (out.status === 'ACCEPTED' && p !== null && ledger !== null) {
       this.store.writeAtomic(`${LINK_DAYS_DIR}/${p.seq}${JSON_SUFFIX}`, DayPacketCodec.toJson(p));
-      ledger.commit(p.seq, p.prev, out.hash, p.date);
-      this.saveLedger();
+      // The same packet may have arrived over the other transport while this one was awaited: it is then
+      // already in the chain, and is not counted twice.
+      const again = ledger.check(p.seq, p.prev, out.hash).kind;
+      if (again === 'NEXT' || again === 'GAP' || again === 'FILL') {
+        ledger.commit(p.seq, p.prev, out.hash, p.date);
+        this.saveLedger();
+      }
     }
     this.addLog(seq, out.message, out.note);
     if (seq > 0) {

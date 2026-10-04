@@ -69,8 +69,9 @@ purpose. One **Close the day** moves Ewa to B / 64; Tomek reaches A after four. 
 script says so, and **Reset demo** before you move to the next persona.
 
 **After installing the build with signed ACKs.** A watch paired with an older build counts as not paired
-(it has no phone key yet): **Pair phone** on the watch, relay, **Confirm** on the phone, relay. The watch then
-reads `Pairing: Paired · phone <code>`.
+(it has no phone key yet): **Pair phone** on the watch, then relay. A phone that still knows this watch
+answers by itself (no **Confirm**); after **Forget watch** it asks for **Confirm** as usual, then relay again.
+The watch then reads `Pairing: Paired · phone <code>`.
 
 ### Plan B (live demo fails)
 
