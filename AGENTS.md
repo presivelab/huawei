@@ -95,19 +95,25 @@ two disagree.
 - Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`); the Report
   screen is built; Share, "Why this tier", the partner view and the ledger are placeholders with routes.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
+- Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
+  (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
+  `feature/hes-lite` → `feature/engine-reports`; the package `fairwear-ui` never arrived. Description and
+  decisions: `docs/HES.md`.
+- Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
+  from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
+  `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
   `tools/shot.sh`. Results: `docs/test-results.txt`.
 
-**What is NOT in the repository**
+**What is NOT in the repository yet**
 
-- The scoring module HES-Lite (`common/src/main/ets/hes/`), the personas, the screens "Why this tier",
-  Share and the partner view, and the claim verifier. They exist only after `_incoming/fairwear-ui/` has
-  been unpacked and integrated. Until then the phone renders a fixed preview of the six personas
-  (`common/src/main/ets/report/PreviewReports.ets`), labelled as preview on screen; nothing is calculated.
-  Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place to switch to
-  the engine.
-- Do not assume them. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the
-  state of this repository.
+- The screens Share, the partner view, the content of "Why this tier" and the Evidence calendar are still
+  being built. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
+  that chooses between the fixed preview (`PreviewReports`) and the engine (`engineReport` /
+  `engineReportOf`). While the preview is shown it is labelled as preview on screen.
+- The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
+  histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
+  this repository; check `docs/HES.md` and the code.
 
 **Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
 brief; a copy goes to `docs/prompts/` with the other prompts)

@@ -249,6 +249,102 @@ export {
   VerifyResult
 } from './src/main/ets/claim/PartnerVerifier';
 export { DeviceRandom } from './src/main/ets/platform/DeviceRandom';
+// HES-Lite v1.0: the scoring engine, rebuilt from the specification. Pure logic. See docs/HES.md.
+export {
+  copyHesDay,
+  emptyHesDay,
+  HesComponentDefinition,
+  HesComponentId,
+  HesComponentResult,
+  HesConfidence,
+  HesDay,
+  HesPoint,
+  HesResult,
+  HesStatus,
+  HesWhy,
+  HES_MISSING
+} from './src/main/ets/hes/HesTypes';
+export { piecewiseScore } from './src/main/ets/hes/HesPiecewise';
+export {
+  hesDefinition,
+  HES_COMPONENTS,
+  HES_CONFIDENCE_HIGH_MIN,
+  HES_CONFIDENCE_MEDIUM_MIN,
+  HES_HRR_WINDOW_DAYS,
+  HES_TIER_A_MIN,
+  HES_TIER_B_MIN,
+  HES_VO2MAX_WINDOW_DAYS,
+  HES_WINDOW_DAYS
+} from './src/main/ets/hes/HesCurves';
+export {
+  hesMean,
+  hesMedian,
+  hesRound,
+  hesSampleSd,
+  sleepRelativeMinutes,
+  sleepTimingSd
+} from './src/main/ets/hes/HesMath';
+export {
+  isSufficient as hesIsSufficient,
+  isValidFor as hesIsValidFor,
+  quality as hesQuality,
+  validDays as hesValidDays
+} from './src/main/ets/hes/HesSufficiency';
+export {
+  componentScore as hesComponentScore,
+  equivalentMvpa,
+  evaluateComponent as hesEvaluateComponent,
+  evaluateComponents as hesEvaluateComponents
+} from './src/main/ets/hes/HesComponents';
+export {
+  calculateObservedHes,
+  coverage as hesCoverage,
+  isCoreComplete as hesIsCoreComplete,
+  observedHes
+} from './src/main/ets/hes/HesComposite';
+export {
+  calculateConfidence as hesCalculateConfidence,
+  confidenceFromIndex as hesConfidenceFromIndex,
+  confidenceIndex as hesConfidenceIndex,
+  weightedQuality as hesWeightedQuality
+} from './src/main/ets/hes/HesConfidence';
+export {
+  pointsToNextTier as hesPointsToNextTier,
+  tierFromHes,
+  tierLabel as hesTierLabel
+} from './src/main/ets/hes/HesTier';
+export { whyThisTier } from './src/main/ets/hes/HesWhy';
+export { composeHes, computeHes } from './src/main/ets/hes/HesEngine';
+export { HesPrng } from './src/main/ets/hes/HesPrng';
+export { HesDaySource, HesSession } from './src/main/ets/hes/HesSession';
+export {
+  generatePersonaDay,
+  generatePersonaHistory,
+  HesPersonas,
+  HesPersonaSpec,
+  HES_PERSONA_END_DATE
+} from './src/main/ets/hes/HesPersonas';
+// Wear month of the demo personas: compliance, breaks and the selective non-wear flag. Pure logic.
+export {
+  buildWearMonth,
+  countedWearMinutes,
+  isDayCompliant,
+  isNightWorn,
+  judgeBreak,
+  WearBreak,
+  WearBreakResult,
+  WearDayRecord,
+  WearDayResult,
+  WearDayState,
+  WearMonthResult
+} from './src/main/ets/wear/WearMonth';
+export {
+  generateWearDay,
+  generateWearMonth,
+  WearEvent,
+  WearPersonas,
+  WEAR_MONTH_DAYS
+} from './src/main/ets/wear/WearPersonas';
 // The monthly report on the phone: view models, the benefit rule and the fixed preview of the six personas.
 export {
   BAR_NO_DATA,
@@ -293,3 +389,17 @@ export {
 } from './src/main/ets/nav/EntryTarget';
 export { dayStateLabel, metricSpoken, scoreSpoken, wearSpoken } from './src/main/ets/report/ReportSpeech';
 export { periodDayIso, periodDaySpoken } from './src/main/ets/report/ReportDates';
+// The same report built from the scoring engine, the persona history and the wear month.
+export {
+  ENGINE_DEFAULT_ID,
+  ENGINE_SOURCE,
+  enginePersonas,
+  engineReport,
+  engineReportOf,
+  engineReports,
+  engineSession,
+  engineWhatIf,
+  EngineWhatIf,
+  nextTierOf,
+  reportComponentId
+} from './src/main/ets/report/EngineReports';
