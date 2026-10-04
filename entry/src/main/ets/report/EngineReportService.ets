@@ -2,9 +2,15 @@ import {
   DayDetail,
   ENGINE_DEFAULT_ID,
   engineDayDetails,
+  engineDayDetailsFrom,
   enginePersonas,
+  engineReportFromPerson,
   engineReportOf,
   engineSession,
+  engineSessionFrom,
+  HealthSimPayload,
+  HealthSimPerson,
+  healthSimPerson,
   HesPersonas,
   HesSession,
   PersonaRef,
@@ -24,6 +30,26 @@ export class EngineReportService implements ReportService {
   private sessions: Map<string, HesSession> = new Map<string, HesSession>();
   // The report of a persona as its session stands now; dropped whenever the session changes.
   private reports: Map<string, PersonaReport> = new Map<string, PersonaReport>();
+  // The data Health Sim sent after the user's consent; null: the built-in persona histories.
+  private payload: HealthSimPayload | null = null;
+
+  /** Reports from now on come from the data Health Sim sent (null: the built-in histories). */
+  useHealthSim(payload: HealthSimPayload | null): void {
+    this.payload = payload;
+    this.sessions.clear();
+    this.reports.clear();
+  }
+
+  /** True while the reports come from Health Sim. */
+  fromHealthSim(): boolean {
+    return this.payload !== null;
+  }
+
+  // The person Health Sim sent for this persona, or null (no Health Sim data, or not this person).
+  private person(known: string): HealthSimPerson | null {
+    const payload = this.payload;
+    return payload === null ? null : healthSimPerson(payload, known);
+  }
 
   private known(id: string): string {
     return HesPersonas.has(id) ? id : ENGINE_DEFAULT_ID;
@@ -32,7 +58,8 @@ export class EngineReportService implements ReportService {
   private session(known: string): HesSession {
     let session: HesSession | undefined = this.sessions.get(known);
     if (session === undefined) {
-      session = engineSession(known);
+      const person = this.person(known);
+      session = person === null ? engineSession(known) : engineSessionFrom(person);
       this.sessions.set(known, session);
     }
     return session;
@@ -46,7 +73,9 @@ export class EngineReportService implements ReportService {
     const known: string = this.known(id);
     let report: PersonaReport | undefined = this.reports.get(known);
     if (report === undefined) {
-      report = engineReportOf(known, this.session(known));
+      const person = this.person(known);
+      report = person === null ? engineReportOf(known, this.session(known)) :
+        engineReportFromPerson(person, this.session(known));
       this.reports.set(known, report);
     }
     return report;
@@ -71,7 +100,8 @@ export class EngineReportService implements ReportService {
   }
 
   dayDetails(id: string): DayDetail[] {
-    return engineDayDetails(id);
+    const person = this.person(this.known(id));
+    return person === null ? engineDayDetails(id) : engineDayDetailsFrom(person);
   }
 
   isPreview(): boolean {
