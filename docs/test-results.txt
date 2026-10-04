@@ -1,6 +1,49 @@
 FairWear test results
 =====================
 
+2026-10-04 03:23 CEDT  branch feature/phone-screens  (brief 13: M-1, M-2, M-3, the Report screen of M-4, M-5 texts and M-6 shots for Report)
+----------------------------------------------------
+Base: feature/ui-foundation 45f67f8.
+Node run (tools/run-logic-tests.sh): common 162/162 (was 141/141), watch 6/6. No existing assertion was changed.
+  New, Report (17, in the hypium list): benefitLevel for every combination of eligible, tier and score;
+  benefit labels and reasons; the six preview personas equal the expected results (score, tier, coverage,
+  confidence, benefit, eligible); notes of the expected results (Marek flagged with 3 breaks and 4 days not
+  compliant, Kasia one break and no flag, Tomek one point to A, Ola no score); the stored benefit is the one
+  benefitLevel gives; weights of the available components add up to 100 (±1); component scores weighted by
+  their weights give the score (±1); eight components each and a missing one has no value, score or bar;
+  thirty days each and the day states agree with the wear summary; Ola's counters; persona list, default
+  and unknown id; the period is written the way the claim accepts it; the home-screen card takes coverage and
+  "score ready" from a report, never the tier; spoken texts of the score ring, a tile and the month bar; day
+  states as words; dates of the period days; a day spoken as its date and state.
+  New, EntryTarget (4): 'evidence' is a known target from a shortcut and from a card; each target maps to
+  its tab; 'source' opens Settings above the Report tab and no other target does; unknown text never selects
+  another tab.
+ArkTS compile: hvigorw assembleHar assembleHap (entry, watch, common) BUILD SUCCESSFUL.
+Lint (tools/lint.sh, fresh shell): 0 errors; entry 8 warnings (was 9), watch 2 (was 2), common 0, all the same
+  performance rule (custom component instead of @Builder).
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits. No hex colour in any .ets under entry.
+Phone emulator (127.0.0.1:5557, 1320x2856, density 3.5, 377 vp wide): welcome, both consent steps, then the
+  three tabs. Report opened for Ania, Tomek, Marek and Ola in light and in dark mode; the persona sheet; the
+  Evidence tab (existing Watch link cards) and the Share placeholder. Checked by reading the layout dump:
+  "Why this tier" opens its page, "Evidence" on the wear card selects the Evidence tab, the source pill and the
+  gear open Settings, Disconnect returns to the welcome screen, and
+  `aa start ... --ps fwTarget evidence|share|source|dashboard|nonsense` opens Evidence, Share, Settings, Report,
+  Report. Dark mode was switched in system Settings > Display & brightness and switched back to light.
+  Screenshots in docs/screenshots/design/: before-phone-dashboard-light; phone-report-ania-{light,dark},
+  phone-report-ania-tiles-{light,dark}, phone-report-ola-{light,dark}, phone-report-tomek-light,
+  phone-report-tomek-tiles-dark, phone-report-marek-{light,dark}, phone-persona-sheet-{light,dark},
+  phone-evidence-tab-light, phone-share-tab-light, phone-welcome-{light,dark}.
+During the run the emulator's render service froze once (sysfreeze render_service SERVICE_BLOCK, 09:09 emulator
+  time; it also froze the other apps on the device) and came back with display density 1.5. The phone
+  emulator was rebooted (hdc shell reboot), density returned to 3.5, and every screenshot was taken after that.
+Not done / not verified:
+  - Why, the Evidence calendar with the day sheet, Share, Partner and Ledger: placeholders with routes only;
+  - the home-screen card with the new digest was not looked at on the home screen (the mapping is tested);
+  - no screenshot at a large system font; no screen-reader pass (the spoken texts are set and unit-tested);
+  - liveSet (demo controls for the live readings) has no UI yet and was not exercised on the device;
+  - the welcome screen with the "disconnected" note clips the watch-phone-shield row above the button
+    (seen in phone-welcome-dark); the screen itself was not changed apart from the title bar.
+
 2026-10-04 02:22 CEST  branch feature/ui-kit  (review of the UI kit block; demo-feed day end to end)
 ----------------------------------------------------
 Re-run by the reviewing session: common 141/141, watch 6/6; wording check 0 hits, enum-in-UI check 0 hits;

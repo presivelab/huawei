@@ -50,6 +50,9 @@ FairWear's own colours are `app.color` resources, defined in both `base` and `da
 | Watch off the wrist            | `fw_wear_off`                                                                                                                   |
 | Not observed                   | `fw_wear_unobserved`                                                                                                            |
 | Tier A, B, C                   | `fw_tier_a`, `fw_tier_b`, `fw_tier_c`                                                                                           |
+| Tier tint and text (phone)     | `fw_tier_a_tint`, `fw_tier_a_text` (and `_b_`, `_c_`): the tint behind a tier letter and the text colour on white or on the tint |
+| Flag (phone)                   | `fw_flag_tint`, `fw_flag_text`                                                                                                    |
+| Day of the month               | compliant `fw_wear_worn`, short `fw_wear_charging`, suspicious break `fw_wear_off`, sick or no data `fw_wear_unobserved`         |
 | Source status                  | `sys.color.confirm` connected, `sys.color.brand` demo, `sys.color.warning` unavailable, `sys.color.font_tertiary` not connected |
 
 No hex colour in an `.ets` file. One accent colour per card. Each metric has one `SymbolGlyph`
@@ -72,7 +75,12 @@ Build screens from the UI kit, not from hand-made rows and columns:
 | `EmptyState`    | a symbol and one sentence                                                                               |
 | `DayStrip`      | seven days as small rings: worn, charging, off, not observed                                            |
 | `WearBar`       | one day as a bar of worn, charging, off, not observed; `WearLegend` names the four colours              |
-| `KitTokens`     | the colour and symbol constants (`COLOR_*`, `SYMBOL_*`, `wearColor`); import them, do not repeat `$r`   |
+| `TierBadge`     | the tier letter on a square tinted in the tier colour; in the app only, never on the home-screen card   |
+| `InfoChip`      | a small label without a dot ("Coverage 100%"); with a tint it states a condition ("Preview · not scored") |
+| `MonthBar`      | a month as one bar, a segment per day in the colour of its state; `DayStateLegend` names the colours     |
+| `CountBar`      | evidence against what is needed: a name, "9 of 14 nights" and a bar (system `Progress`)                  |
+| `TextLink`      | a link to another screen: text and a forward chevron in the accent colour, at least 44 vp high           |
+| `KitTokens`     | the colour and symbol constants (`COLOR_*`, `SYMBOL_*`, `wearColor`, `tierColor`, `dayStateColor`, `componentColor`, `componentSymbol`); import them, do not repeat `$r` |
 
 Spacing grid: 4, 8, 12, 16, 24. Cards are rounded and have no border. Navigation is the system
 `Navigation`. Motion: rings fill in 300–600 ms; nothing else moves on its own.

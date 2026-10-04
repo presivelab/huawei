@@ -82,10 +82,11 @@ Everything that opens FairWear uses that same ability and one optional parameter
 
 `EntryAbility` passes the want to `routeFromWant` (`entry/src/main/ets/nav/EntryRouter.ets`) in `onCreate`
 and `onNewWant`; the start page opens the screen. The value is untrusted input. `resolveFwTargetFromWant`
-(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `share` and `source`; a missing value, an
+(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `evidence`, `share` and `source`; a missing value, an
 unknown value, a non-string, an oversized string or malformed card parameters open the start page and never
-throw (7 tests in `common/src/test/EntryTarget.test.ets`). `share` is reserved for the share screen, which
-is not in this build, so it opens the start page and there is no shortcut for it yet.
+throw (11 tests in `common/src/test/EntryTarget.test.ets`). After consent the start page is three tabs:
+`dashboard` selects Report, `evidence` Evidence and `share` Share (`fwTargetTab`); `source` opens Settings
+above the Report tab. The Share tab is a placeholder in this build and there is no shortcut for it yet.
 
 Checked on the Phone emulator (API 24): cold start and a second start of the running app with
 `--ps fwTarget source`, with an unknown value and with no parameter; the shortcut; the card tap.

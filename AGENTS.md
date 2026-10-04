@@ -92,6 +92,8 @@ two disagree.
   `fwTarget`, device signing with HUKS and a software fallback.
 - Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
   over `hdc`.
+- Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`); the Report
+  screen is built; Share, "Why this tier", the partner view and the ledger are placeholders with routes.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
   `tools/shot.sh`. Results: `docs/test-results.txt`.
@@ -100,7 +102,10 @@ two disagree.
 
 - The scoring module HES-Lite (`common/src/main/ets/hes/`), the personas, the screens "Why this tier",
   Share and the partner view, and the claim verifier. They exist only after `_incoming/fairwear-ui/` has
-  been unpacked and integrated. Until then the phone shows "No score yet".
+  been unpacked and integrated. Until then the phone renders a fixed preview of the six personas
+  (`common/src/main/ets/report/PreviewReports.ets`), labelled as preview on screen; nothing is calculated.
+  Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place to switch to
+  the engine.
 - Do not assume them. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the
   state of this repository.
 

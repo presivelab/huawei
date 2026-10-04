@@ -47,8 +47,14 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 ## State of this branch
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
-- The scoring module (HES-Lite) and the demo data set are not in this branch yet. The tier, score, coverage
-  and last sync are shown as "—"; no number on the screens is invented.
+- The scoring module (HES-Lite) is not in this branch yet. Phone screens currently render fixed preview data
+  matching the expected persona results; the HES-Lite engine replaces it. The screens say so: the source pill
+  reads "Demo data · preview" and the line under the score card reads "Score engine not connected — preview
+  values". The preview lives in `common/src/main/ets/report/PreviewReports.ets`; the one place that chooses
+  where reports come from is `entry/src/main/ets/report/ServiceLocator.ets`.
+- After consent the phone shows three tabs: Report (the month of the selected demo persona), Evidence (the
+  watch days) and Share (not built yet). Benefit level: eligible and tier A is a full benefit, eligible and
+  tier B a partial benefit, anything else no benefit this month, always shown with its reason.
 - What is real and what is simulated: the table in `docs/ARCHITECTURE.md`.
 
 ## Tests
