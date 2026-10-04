@@ -1,5 +1,15 @@
 import { describe, it, expect } from '@ohos/hypium';
-import { FwTarget, FW_TARGET_PARAM, resolveFwTarget, resolveFwTargetFromWant } from '../main/ets/nav/EntryTarget';
+import {
+  FwTarget,
+  FW_TAB_EVIDENCE,
+  FW_TAB_REPORT,
+  FW_TAB_SHARE,
+  FW_TARGET_PARAM,
+  fwTargetOpensSettings,
+  fwTargetTab,
+  resolveFwTarget,
+  resolveFwTargetFromWant
+} from '../main/ets/nav/EntryTarget';
 
 export default function entryTargetTest() {
   describe('EntryTarget', () => {
@@ -60,6 +70,38 @@ export default function entryTargetTest() {
         long += long;
       }
       expect(resolveFwTarget(long)).assertEqual(FwTarget.DASHBOARD);
+    });
+
+    it('evidence is a known target, from a shortcut and from a card', 0, () => {
+      expect(resolveFwTarget('evidence')).assertEqual(FwTarget.EVIDENCE);
+      expect(resolveFwTarget(' Evidence ')).assertEqual(FwTarget.EVIDENCE);
+      expect(resolveFwTargetFromWant('evidence', undefined)).assertEqual(FwTarget.EVIDENCE);
+      expect(resolveFwTargetFromWant(undefined, '{"fwTarget":"evidence"}')).assertEqual(FwTarget.EVIDENCE);
+      expect(resolveFwTarget('evidence/calendar')).assertEqual(FwTarget.DASHBOARD);
+    });
+
+    it('each target maps to its tab: dashboard Report, evidence Evidence, share Share', 0, () => {
+      expect(fwTargetTab(FwTarget.DASHBOARD)).assertEqual(FW_TAB_REPORT);
+      expect(fwTargetTab(FwTarget.EVIDENCE)).assertEqual(FW_TAB_EVIDENCE);
+      expect(fwTargetTab(FwTarget.SHARE)).assertEqual(FW_TAB_SHARE);
+      expect(FW_TAB_REPORT).assertEqual(0);
+      expect(FW_TAB_EVIDENCE).assertEqual(1);
+      expect(FW_TAB_SHARE).assertEqual(2);
+    });
+
+    it('source opens Settings above the Report tab; no other target opens Settings', 0, () => {
+      expect(fwTargetOpensSettings(FwTarget.SOURCE)).assertTrue();
+      expect(fwTargetTab(FwTarget.SOURCE)).assertEqual(FW_TAB_REPORT);
+      expect(fwTargetOpensSettings(FwTarget.DASHBOARD)).assertFalse();
+      expect(fwTargetOpensSettings(FwTarget.EVIDENCE)).assertFalse();
+      expect(fwTargetOpensSettings(FwTarget.SHARE)).assertFalse();
+    });
+
+    it('an unresolved or unknown text never selects a tab other than Report', 0, () => {
+      expect(fwTargetTab('settings')).assertEqual(FW_TAB_REPORT);
+      expect(fwTargetTab('')).assertEqual(FW_TAB_REPORT);
+      expect(fwTargetTab(resolveFwTarget('SHARE '))).assertEqual(FW_TAB_SHARE);
+      expect(fwTargetOpensSettings('settings')).assertFalse();
     });
   });
 }
