@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Share — code for the partner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0A59F7;text-decoration:none}a:hover{color:#0846C4}
+</style>
+</helmet>
+<div style="width: 390px; height: 980px; position: relative; background: #F1F3F5; font-family: 'Noto Sans', system-ui, sans-serif; color: #1A1C1E; overflow: hidden">
+<div style="padding: 20px 16px 96px; display: flex; flex-direction: column; gap: 14px">
+<div style="padding-top: 8px; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 700">Share</h1>
+<span style="font-size: 14px; color: #4A5058">Show this code to your partner</span>
+</div>
+
+<section style="background: #FFFFFF; border-radius: 24px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #5D636B; letter-spacing: 0.2px">WHAT THE PARTNER SEES</h2>
+<div style="display: flex; gap: 10px; align-items: center">
+<span style="width: 40px; height: 40px; border-radius: 12px; background: #FBF1D9; color: #8A6200; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center">B</span>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Tier B · Eligible: yes</span><span style="font-size: 13px; color: #4A5058">Period 4 Sep – 3 Oct</span></div>
+</div>
+<button type="button" style="align-self: flex-start; min-height: 44px; border: 0; background: transparent; padding: 0; font: 500 13px 'Noto Sans', sans-serif; color: #0A59F7">Technical details ▾</button>
+</section>
+
+<section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 14px">
+<div role="img" aria-label="QR code with the signed tier claim" style="width: 232px; height: 232px; display: grid; grid-template-columns: repeat(25, minmax(0, 1fr)); padding: 10px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E3E6EA; border-radius: 12px">
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="625"><span style="background: {{c.f}}"></span></sc-for>
+</div>
+<div style="display: flex; gap: 10px; font-size: 12px; color: #4A5058">
+<span>318 of 512 characters</span><span>·</span><span style="display: flex; align-items: center; gap: 4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C7553" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>HUKS key</span>
+</div>
+<div style="font-size: 12px; line-height: 1.5; color: #5D636B; text-align: center">Not in this code: your score, coverage, flags, sick days or any health data. Valid once, for this request only.</div>
+</section>
+
+<a href="Partner.dc.html" style="min-height: 52px; border-radius: 26px; background: #E3E7EC; color: #1A1C1E; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">Open partner view (demo)</a>
+</div>
+<nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: #FFFFFF; border-top: 1px solid #E3E6EA; display: flex">
+<a href="Main.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #5D636B; font-size: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5D636B" stroke-width="2"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v4.5l3 2"></path></svg>Report</a>
+<a href="EvidenceMarek.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #5D636B; font-size: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5D636B" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M8 3v4M16 3v4M4 10h16"></path></svg>Evidence</a>
+<a href="Share.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #0A59F7; font-size: 12px; font-weight: 600"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A59F7" stroke-width="2"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2"></path></svg>Share</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var N = 25, cells = [], seed = 7;
+    function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+    function finder(r, c) {
+      var fs = [[0, 0], [0, 18], [18, 0]];
+      for (var k = 0; k < fs.length; k++) {
+        var rr = r - fs[k][0], cc = c - fs[k][1];
+        if (rr >= 0 && rr < 7 && cc >= 0 && cc < 7) {
+          var ring = rr === 0 || rr === 6 || cc === 0 || cc === 6;
+          var core = rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4;
+          return (ring || core) ? 1 : 0;
+        }
+        if (rr >= -1 && rr <= 7 && cc >= -1 && cc <= 7) return 0;
+      }
+      return -1;
+    }
+    for (var r = 0; r < N; r++) {
+      for (var c = 0; c < N; c++) {
+        var f = finder(r, c);
+        var on = f === -1 ? (rnd() > 0.52) : f === 1;
+        cells.push({ f: on ? '#1A1C1E' : 'transparent' });
+      }
+    }
+    return { cells: cells };
+  }
+}
+</script>
+</body>
+</html>
