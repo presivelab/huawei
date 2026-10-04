@@ -47,15 +47,36 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 ## State of this branch
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
-- The scoring module (HES-Lite) is not in this branch yet. Phone screens currently render fixed preview data
-  matching the expected persona results; the HES-Lite engine replaces it. The screens say so: the source pill
-  reads "Demo data · preview" and the line under the score card reads "Score engine not connected — preview
-  values". The preview lives in `common/src/main/ets/report/PreviewReports.ets`; the one place that chooses
-  where reports come from is `entry/src/main/ets/report/ServiceLocator.ets`.
-- After consent the phone shows three tabs: Report (the month of the selected demo persona), Evidence (the
-  watch days) and Share (not built yet). Benefit level: eligible and tier A is a full benefit, eligible and
-  tier B a partial benefit, anything else no benefit this month, always shown with its reason.
-- What is real and what is simulated: the table in `docs/ARCHITECTURE.md`.
+- The score is calculated on the phone by HES-Lite v1.0 (`common/src/main/ets/hes/`): deterministic rules and
+  curves, no learned model and no network. It runs on the histories of six demo personas, which are synthetic
+  and generated from a seed; the source pill on the Report tab reads "HUAWEI Health · Demo data". All weights,
+  curves, thresholds and minimum counts are prototype product assumptions, not clinically tested. Description,
+  persona results and decisions: `docs/HES.md`.
+- Wear rules run next to the score (`common/src/main/ets/wear/`): compliant days, nights, breaks, and the
+  selective non-wear flag. One suspicious break never raises the flag, three always do, two only when they
+  are more than 30% of all breaks.
+- After consent the phone shows three tabs: Report (the month of the selected demo persona), Evidence and
+  Share. Benefit level: eligible and tier A is a full benefit, eligible and tier B a partial benefit,
+  anything else no benefit this month, always shown with its reason.
+- The screens get their data in one place, `entry/src/main/ets/report/ServiceLocator.ets`, from the engine
+  (`EngineReportService`): the report of a persona, the details of each day of the wear month with the reason
+  as text, the live readings, "Close the day" and reset.
+
+## What is real and what is simulated
+
+| Part                              | State                                                                                                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Score (HES-Lite), tier, coverage  | **Real** engine, calculated on the phone. The history it runs on is **synthetic**: six demo personas generated from a seed.                                                                                  |
+| Wear compliance and the flag      | **Real** rules, on a **synthetic** 30-day wear record per persona.                                                                                                                                           |
+| Live heart rate and today's steps | Shown, **never scored**. The score uses completed days only; today's steps enter the history when the day is closed, the live heart rate is never stored.                                                    |
+| VO₂max and HRV                    | Watch measurements that HES-Lite uses when they are present, as percentiles. In the personas they are **synthetic**. A missing one lowers coverage and never the score.                                      |
+| HUAWEI Health connection          | **Stub** until Huawei grants the app access to health data through Health Service Kit. The authorization step is a labelled demo placeholder; FairWear does not copy Huawei's screen.                        |
+| Watch to phone                    | Signed day packets carried by a development relay over `hdc` (`tools/watch-phone-relay.mjs`). The Wear Engine code path exists and was not run: it needs paired devices and Wear Engine approval.            |
+| Watch days                        | **Real** recording and signing on the watch while the app is open; on the emulator the readings come from the Virtual sensor panel or the labelled demo feed. Verified watch days are shown, **not scored**. |
+| Claim signature                   | **Real** ECDSA P-256; the key is in HUKS, or a software key when HUKS is not available, labelled in the UI.                                                                                                  |
+| Partner                           | A screen in the same app, not a separate system.                                                                                                                                                             |
+
+More detail per part: `docs/ARCHITECTURE.md`, `docs/HES.md`, `docs/WATCH_LINK.md`.
 
 ## Tests
 
@@ -112,4 +133,4 @@ node tools/watch-phone-relay.mjs once --drop 3   # demo: the phone shows "1 day 
 | Watch → phone transport   | **Real** Wear Engine code path, **not demonstrable** on emulators (needs paired devices and Wear Engine approval) and not run. The demo uses `tools/watch-phone-relay.mjs` over hdc, carrying the identical files. |
 | Demo clock ×300           | **Simulated time**, labelled on the watch and in every packet recorded with it.                                                                                                                                    |
 | 24 h background recording | **Not implemented.** No continuous-task type fits health logging. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs.                             |
-| Watch days in the score   | **Not connected in this branch**: the scoring module is not in this checkout. The phone shows the received days and their source.                                                                                  |
+| Watch days in the score   | **Shown, not scored.** The score runs on the persona histories; the phone shows the received days and their source next to it.                                                                                     |

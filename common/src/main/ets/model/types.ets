@@ -63,7 +63,7 @@ export interface UserSettings {
 }
 export interface LedgerEntry {      // K14 — everything that left the device
   t: number;
-  kind: string;                     // 'CLAIM' | 'LLM'
+  kind: string;                     // 'CLAIM'
   destination: string;
   payload: string;                  // exact content sent
   bytes: number;

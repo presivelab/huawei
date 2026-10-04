@@ -8,7 +8,7 @@ This engine was rebuilt from the written specification `HES_Lite_Final_Hackathon
 phone brief), because the package that was to contain it did not arrive. It is pure logic in the `common`
 module and has no UI.
 
-All weights, curves, thresholds and minimum counts are prototype product assumptions.
+All weights, curves, thresholds and minimum counts are prototype product assumptions, not clinically tested.
 
 ## Files and specification sections
 
@@ -76,6 +76,18 @@ Wear month (30 days, 4 September to 3 October 2026, default thresholds):
 | Tomek   | 29 of 30       | 30          | 1 (1)           | 0          | no   | 29 compliant, 1 short               |
 | Ewa     | 27 of 30       | 27          | 3 (3)           | 0          | no   | 27 compliant, 3 short               |
 | Ola     | 8 of 30        | 8           | 16 (16)         | 0          | no   | 8 compliant, 16 short, 6 unknown    |
+
+The flag ("selective non-wear") is a rule over counted breaks (`common/src/main/ets/rules/SelectiveNonWear.ets`),
+with the default thresholds:
+
+- one suspicious break never raises the flag;
+- three or more suspicious breaks always raise it;
+- two suspicious breaks raise it only when they are more than 30% of all **breaks** of the month (not of the
+  days).
+
+A break is suspicious when it was judged (at least 12 heart-rate readings in the 24 h before it), the resting
+heart rate in those 24 h was at least 7 bpm above the person's baseline, and the steps were below 60% of the
+usual. Marek has 3 suspicious breaks of 5, so he is flagged; Kasia has 1 of 4, so she is not.
 
 ## Decisions where the specification is silent or contradicts itself
 
