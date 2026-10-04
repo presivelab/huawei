@@ -1,4 +1,5 @@
 import { HealthScope, healthSourceLabel, HealthStatus } from 'common';
+import { reportsFromHealthSim, reportSourceLabel } from '../report/ServiceLocator';
 
 // UI copy of the add-on screens. English only; the brand is written "HUAWEI Health", text only.
 
@@ -49,6 +50,17 @@ export const REFUSED_BODY: string =
   'No health data was read. Without your permission FairWear cannot calculate your Health Evidence Score, ' +
     'coverage or tier, and there is nothing to share.';
 
+// Health Sim: the separate app that plays HUAWEI Health's part on the emulators.
+export const HEALTH_SIM_SENTENCE: string = 'Health Sim stands in for HUAWEI Health on this emulator.';
+export const HEALTH_SIM_ASKING: string = 'Asking Health Sim for access…';
+export const HEALTH_SIM_ASKING_BODY: string =
+  'Health Sim shows its own consent screen. FairWear does not reproduce it and gets nothing until you allow ' +
+    'it there.';
+export const HEALTH_SIM_ASK_AGAIN: string = 'Ask Health Sim again';
+export const HEALTH_SIM_USE_BUILT_IN: string = 'Continue with built-in demo data';
+export const HEALTH_SIM_READS_SENTENCE: string =
+  'Reads the simulated data Health Sim handed over after your consent. ' + HEALTH_SIM_SENTENCE;
+
 export const DISCONNECTED_TITLE: string = 'HUAWEI Health disconnected';
 export const DISCONNECTED_BODY: string =
   'Health data held in memory was cleared and the tier is hidden. Connecting again asks for your consent again.';
@@ -78,14 +90,19 @@ export function scopeLabel(scope: HealthScope): string {
 // The source line: brand and a readable status, for example the brand followed by "Demo data".
 // The status enum never reaches the screen (see healthStatusLabel in common). The last sync is added
 // only when one is known.
+// While the reports come from Health Sim the line names Health Sim, not the brand.
 export function sourceLine(status: string, lastSync: string): string {
-  if (status === HealthStatus.NOT_AUTHORIZED || lastSync === '—') {
+  if (status === HealthStatus.NOT_AUTHORIZED) {
     return healthSourceLabel(status);
   }
-  return healthSourceLabel(status) + ' · last sync ' + lastSync;
+  const label: string = reportsFromHealthSim() ? reportSourceLabel() : healthSourceLabel(status);
+  return lastSync === '—' ? label : label + ' · last sync ' + lastSync;
 }
 
 export function statusExplanation(status: string): string {
+  if (status !== HealthStatus.NOT_AUTHORIZED && reportsFromHealthSim()) {
+    return HEALTH_SIM_READS_SENTENCE;
+  }
   if (status === HealthStatus.CONNECTED) {
     return 'Reads from HUAWEI Health.';
   }
