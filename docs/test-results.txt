@@ -1,6 +1,41 @@
 FairWear test results
 =====================
 
+2026-10-04 06:12 CEDT  branch feature/watch-link-tour  (T6.3: a3 screenshots light and dark; inbox race fix eb6daf8 on the emulators)
+----------------------------------------------------
+Base: feature/engine-reports 124ec58 + eb6daf8 (SettleGate: a file still being written is left for the next look).
+Node run (tools/run-logic-tests.sh): common 368/368 (was 364/364; four new flow tests), watch 6/6.
+ArkTS compile: assembleHap watch and entry BUILD SUCCESSFUL. Lint 0 errors (entry 7 warnings, watch 2, common 0).
+Wording check 0 hits, enum-in-UI check 0 hits.
+Emulators (wearable 127.0.0.1:5555, phone 127.0.0.1:5557), both HAPs built at eb6daf8, taps with uitest:
+  Inbox race: the same pairing request sent 13 times and the same day packet sent 12 times with
+    `hdc file send` into inbox/: no "Invalid format" in the sync log ("Pairing request received" each time;
+    "Accepted" once, then "Duplicate day" 11 times). Before the fix agent 1 saw it 3 times in about 12 sends.
+  Clean run 05:56-06:11 (reset, Forget watch twice, pair, demo clock x300 + feed, Close day once, then three
+    days sealed by the watch): #1 2026-10-04 the closed first day, not observed 24 h; #2 worn 14 h 40 min,
+    charging 6 h 35 min, off wrist 2 h 45 min, 12,178 steps, break 12:10-14:55, 77 heart-rate slots before;
+    #3 worn 14 h 40 min, charging 6 h 30 min, off wrist 2 h 50 min, 12,157 steps, break 12:10-15:00, 171 slots;
+    #4 worn 14 h 40 min, charging 6 h 30 min, off wrist 2 h 50 min, 12,122 steps, break 12:05-14:55, 172 slots.
+    The brief's check "startMin 730, endMin 895" holds for #2; #3 and #4 are one slot off at one end, inside
+    the range WatchLinkFeed.test.ets allows.
+  --tamper on #3 (run before, 05:42) -> "#3 REJECTED (Invalid signature)", then "#3 ACCEPTED";
+  --drop 3 -> "#4 ACCEPTED (Accepted · Missing 1 day(s))", "3 of 4 days verified", "1 day never reached this
+    phone"; then "#3 ACCEPTED", "All 4 days verified", watch "Synced ✓".
+  Tour in light and in dark mode: timeline of the newest day, the three checks ("Invalid signature · Not taken
+    in", "Duplicate day · Acknowledged again, counted once", "Accepted · Missing 1 day(s)" then "Accepted ·
+    Fills the gap"), "Your stored days were not changed".
+  Screenshots in docs/screenshots/final/: a3-watch-dial-feed, a3-watch-close-day, and for the phone in light and
+    dark: a3-phone-pair, a3-phone-day-imported, a3-phone-invalid-signature, a3-phone-missing-day, a3-tour-steps,
+    a3-tour-cheat. Dark mode switched with the Dark card in Settings > Display & brightness, light again at the end.
+  State left on the emulators at 06:11: paired (fd7c02b2), "All 4 days verified", light mode, demo clock off.
+Seen, not caused by FairWear: twice (05:26:27 and 05:49:55) the watch log shows FairWear sent to the background,
+  the power key, the app list and a tap on the Health Demo icon (com.fairwear.healthdemo); who did it is not
+  known. FairWear records only while it is open, so the day running at that moment had "Not observed" time;
+  the run was started again each time. Every day shown in an a3 shot was recorded whole (the day-imported,
+  invalid-signature and tour shots show days #2 and #3 of the 05:32 run, sealed before the second pause; the
+  missing-day shots show the 05:56 run).
+Not done: a real watch at the mentors' table (optional item 5 of the brief).
+
 2026-10-04 05:15 CEDT  branch feature/engine-reports  (fix/audit merged: audit fixes compiled and walked on the emulators)
 ----------------------------------------------------
 Merge: git merge fix/audit into 9d414b7 -> c119ad7, no conflict. Then 4ce179b (relay, see Watch Link below).

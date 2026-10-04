@@ -59,9 +59,12 @@ stays flagged; Ola does not reach a score (she wears the watch too rarely at nig
 - A second run of the relay after a rehearsal answers again (the relay forgets old ACKs when a new pairing or
   a new day is sent). If the watch was reset, also tap **Forget watch** twice on the phone, then pair again.
 - The relay prints `REJECTED (Invalid format)` for a packet nobody changed: the phone looked into its inbox
-  while the file was still arriving (`docs/WATCH_LINK.md`, Known limitations). For a day, run the relay once
-  more. For a pairing request, tap **Pair phone** on the watch again and run the relay. Rehearse the
-  3:15 step once before recording so this does not happen on camera unnoticed.
+  while the file was still arriving. The app now leaves such a file for its next look
+  (`docs/WATCH_LINK.md`, Known limitations), so this should not happen any more; if it does, run the relay
+  once more for a day, and for a pairing request tap **Pair phone** on the watch again and run the relay.
+- The watch shows another app or the watch face: FairWear records only while it is open. Start it again
+  from the app list and check that the dial says "DEMO ×300 · FEED" before the 3:05 step. A day recorded
+  across such a pause has "Not observed" time and may have no break.
 
 ## B. HUAWEI Health integration path (DEMO data)
 
