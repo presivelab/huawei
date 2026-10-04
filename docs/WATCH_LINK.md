@@ -175,11 +175,13 @@ The phone app reads its inbox when it comes to the foreground, every 2 s while i
 5. `Close day (demo)` again, relay with `--tamper` → phone log: `Invalid signature`, day not taken in. Relay again → `Accepted`.
 6. Close two more days, relay with `--drop 3` → phone: `1 day missing`, `#3 · not received`. Relay again → the gap is filled.
 
+**With the demo feed (no Virtual sensor panel).** Steps 2 to 4 become: watch, second page: `Demo clock ×300`, then `Demo feed: off` → `on`. The dial reads `DEMO ×300 · FEED · hh:mm`, heart rate and steps are scripted, and from 12:00 to 15:00 of recorder time (36 s) the ring turns red, `not on wrist`. The watch closes the day by itself at midnight of recorder time, 4 min 48 s after the previous one: `1 to sync` → relay → the phone shows the day with worn, charging and off-wrist time, steps and `Off wrist 12:05–15:00`. `Demo clock ×300` again stops the feed. Start from a fresh pair (see "Known limitations", stale ACK files) so the list holds feed days only.
+
 Line for the jury: "The watch measures, the phone judges with the same open rules, the insurer sees only a signed tier. Every day is signed on the wrist and chained, so a day can't be quietly deleted or edited."
 
 ## Checked on the emulators (2026-10-04, agent-run, not yet confirmed by a team member)
 
-Wearable emulator 127.0.0.1:5555 and phone emulator 127.0.0.1:5557, API 24, unsigned debug HAPs. Taps were sent with `uitest uiInput`.
+Wearable emulator 127.0.0.1:5555 and phone emulator 127.0.0.1:5557, API 24, unsigned debug HAPs. Taps were sent with `uitest uiInput`. The `watchlink-NN` files named below were re-shot in the demo-feed run described in the next section; the values in this list are those of the first run.
 
 - Watch: key `source=HUKS`; sensor ids without WEAR_DETECTION (280), so `HR_SIGNAL`; heart-rate events arrive with value 0, so the state is `not on wrist`.
 - Watch: `Demo clock ×300` → the ring fills (red, because the emulator's heart rate is 0), label `DEMO ×300 · hh:mm` (`watchlink-03`).
@@ -191,7 +193,34 @@ Wearable emulator 127.0.0.1:5555 and phone emulator 127.0.0.1:5557, API 24, unsi
 
 Not run on the emulators: a non-zero heart rate (worn, green ring, the 60 s limit with the real clock), a denied permission with the new dial, `Reset watch data`, `Forget watch`, an app restart of either side, a real midnight.
 
+## Checked on the emulators with the demo feed (2026-10-04 03:35–04:00 CEDT, agent-run, not yet confirmed by a team member)
+
+Same two emulators, unsigned debug HAPs built in the `feature/watch-link-tour` worktree: watch from `b9ce4b2`; phone from `b9ce4b2` for pairing (`watchlink-05`, `-07`) and from `7213345` (the engine build) from `watchlink-11` on. `watchlink-08` was taken while another session was installing its own engine build on the shared phone emulator, so its build is one of the two; the Watch link code is the same in all of them. Taps with `uitest uiInput`, values read from the layout dump and from the packets in the watch outbox.
+
+- Fresh start: `Forget watch` on the phone, `Reset watch data` on the watch, `Pair phone` → relay → `Pair watch fd7c02b2?` (`watchlink-07`) → `Confirm` → relay → `#0 ACCEPTED (Paired)` (`watchlink-05`, `watchlink-09`).
+- Watch: `Demo clock ×300` and `Demo feed: on` (`watchlink-02`, `watchlink-03`); dial `worn` with a scripted heart rate (`watchlink-01`), `not on wrist` during the scripted break (`watchlink-15`), the ring with the red break stretch during the workout hour (`watchlink-16`).
+- The watch sealed four days by itself, one every 4 min 48 s, without `Close day (demo)`: `1 to sync` (`watchlink-13`, `watchlink-04`), after the relay `Synced ✓` (`watchlink-10`). Every packet has `clock = DEMO_X300_FEED` and one break; packets 3 and 4 are 877 and 876 bytes.
+
+| day       | seq | worn        | charging   | off wrist  | not observed | steps  | break       | heart-rate slots in the 24 h before |
+| --------- | --- | ----------- | ---------- | ---------- | ------------ | ------ | ----------- | ----------------------------------- |
+| Sun 4 Oct | 1   | 10 h 25 min | 1 h 5 min  | 2 h 45 min | 9 h 45 min   | 7,626  | 12:10–14:55 | 27                                  |
+| Mon 5 Oct | 2   | 14 h 30 min | 6 h 35 min | 2 h 55 min | 0            | 12,068 | 12:05–15:00 | 171                                 |
+| Tue 6 Oct | 3   | 14 h 40 min | 6 h 30 min | 2 h 50 min | 0            | 12,138 | 12:10–15:00 | 171                                 |
+| Wed 7 Oct | 4   | 14 h 35 min | 6 h 30 min | 2 h 55 min | 0            | 12,119 | 12:05–15:00 | 172                                 |
+
+- The first day starts at 09:45 because the recorder started then; the hours before are `not observed`. The scripted break is 12:00–15:00 (3 h); the watch records it as 2 h 45 min to 2 h 55 min, because the wear rule waits for the last heart rate to go stale and a slot takes its majority state. `WatchLinkFeed.test.ets` allows exactly this range.
+- Phone, Evidence tab: day 1 `1 day verified` with worn, charging and off-wrist time, steps and `Off wrist 12:10–14:55` (`watchlink-08`); the full day 2 (`watchlink-17`).
+- `--tamper` on packet 2 → `#2 REJECTED (Invalid signature)`, sync log `#2 · Invalid signature`, still one day (`watchlink-11`); a clean run → `#2 ACCEPTED`.
+- `--drop 3` with packets 3 and 4 waiting → `#4 ACCEPTED (Accepted · Missing 1 day(s))`, `3 of 4 days verified`, `1 day never reached this phone`, a dashed `Missing` ring between Mon and Wed (`watchlink-12`); a clean run → `#3 ACCEPTED`, `All 4 days verified` (`watchlink-14`, `watchlink-18`).
+- Tour (`How Watch Link works` on the Watch link card): step 1 draws the slot timeline of the newest received day, `Wed 7 Oct · wear source: heart-rate signal`, with the demo-feed label (`tour-01`); `Show the code` opens the code panel (`tour-02`). The three checks ran on the received days (`tour-03`): `Change five minutes of one day` → `Invalid signature · Not taken in`; `Send the same day again` → `Duplicate day · Acknowledged again, counted once`; `Hold a day back` → `Accepted · Missing 1 day(s)`, then `Accepted · Fills the gap`; each reported 2 ms and `Your stored days were not changed`. After the checks the card still read `All 4 days verified` and `watchlink/days/` still held `1.json` to `4.json`. The last two cards are in `tour-04`.
+
+Not run: the tour in dark mode, the tour with no day received, the code panels of steps 2 to 6, `watchlink-06` (unchanged, the screen is the one in `watchlink-09`), Wear Engine on paired devices, a real heart rate.
+
+Seen during the run, not changed: on the watch's second page the title and the `Phone: #N` line sit at y = 24 and y = 449 of 466 when the demo feed is on, which a round screen cuts (`watchlink-04`).
+
 ## Known limitations
+
+- **`Forget watch` leaves the old ACK files.** `PhoneLinkEngine.forget()` clears the ledger, the days and the log, but not `acks/<seq>.json`. With the dev relay those files are carried to the watch on the next run: a watch that was reset and paired again then marks itself paired before the phone confirmed and shows `Phone: #7: Accepted`, and an old ACK with the seq of a packet still in the outbox would remove that packet unsent. The phone side is not affected: it pins the key only on `Confirm`. In the run above the old files were removed by hand (`hdc shell -b com.fairwear.app rm …/acks/<seq>.json`, and `_relay/` emptied) before pairing. Wear Engine sends ACKs as messages, so this concerns the relay only.
 
 - The watch records **while the app is open**. No continuous task is requested: none of the continuous-task types (data transfer, audio, location, Bluetooth, multi-device…) matches health logging, and the system suspends apps whose task type does not match what they do. Time in the background is `U`. In the product the full-day history comes from HUAWEI Health; the watch app adds signed wear evidence while it runs.
 - The demo clock shifts recorder time for good. After any demo time the recorder runs on `DEMO_OFFSET` and its packets are labelled as simulated time. `Reset watch data` returns to the real clock and starts a new chain; the phone then has to `Forget watch` and pair again.

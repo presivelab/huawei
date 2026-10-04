@@ -1,6 +1,47 @@
 FairWear test results
 =====================
 
+2026-10-04 04:05 CEDT  branch feature/watch-link-tour  (tour on the common base; watch -> phone run with the demo feed and its 3 h break)
+----------------------------------------------------
+Base: feature/engine-reports 7213345 (fast-forward: 75fe748 -> b9ce4b2 -> 7213345, no conflict). No code file
+  was changed on this branch after the fast-forward: screenshots and documents only.
+Node run (tools/run-logic-tests.sh): common 336/336, watch 6/6 (same as the base).
+ArkTS compile: hvigorw assembleHap watch and entry BUILD SUCCESSFUL at the branch head.
+Lint (tools/lint.sh): 0 errors; entry 7 warnings, watch 2, common 0.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+Emulators (wearable 127.0.0.1:5555, phone 127.0.0.1:5557, API 24), unsigned debug HAPs, taps with uitest, values
+  read from the layout dump and from the packets in the watch outbox. Watch HAP built at b9ce4b2; phone HAP at
+  b9ce4b2 for pairing and at 7213345 from the tamper step on (the phone emulator was shared with three other
+  sessions, each installing its own build in its turn).
+  Fresh start: Forget watch, Reset watch data, Pair phone, relay, "Pair watch fd7c02b2?", Confirm, relay,
+    "#0 ACCEPTED (Paired)".
+  Watch, demo clock x300 with the demo feed: four days sealed by the watch itself at midnight of recorder time,
+    one every 4 min 48 s, all DEMO_X300_FEED, one break each:
+      #1 Sun 4 Oct  worn 10 h 25 min, charging 1 h 5 min, off wrist 2 h 45 min, not observed 9 h 45 min
+                    (the recorder started at 09:45), 7,626 steps, break 12:10-14:55, 27 heart-rate slots before
+      #2 Mon 5 Oct  worn 14 h 30 min, charging 6 h 35 min, off wrist 2 h 55 min, 12,068 steps, break 12:05-15:00,
+                    171 heart-rate slots, resting 56 bpm and 12,089 steps in the 24 h before
+      #3 Tue 6 Oct  worn 14 h 40 min, charging 6 h 30 min, off wrist 2 h 50 min, 12,138 steps, break 12:10-15:00
+      #4 Wed 7 Oct  worn 14 h 35 min, charging 6 h 30 min, off wrist 2 h 55 min, 12,119 steps, break 12:05-15:00
+    The scripted break is 12:00-15:00; the recorded one is 2 h 45 min to 2 h 55 min (the wear rule waits for the
+    last heart rate to go stale), inside the range WatchLinkFeed.test.ets allows.
+  Relay: #1 ACCEPTED; --tamper on #2 -> "#2 REJECTED (Invalid signature)", sync log "#2 · Invalid signature",
+    then "#2 ACCEPTED"; --drop 3 -> "#4 ACCEPTED (Accepted · Missing 1 day(s))", "3 of 4 days verified",
+    "1 day never reached this phone"; then "#3 ACCEPTED", "All 4 days verified", watch "Synced ✓".
+  Tour (How Watch Link works): slot timeline of Wed 7 Oct with the demo-feed label; code panel of step 1; the
+    three checks on the received days: "Invalid signature · Not taken in", "Duplicate day · Acknowledged again,
+    counted once", "Accepted · Missing 1 day(s)" then "Accepted · Fills the gap", 2 ms each, "Your stored days
+    were not changed"; afterwards still "All 4 days verified" and days 1.json to 4.json in the sandbox.
+  Screenshots: docs/screenshots/watchlink-01 ... -05, -07 ... -18 (06 unchanged) and tour-01 ... tour-04. They
+    replace the earlier set, where every day read "Worn 0 h 00 min" because the emulator's heart rate is 0.
+Not done / not verified:
+  - the tour in dark mode, with no day received, and the code panels of steps 2 to 6;
+  - the screenshots in docs/screenshots/design/ (UI kit gate) still show the earlier days with "Worn 0 min";
+  - Wear Engine on paired devices and a real heart rate (unchanged);
+  - found, not fixed: Forget watch leaves acks/<seq>.json on the phone and the relay carries them to a watch
+    that was reset (docs/WATCH_LINK.md, "Known limitations"); removed by hand before this run. On the watch's
+    second page the title and the "Phone: #N" line sit at the edge of the round screen when the feed is on.
+
 2026-10-04 03:42 CEDT  branch feature/engine-reports  (G1: the phone reports come from the scoring engine)
 ----------------------------------------------------
 Base: feature/phone-screens b9ce4b2 (fast-forward). Commit 69b3417.
