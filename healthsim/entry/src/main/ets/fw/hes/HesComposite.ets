@@ -2,8 +2,9 @@
 // A component that is not available is left out of the numerator and of the denominator. It is never zero.
 //
 // Decision: the arithmetic runs on weights in thousandths (150, 125, 100, 50), which are whole numbers.
-// With fractions, 0.15 + 0.15 + 0.125 is not exactly 0.425 in floating point and a coverage of 42.5%
-// could round either way; with whole numbers 42.5 rounds up to 43 and 84.50 rounds up to 85 every time.
+// With fractions, 0.15 + 0.15 + 0.125 is not exactly 0.425 in floating point; with whole numbers the
+// coverage is exactly 42.5 on every run and a score of 84.50 rounds up to 85 every time.
+// The coverage is never rounded: a missing component lowers it by exactly its base weight.
 import { HES_COMPONENTS } from './HesCurves';
 import { hesRound } from './HesMath';
 import { HesComponentResult, HES_MISSING } from './HesTypes';
@@ -30,9 +31,10 @@ export function availableWeightPermille(components: HesComponentResult[]): numbe
   return sum;
 }
 
-/** Evidence Coverage (section 4.1): 100 x the sum of the base weights of the available components. */
+/** Evidence Coverage (section 7): 100 x the sum of the base weights of the available components.
+ *  Exact: weights are whole thousandths, so the coverage is a multiple of 0.5 and is never rounded. */
 export function coverage(components: HesComponentResult[]): number {
-  return hesRound(availableWeightPermille(components) / PERMILLE_PER_PERCENT);
+  return availableWeightPermille(components) / PERMILLE_PER_PERCENT;
 }
 
 /**
