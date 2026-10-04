@@ -3,6 +3,7 @@
 import { EARLIEST_BREAK_START_MIN } from './DayBuilder';
 import { asObject, parseJsonObject, readArray, readInt, readIntArray, readString } from './JsonRead';
 import {
+  ACK_VERSION,
   AckPacket,
   AckStatus,
   BreakContext,
@@ -297,9 +298,28 @@ export class PairPacketCodec {
   }
 }
 
+// Free text on one line: the reason goes into the ACK signing string as one line.
+function isOneLine(text: string): boolean {
+  return text.length <= MAX_TEXT && text.indexOf('\n') < 0 && text.indexOf('\r') < 0;
+}
+
 export class AckPacketCodec {
-  static make(seq: number, status: AckStatus, reason: string): AckPacket {
-    const ack: AckPacket = { v: PACKET_VERSION, type: TYPE_ACK, seq: seq, status: status, reason: reason };
+  // An unsigned ACK; the phone signs it (PacketSealer.sealAck) before it is written.
+  static make(seq: number, status: AckStatus, reason: string, watchKid: string, ref: string, phoneKid: string,
+    phonePub: string, iat: number): AckPacket {
+    const ack: AckPacket = {
+      v: ACK_VERSION,
+      type: TYPE_ACK,
+      seq: seq,
+      status: status,
+      reason: reason,
+      watchKid: watchKid,
+      ref: ref,
+      phoneKid: phoneKid,
+      phonePub: phonePub,
+      iat: iat,
+      sig: ''
+    };
     return ack;
   }
 
@@ -320,7 +340,7 @@ export class AckPacketCodec {
       out.reason = 'v or type missing';
       return out;
     }
-    if (v !== PACKET_VERSION || type !== TYPE_ACK) {
+    if (v !== ACK_VERSION || type !== TYPE_ACK) {
       out.code = 'VERSION';
       out.reason = `v ${v}, type ${type}`;
       return out;
@@ -328,7 +348,14 @@ export class AckPacketCodec {
     const seq = readInt(o, 'seq');
     const status = readString(o, 'status');
     const reason = readString(o, 'reason');
-    if (seq === null || status === null || reason === null || seq < PAIR_ACK_SEQ || reason.length > MAX_TEXT) {
+    const watchKid = readString(o, 'watchKid');
+    const ref = readString(o, 'ref');
+    const phoneKid = readString(o, 'phoneKid');
+    const phonePub = readString(o, 'phonePub');
+    const iat = readInt(o, 'iat');
+    const sig = readString(o, 'sig');
+    if (seq === null || status === null || reason === null || watchKid === null || ref === null ||
+      phoneKid === null || phonePub === null || iat === null || sig === null || seq < PAIR_ACK_SEQ) {
       out.reason = 'a field is missing or has the wrong type';
       return out;
     }
@@ -336,8 +363,15 @@ export class AckPacketCodec {
       out.reason = 'unknown status';
       return out;
     }
+    if (!isOneLine(reason) || (watchKid.length > 0 && !isKid(watchKid)) || (ref.length > 0 && !isPlainToken(ref)) ||
+      !isKid(phoneKid) || !isPlainToken(phonePub) || !isPlainToken(sig) || iat < 0) {
+      out.reason = 'reason, watchKid, ref, phoneKid, phonePub, sig or iat is malformed';
+      return out;
+    }
+    const ack = AckPacketCodec.make(seq, status as AckStatus, reason, watchKid, ref, phoneKid, phonePub, iat);
+    ack.sig = sig;
     out.code = 'OK';
-    out.packet = AckPacketCodec.make(seq, status as AckStatus, reason);
+    out.packet = ack;
     return out;
   }
 }

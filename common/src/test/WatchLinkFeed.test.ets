@@ -1,7 +1,7 @@
 // The demo feed through the watch engine under Node. Not part of List.test.ets (the ports come from
 // tools/logic-tests/node-ports.ts).
 import { describe, it, expect } from '@ohos/hypium';
-import { FsTextStore, makeTempDir, NodeHasher, NodeSigner, removeDir } from '@fairwear/node-ports';
+import { FsTextStore, makeTempDir, NodeHasher, NodeSigner, NodeSigVerifier, removeDir } from '@fairwear/node-ports';
 import { DEFAULT_THRESHOLDS } from '../main/ets/model/defaults';
 import { DayPacketCodec } from '../main/ets/watchlink/DayPacketCodec';
 import { WatchLinkEngine } from '../main/ets/watchlink/WatchLinkEngine';
@@ -33,7 +33,7 @@ class FeedBench {
 
   constructor() {
     this.store = new FsTextStore(this.dir);
-    this.watch = new WatchLinkEngine(this.store, new NodeSigner(), new NodeHasher(), this.clock, TZ);
+    this.watch = new WatchLinkEngine(this.store, new NodeSigner(), new NodeHasher(), this.clock, TZ, new NodeSigVerifier());
   }
 
   // `seconds` real seconds of the watch app running. `sensorBpm` > 0 also sends a sensor reading each second.

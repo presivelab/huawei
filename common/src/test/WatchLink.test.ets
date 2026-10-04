@@ -14,6 +14,7 @@ import { ChainLedger } from '../main/ets/watchlink/ChainLedger';
 import { DayBuilder } from '../main/ets/watchlink/DayBuilder';
 import { AckPacketCodec, DayPacketCodec, PairPacketCodec } from '../main/ets/watchlink/DayPacketCodec';
 import {
+  AckVerifier,
   DayPacketVerifier,
   MSG_ACCEPTED,
   MSG_CHAIN_CONFLICT,
@@ -126,7 +127,8 @@ class Rig {
   constructor() {
     this.state = newChainState(this.signer.kid());
     this.ledger = new ChainLedger(this.signer.kid(), this.signer.publicKeySpkiB64());
-    this.check = new DayPacketVerifier(this.verifier, this.hasher, this.phoneClock);
+    // The demo build's setting: demo-clock packets are taken in (the default refuses them).
+    this.check = new DayPacketVerifier(this.verifier, this.hasher, this.phoneClock, true);
   }
 
   // Signs the next packet of the chain for a worn day and advances the watch's chain state.
@@ -544,14 +546,26 @@ export default function watchLinkTest() {
       expect(DayPacketCodec.fromJson(good.replace('"v":1', '"v":2')).code).assertEqual('VERSION');
     });
 
-    it('ACK packets round-trip', 0, () => {
-      const json = AckPacketCodec.toJson(AckPacketCodec.make(7, 'REJECTED', MSG_INVALID_SIGNATURE));
+    it('ACK packets round-trip, signed by the phone', 0, async () => {
+      const phone = new NodeSigner();
+      const watchKid = new NodeSigner().kid();
+      const ack = await PacketSealer.sealAck(AckPacketCodec.make(7, 'REJECTED', MSG_INVALID_SIGNATURE, watchKid,
+        'ref_hash', '', '', 1700000000), phone);
+      const json = AckPacketCodec.toJson(ack);
       const back = AckPacketCodec.fromJson(json);
       expect(back.code).assertEqual('OK');
       const p = back.packet;
-      expect(p !== null && p.seq === 7 && p.status === 'REJECTED' && p.reason === MSG_INVALID_SIGNATURE)
-        .assertTrue();
+      expect(p !== null && p.seq === 7 && p.status === 'REJECTED' && p.reason === MSG_INVALID_SIGNATURE &&
+        p.watchKid === watchKid && p.ref === 'ref_hash' && p.phoneKid === phone.kid()).assertTrue();
+      if (p !== null) {
+        expect(await AckVerifier.verify(p, new NodeSigVerifier(), new NodeHasher())).assertTrue();
+      }
       expect(AckPacketCodec.fromJson(json.replace('REJECTED', 'MAYBE')).code).assertEqual('FORMAT');
+      // A line break in the reason would add a line to the signing string.
+      expect(AckPacketCodec.fromJson(json.replace(MSG_INVALID_SIGNATURE, 'a\\nb')).code).assertEqual('FORMAT');
+      // The unsigned version-1 ACK is not taken.
+      expect(AckPacketCodec.fromJson('{"v":1,"type":"ACK","seq":7,"status":"ACCEPTED","reason":"Accepted"}').code)
+        .assertEqual('VERSION');
     });
   });
 
@@ -721,10 +735,18 @@ export default function watchLinkTest() {
       state.seq = 4;
       state.lastHash = 'HASH4';
       state.paired = true;
+      state.phoneKid = '0badc0de';
+      state.phonePub = 'PHONEPUB';
       const back = chainStateFromJson(chainStateToJson(state), '3fa9c1d2');
       expect(back.seq).assertEqual(4);
       expect(back.lastHash).assertEqual('HASH4');
       expect(back.paired).assertTrue();
+      expect(back.phoneKid).assertEqual('0badc0de');
+      // A state from before signed ACKs (no phone key): not paired, the chain itself stays.
+      const old = chainStateFromJson('{"kid":"3fa9c1d2","seq":4,"lastHash":"HASH4","paired":true}', '3fa9c1d2');
+      expect(old.paired).assertFalse();
+      expect(old.seq).assertEqual(4);
+      expect(old.lastHash).assertEqual('HASH4');
       // Another key, a damaged file or no file: a fresh chain.
       expect(chainStateFromJson(chainStateToJson(state), 'aaaaaaaa').seq).assertEqual(0);
       expect(chainStateFromJson('{"seq":', '3fa9c1d2').lastHash).assertEqual(GENESIS);

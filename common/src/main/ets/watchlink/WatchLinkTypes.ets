@@ -117,12 +117,26 @@ export interface PairPacket {
 
 export type AckStatus = 'ACCEPTED' | 'DUPLICATE' | 'REJECTED';
 
+// ACKs are signed by the phone since version 2. An unsigned version-1 ACK is refused by the watch.
+export const ACK_VERSION: number = 2;
+
+// The phone's answer to one packet, signed with the phone's own Watch Link key.
+//   phoneKid / phonePub  the phone key; the watch pins it when the pairing is accepted
+//   watchKid             the watch the answer is meant for
+//   ref                  hash of the signing string of the packet answered (day or pairing request), so an
+//                        answer cannot be moved to another packet with the same seq; '' when it did not decode
 export interface AckPacket {
   v: number;
   type: string;               // 'ACK'
   seq: number;
   status: AckStatus;
   reason: string;
+  watchKid: string;
+  ref: string;
+  phoneKid: string;
+  phonePub: string;
+  iat: number;
+  sig: string;
 }
 
 export function emptySlot(idx: number): SlotRecord {

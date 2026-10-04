@@ -6,20 +6,20 @@
 //   days/<date>.json    slot records, 3 days
 //   outbox/<seq>.json   signed day packets, deleted after the phone's ACK, at most 30
 //   pair.json           the pairing request
-//   acks/<seq>.json     incoming ACKs (seq 0 answers the pairing request)
-//   state.json          seq, lastHash, kid, paired
+//   acks/<seq>.json     incoming ACKs (seq 0 answers the pairing request), signed by the phone
+//   state.json          seq, lastHash, kid, paired, the pinned phone key and the last pairing request's hash
 //   clock.json          recorder-clock offset
 import { DayBuilder } from './DayBuilder';
 import { demoFeedAt, demoFeedSteps, feedClockLabel } from './DemoFeed';
 import { AckPacketCodec, DayPacketCodec, PAIR_ACK_SEQ } from './DayPacketCodec';
 import { DayTransport } from './DayTransport';
-import { MSG_UNKNOWN_KEY } from './DayPacketVerifier';
+import { AckVerifier, MSG_UNKNOWN_KEY } from './DayPacketVerifier';
 import { parseJsonObject, readNumber } from './JsonRead';
 import { chainStateFromJson, chainStateToJson, newChainState, PacketSealer, WatchChainState } from './PacketSealer';
 import { DEMO_SPEED, RecorderClock } from './RecorderClock';
 import { SettleGate } from './SettleGate';
 import { SlotRecorder } from './SlotRecorder';
-import { Clock, Hasher, Signer, TextStore } from './WatchLinkPorts';
+import { Clock, Hasher, Signer, SigVerifier, TextStore } from './WatchLinkPorts';
 import { daySigningString } from './WatchLinkSigning';
 import {
   dateOfDayNumber,
@@ -47,6 +47,8 @@ export const OUTBOX_CAP: number = 30;
 
 export const STATUS_NOT_PAIRED: string = 'Not paired';
 export const STATUS_SYNCED: string = 'Synced ✓';
+export const ACK_BAD_SIGNATURE: string = 'Answer ignored: invalid signature';
+export const ACK_OTHER_PHONE: string = 'Answer ignored: another phone';
 
 const JSON_SUFFIX: string = '.json';
 
@@ -101,6 +103,7 @@ export function syncStatusLine(paired: boolean, pending: number): string {
 export class WatchLinkEngine {
   private store: TextStore;
   private signer: Signer;
+  private verifier: SigVerifier;
   private hasher: Hasher;
   private realClock: Clock;
   private tzOffsetMin: number;
@@ -119,10 +122,14 @@ export class WatchLinkEngine {
   private feedOn: boolean = false;
   private feedHr: number = 0;
   private feedLastRecorderMs: number = -1;
+  private readingAcks: boolean = false;
 
-  constructor(store: TextStore, signer: Signer, hasher: Hasher, realClock: Clock, tzOffsetMin: number) {
+  // `verifier` checks the phone's signature on every ACK.
+  constructor(store: TextStore, signer: Signer, hasher: Hasher, realClock: Clock, tzOffsetMin: number,
+    verifier: SigVerifier) {
     this.store = store;
     this.signer = signer;
+    this.verifier = verifier;
     this.hasher = hasher;
     this.realClock = realClock;
     this.tzOffsetMin = tzOffsetMin;
@@ -145,7 +152,7 @@ export class WatchLinkEngine {
     this.recClock = new RecorderClock(this.readClockOffset());
     this.recorder.setClock(1, this.recClock.label(now));
     await this.adoptOutbox();
-    this.processAcks();
+    await this.processAcks();
   }
 
   // While the demo feed runs, the script stands in for the sensors: sensor events are not mixed in.
@@ -186,7 +193,7 @@ export class WatchLinkEngine {
       this.saveClock(realMs);
     }
     await this.packFinishedDays();
-    this.processAcks();
+    await this.processAcks();
   }
 
   // Observation stops (app to background). The time until the next tick stays not observed.
@@ -258,11 +265,14 @@ export class WatchLinkEngine {
     return this.chain.seq;
   }
 
-  // "Pair phone": writes the self-signed pairing request and returns the 8-hex code to show.
+  // "Pair phone": writes the self-signed pairing request and returns the 8-hex code to show. Its hash is
+  // kept: only the phone's answer to this very request can pair the watch.
   async pair(): Promise<string> {
-    const json = await PacketSealer.makePair(this.signer, this.realClock);
-    this.store.writeAtomic(PAIR_FILE, json);
-    this.sendOut(json);
+    const sealed = await PacketSealer.sealPair(this.signer, this.hasher, this.realClock);
+    this.store.writeAtomic(PAIR_FILE, sealed.json);
+    this.chain.pairRef = sealed.hash;
+    this.saveState();
+    this.sendOut(sealed.json);
     return this.signer.kid();
   }
 
@@ -287,9 +297,27 @@ export class WatchLinkEngine {
     this.lastAck = '';
   }
 
-  // Reads incoming ACKs. ACCEPTED or DUPLICATE: the packet is delivered and leaves the outbox.
-  // REJECTED: the packet stays (the copy the phone saw may have been damaged on the way).
-  processAcks(): void {
+  // Reads incoming ACKs. Only an ACK signed by the phone and addressed to this watch is used:
+  //  - pairing (seq 0), ACCEPTED, answering the pairing request the user just made (once): pins the phone
+  //    key and pairs;
+  //  - a day, from the pinned phone, answering the packet in the outbox: ACCEPTED or DUPLICATE deliver it
+  //    (it leaves the outbox), REJECTED keeps it (the copy the phone saw may have been damaged on the way);
+  //    'Unknown watch key' unpairs, because the phone forgot this watch.
+  // Unsigned, wrongly signed, from another phone, for another watch, or answering another packet: dropped,
+  // and nothing changes.
+  async processAcks(): Promise<void> {
+    if (this.readingAcks) {
+      return;
+    }
+    this.readingAcks = true;
+    try {
+      await this.readAcks();
+    } finally {
+      this.readingAcks = false;
+    }
+  }
+
+  private async readAcks(): Promise<void> {
     const names = this.store.list(ACKS_DIR);
     let changed = false;
     for (let i = 0; i < names.length; i++) {
@@ -304,21 +332,63 @@ export class WatchLinkEngine {
         continue;
       }
       const ack = AckPacketCodec.fromJson(text).packet;
-      if (ack === null) {
+      if (ack === null || ack.watchKid !== this.chain.kid) {
         continue;
       }
+      const pinned = this.chain.phoneKid.length > 0;
+      const fromPinned = pinned && ack.phoneKid === this.chain.phoneKid && ack.phonePub === this.chain.phonePub;
+      if (ack.seq !== PAIR_ACK_SEQ && !fromPinned) {
+        this.lastAck = ACK_OTHER_PHONE;
+        continue;
+      }
+      if (!(await AckVerifier.verify(ack, this.verifier, this.hasher))) {
+        this.lastAck = ACK_BAD_SIGNATURE;
+        continue;
+      }
+      if (ack.seq === PAIR_ACK_SEQ) {
+        // An answer to an older request (or to none) changes nothing.
+        if (ack.ref.length === 0 || ack.ref !== this.chain.pairRef) {
+          continue;
+        }
+        if (ack.status !== 'ACCEPTED') {
+          this.lastAck = `Pairing: ${ack.reason}`;
+          continue;
+        }
+        // The request is answered once: its hash is cleared, so a copy of this answer, or an answer someone
+        // else signs for the same request later, can never pin another key.
+        this.chain.phoneKid = ack.phoneKid;
+        this.chain.phonePub = ack.phonePub;
+        this.chain.pairRef = '';
+        this.chain.paired = true;
+        changed = true;
+        this.lastAck = `Pairing: ${ack.reason} · phone ${ack.phoneKid}`;
+        continue;
+      }
+      const outboxPath = `${OUTBOX_DIR}/${ack.seq}${JSON_SUFFIX}`;
+      const packetText = this.store.read(outboxPath);
+      const packet = packetText === null ? null : DayPacketCodec.fromJson(packetText).packet;
+      if (packet === null) {
+        // Delivered before (or never sent): nothing to do.
+        continue;
+      }
+      const answersThisPacket = ack.ref === await this.hasher.sha256B64url(daySigningString(packet));
       if (ack.status === 'REJECTED') {
-        this.lastAck = ack.seq === PAIR_ACK_SEQ ? `Pairing: ${ack.reason}` : `#${ack.seq}: ${ack.reason}`;
-        if (ack.reason === MSG_UNKNOWN_KEY && this.chain.paired) {
+        // Shown also when the phone saw a changed copy (its ref is then the hash of that copy). The packet
+        // stays either way; only an answer about this very packet can unpair.
+        this.lastAck = `#${ack.seq}: ${ack.reason}`;
+        if (answersThisPacket && ack.reason === MSG_UNKNOWN_KEY && this.chain.paired) {
           this.chain.paired = false;
+          this.chain.phoneKid = '';
+          this.chain.phonePub = '';
           changed = true;
         }
         continue;
       }
-      if (ack.seq !== PAIR_ACK_SEQ) {
-        this.store.remove(`${OUTBOX_DIR}/${ack.seq}${JSON_SUFFIX}`);
-        this.lastAck = `#${ack.seq}: ${ack.reason}`;
+      if (!answersThisPacket) {
+        continue;
       }
+      this.lastAck = `#${ack.seq}: ${ack.reason}`;
+      this.store.remove(outboxPath);
       if (!this.chain.paired) {
         this.chain.paired = true;
         changed = true;

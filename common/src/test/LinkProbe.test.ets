@@ -45,14 +45,15 @@ class ProbeBench {
   phoneStore: FsTextStore;
   clock: StepClock = new StepClock(slotStartMs(dayNumberOfDate(D4), 0, TZ) + 12 * 3600 * 1000);
   signer: NodeSigner = new NodeSigner();
+  phoneSigner: NodeSigner = new NodeSigner();
   watch: WatchLinkEngine;
   phone: PhoneLinkEngine;
 
   constructor() {
     this.watchStore = new FsTextStore(this.watchDir);
     this.phoneStore = new FsTextStore(this.phoneDir);
-    this.watch = new WatchLinkEngine(this.watchStore, this.signer, new NodeHasher(), this.clock, TZ);
-    this.phone = new PhoneLinkEngine(this.phoneStore, new NodeSigVerifier(), new NodeHasher(), this.clock);
+    this.watch = new WatchLinkEngine(this.watchStore, this.signer, new NodeHasher(), this.clock, TZ, new NodeSigVerifier());
+    this.phone = new PhoneLinkEngine(this.phoneStore, new NodeSigVerifier(), new NodeHasher(), this.clock, this.phoneSigner, true);
     this.phone.load();
   }
 
@@ -90,14 +91,14 @@ class ProbeBench {
         this.watchStore.writeAtomic(`acks/${acks[i]}`, text);
       }
     }
-    this.watch.processAcks();
+    await this.watch.processAcks();
   }
 
   async pairAndStart(): Promise<void> {
     await this.watch.start();
     await this.watch.pair();
     await this.relay();
-    this.phone.confirmPair();
+    await this.phone.confirmPair();
     await this.relay();
     this.watch.setDemoClock(true);
   }
