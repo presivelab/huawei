@@ -105,7 +105,7 @@ A conversation is recorded only when the doctor agrees. The watch flow is writte
 notes" → "Ask your doctor: OK to record for your personal notes?" → "Doctor agreed" or "Cancel" → the
 recording, which stays on the watch. The recording is for the patient's own notes: nothing from it is
 part of a claim, and the user can delete it at any time. In this build the transcript on the phone is a
-demo transcript and is labelled "Demo transcript"; see the table below for the state of the watch part.
+demo transcript and is labelled "Demo transcript": the watch records, and nothing is sent from the watch to the phone yet.
 
 ## Why emergency and inpatient visits are never shared
 
@@ -124,7 +124,7 @@ signed it. The receipt of such a visit can still be verified and kept on the pho
 | VisitClaim signing and verification | real: ECDSA P-256 with the same device key as tier claims; checked by `VisitVerifier`                                                                                                     |
 | Visit notes                         | real rule-based code on the phone; the transcript is a demo transcript                                                                                                                    |
 | Follow-up reminder                  | real system reminder (`reminderAgentManager`, 09:00 on the due day) when the system permits it and the day is still ahead; the demo dates are in the past, so the demo sets none          |
-| Watch recording                     | see `watch/src/main/ets/pages/VisitRecord.ets` when present; no transfer from the watch to the phone                                                                                      |
+| Watch recording | real microphone capture on the watch after the doctor agreed (`VisitRecord.ets`, app "Visit notes"), kept in the watch sandbox; "Demo recording" where there is no capture or no permission; no transfer from the watch to the phone, so the notes on the phone come from the demo transcript |
 | Day dial                            | real drawing from the newest completed day; demo data before launch                                                                                                                       |
 | Ledger "What left this phone"       | visit codes are not written to the ledger in this build                                                                                                                                   |
 

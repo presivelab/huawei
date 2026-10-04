@@ -30,6 +30,16 @@
           ],
           "when": "inuse"
         }
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:reason_microphone",
+        "usedScene": {
+          "abilities": [
+            "VisitRecordAbility"
+          ],
+          "when": "inuse"
+        }
       }
     ],
     "abilities": [
@@ -39,6 +49,26 @@
         "description": "$string:WatchAbility_desc",
         "icon": "$media:layered_image",
         "label": "$string:WatchAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "ohos.want.action.home"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "VisitRecordAbility",
+        "srcEntry": "./ets/visitability/VisitRecordAbility.ets",
+        "description": "$string:VisitRecordAbility_desc",
+        "icon": "$media:layered_image",
+        "label": "$string:VisitRecordAbility_label",
         "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
