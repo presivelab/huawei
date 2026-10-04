@@ -25,10 +25,6 @@ export const EVIDENCE_LABEL: string = 'Evidence';
 export const WEAR_TITLE: string = 'Wear this month';
 export const EVIDENCE_TITLE: string = 'Your evidence';
 export const EVIDENCE_NOTE: string = 'completed days · last 28';
-export const TODAY_TITLE: string = 'Today';
-export const TODAY_CHIP_LIVE: string = 'Live · not scored';
-export const TODAY_CHIP_PREVIEW: string = 'Preview · not scored';
-export const TODAY_NOTE: string = 'Enters your score when the day closes. Your score uses completed days only.';
 export const DISCLAIMER: string =
   'HES is deterministic rules, not a medical device. Weights and curves are prototype assumptions, ' +
     'not clinically tested.';
@@ -54,7 +50,6 @@ export const PERSONA_CHIP_SUFFIX: string = ' · Demo';
 export const SHARE_TAB_TITLE: string = 'Share';
 export const EVIDENCE_TAB_TITLE: string = 'Evidence';
 export const REPORT_TAB_TITLE: string = 'Report';
-export const NEXT_STEP_SENTENCE: string = 'This screen arrives in the next step.';
 
 // The source line of the report: the brand and the readable status, marked as preview while the values
 // are fixed preview values ("HUAWEI Health · Demo data · preview").
@@ -152,7 +147,6 @@ export const DAY_CHARGING: string = 'charging';
 export const DAY_NIGHT: string = 'night';
 export const DAY_NIGHT_YES: string = 'Worn';
 export const DAY_NIGHT_NO: string = 'Not worn';
-export const DAY_NOT_OBSERVED: string = '—';
 
 // What a day state means when the day has no recorded details to show.
 export function dayStateNote(state: string): string {
