@@ -1,6 +1,64 @@
 FairWear test results
 =====================
 
+2026-10-04 05:15 CEDT  branch feature/engine-reports  (fix/audit merged: audit fixes compiled and walked on the emulators)
+----------------------------------------------------
+Merge: git merge fix/audit into 9d414b7 -> c119ad7, no conflict. Then 4ce179b (relay, see Watch Link below).
+tools/run-logic-tests.sh common   364/364 passed
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry), assembleHap (watch): BUILD SUCCESSFUL at c119ad7; no source change was
+  needed to compile. tools/deploy.sh entry and watch: built, installed and started on both emulators.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Emulators: phone 127.0.0.1:5557 and wearable 127.0.0.1:5555 (API 24), unsigned debug HAPs, taps with uitest,
+texts read from the layout dump, light mode.
+
+Share row: PASS. Run by the Share session on a trial merge of the same tree (9d414b7 + fix/audit), HUKS key.
+  Marek: "Tier B · Eligible: no", 307 of 512. Partner view: Use the code -> Signature valid; Verify the same
+  code again -> Already used; back, Open partner view, Use the code again -> a new code and Signature valid
+  (ledger 17 -> 18), not Already used. "What left this phone": newest first, time, destination, claim line,
+  the full token, "305 bytes" / "307 bytes". "Make a new code" with a double tap: one new ledger entry
+  (18 -> 19). Ola: no code, partner button disabled.
+  Not checked: "Try again" after a signing failure, a code older than 10 minutes, the ledger in dark mode.
+  Shots: a1-ledger-light, a1-partner-new-code-light (taken by that session).
+
+Report row: PASS.
+  Ewa, Close the day: toast "Day closed · HES 64 · Tier B" (shot a1-report-ewa-closed-day-light); the period
+  line changes from "4 Sep – 3 Oct · last 30 days" to "4 Sep – 3 Oct · score to 4 Oct"; 59 "1 point to B"
+  becomes 64 "16 points to A"; the tiles change: Steps 5,142 -> 5,377 /day, Active minutes 59 -> 63 min/week,
+  Sleep 5 h 58 min -> 6 h 28 min, Sleep regularity ±94 -> ±86 min (Resting HR 76 bpm and Recovery 22 bpm stay).
+  Reset demo: toast "Demo reset · HES 59 · Tier C"; the period line, the score and every tile are back.
+
+Watch Link row: PASS after one change to the relay (4ce179b); one defect found that is not fixed.
+  Phone, "Forget watch": the first tap changes the button to "Tap again to forget" and shows "Then reset the
+  watch data on the watch and pair again."; the days stay until the second tap. PASS.
+  Watch, "Close day (demo)" with a double tap (uitest doubleClick): one day in the outbox, the second tap is
+  answered "Nothing recorded yet". PASS. Two separate taps about a second apart close two days, as before.
+  node tools/watch-phone-relay.mjs --dry-run with hdc not on PATH: prints the commands, exit 0. PASS.
+  Second relay run after a watch reset and Forget watch, as merged (c119ad7): FAIL. The relay printed
+  "#0 ACCEPTED (Paired)" BEFORE Confirm on the phone: it delivered its own kept copy of the previous
+  pairing's ACK (_relay/phone/acks/0.json), and the run after Confirm said "no new ACK".
+  After 4ce179b (the kept copy is dropped when a new pairing request or an unseen packet is pushed): reset,
+  Forget twice, Pair phone, relay -> "no new ACK"; Confirm, relay -> "#0 ACCEPTED (Paired)"; Close day,
+  relay -> "#1 ACCEPTED (Accepted)", watch "Synced", "Phone: #1: Accepted". PASS.
+  Defect, not fixed: the phone reads its inbox every 2 s and can read a file hdc is still writing; it then
+  answers "REJECTED (Invalid format)" for a packet that is fine. Seen 3 times in about 12 sends (day #1 once,
+  pair.json twice). The same day packet sent again was accepted. Workaround and the reason it is not fixed
+  in the relay: docs/WATCH_LINK.md, Known limitations; docs/DEMO_SCRIPT.md, Plan B.
+
+Docs row: docs/DEMO_SCRIPT.md part A read against the screens; no label had to be changed.
+  Walked on this build: Welcome, Connect, Simulate consent, Agree and continue; Report for Ania, Marek, Kasia;
+  Evidence › Calendar for Marek ("Flagged", the flag rule, Thu 17 Sep with the reason, Appeal this day ->
+  "Appeal sent"); "Why this tier" for Tomek ("HES 79 · 1 point to A", Strongest / To improve); Ewa with Close
+  the day and Reset demo; pairing with "Pair watch fd7c02b2?" and Confirm; Settings with "Disconnect HUAWEI
+  Health". Share, the partner view and the ledger: by the Share session, above.
+  Not walked on this build: switching HRV off on the consent screen, the heart-rate slider, "Technical details"
+  on Share, the three checks of "How Watch Link works", the home-screen card, the relay with --tamper and
+  --drop (no new feed day was sealed yet when this was written), Disconnect itself.
+State left on the emulators: watch reset and paired again with the phone (key fd7c02b2), demo clock ×300 and
+  demo feed on since about 05:12, day #1 (closed at once, as the script asks) verified on the phone; the five
+  feed days of the earlier run are gone from both sides. The watch seals a day every 4 min 48 s.
+
 2026-10-04 04:46 CEDT  branch feature/engine-reports  (G3: the last build of both HAPs)
 ----------------------------------------------------
 Tree: d6d3307 = the G2 merge (1ec3f81) + the G2 record + the three G3 records of the other sessions
