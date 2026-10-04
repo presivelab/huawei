@@ -50,7 +50,22 @@ measures, scores it on the phone, and shares only a signed tier.
 | -------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `common` | none (HAR, no UI imports) | Model types, tier claim codec and verifier (`claim/`), the score (`hes/`), wear month and selective non-wear rule (`wear/`, `rules/`), the report view models (`report/`), Watch Link logic (`watchlink/`), the health source layer (`health/`), live wear state (`live/`). |
 | `entry`  | phone                     | The add-on flow (welcome, two-step consent, Settings), the tabs Report / Evidence / Share, Why this tier, the partner view (demo), "What left this phone", the Watch link cards and tour, the home-screen card and shortcuts, the HUAWEI Health adapter stub. |
+| `healthsim/` (a separate DevEco project) | phone and wearable | Health Sim, our simulator app that stands in for HUAWEI Health on the emulators. Bundle `com.fairwear.healthsim` (`healthsim/AppScope/app.json5`); modules `entry` (phone) and `watch`. It is not part of the root build: build it from `healthsim/` (see `healthsim/README.md`). Copies of the `common` files it needs are under `healthsim/*/src/main/ets/fw/`; `common/src/test/HealthSimCopies.test.ets` keeps them identical. |
 | `watch`  | wearable                  | Live heart rate, steps today and wear state; the Watch Link recorder (288 slots a day), day signing with the watch key, the slot-ring dial, the demo clock and demo feed, the Wear Engine send path (not run). |
+
+**Consent flow.** `DataConsentPage` hands the switched-on data types (`HealthScope[]`) to
+`AddonSession.confirmDataConsent`. With Health Sim data waiting it calls
+`ServiceLocator.useHealthSim(withScopes(payload, scopes), scopes)`, otherwise `ServiceLocator.useBuiltIn(scopes)`.
+`ServiceLocator` passes the scopes to `EngineReportService.useScopes`, which drops every session and report;
+each new session is built by `engineSession(id, scopes)` or `engineSessionFrom(person, scopes)` in `common`,
+where the starting history and every day closed later go through `dayWithScopes`. The scopes are stored as a
+JSON array of names in `healthsim/scopes.json` in the app sandbox, restored by `attachReportStore` at start,
+and removed together with the Health Sim data by `clearHealthSim` (Disconnect), which returns to every data
+type.
+
+The home-screen card takes its source line from `ServiceLocator.reportSourceLabel()` while the reports come
+from Health Sim (`CardSync` → `buildCardDigest(status, coverage, ready, label)`); the label is used only while
+connected.
 
 ## Health source layer (`common/src/main/ets/health/`)
 

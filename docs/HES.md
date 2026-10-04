@@ -10,6 +10,14 @@ module and has no UI.
 
 All weights, curves, thresholds and minimum counts are prototype product assumptions, not clinically tested.
 
+**Consent.** FairWear's consent filters the data before scoring: every field of a data type that is switched off
+is treated as not measured. This holds for the starting history and for each day added by "Close the day", on
+the Health Sim path and on the built-in path alike (`EngineReports.engineSession` / `engineSessionFrom` with
+the consented scopes). A switched-off type lowers coverage and is never counted as zero.
+
+The wear check always uses when the watch was on the wrist and, around each break, the resting heart rate and
+steps of the 24 h before it. It decides eligibility, not the score.
+
 ## Files and specification sections
 
 | File (`common/src/main/ets/hes/`) | Specification    | What it holds                                                                                                                        |
@@ -205,6 +213,13 @@ implementation of the same interface; it is not in use.
     day" adds still comes from the persona generator in FairWear** (`HesPersonas`), because Health Sim sends
     completed days only. The report built from the Health Sim data equals the built-in one for all six
     personas (`HealthSimPayload.test.ets`); only the source line differs: "Health Sim · Simulated data".
+
+## Known limits
+
+A day with at least 20 h of wear and a suspicious break is drawn as SUSPICIOUS in the calendar but still counts
+as a compliant day in the monthly percentage. The wear month's own count of red days (`WearMonth.redDays`)
+leaves such a day out, while the calendar's count (`EvidenceCalendar.redDays`) includes it. None of the six
+personas has such a day, so the two counts agree for all of them (Marek 4, Kasia 4).
 
 ## What this is not
 

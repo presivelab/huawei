@@ -6,13 +6,13 @@ The first plan (`IMPLEMENTATION.md`, written with Claude on claude.ai) is not in
 
 ## Pitch
 
-**User problem:** Programmes that reward healthy habits (for example an insurer's) need wearable data they can trust, and users shouldn't have to hand over raw health data to get a benefit. Today both sides lose: people can game wear-based programs by taking the watch off on bad days, while honest users share far more than necessary. FairWear computes wear compliance and an explainable health tier on the device and gives the partner only a signed A/B/C tier, never raw heart-rate data.
+**User problem:** Programmes that reward regular activity and sleep (for example an insurer's) need wearable data they can trust, and users shouldn't have to hand over raw health data to get a benefit. Today both sides lose: people can game wear-based programs by taking the watch off on bad days, while honest users share far more than necessary. FairWear computes wear compliance and an explainable evidence tier on the device and gives the partner only a signed A/B/C tier, never raw heart-rate data.
 
 **Desired demonstration:** A native ArkTS/ArkUI app in two modules. The watch (wearable emulator) records signed, hash-chained wear days. The phone (phone emulator) scores six synthetic demo personas with HES-Lite, detects selective non-wear, shows "Why this tier" and an Evidence calendar where a day can be appealed, and shares a signed A/B/C tier as a QR code that a demo partner verifies. Raw data never leaves the device. The full script is `docs/DEMO_SCRIPT.md`.
 
 **Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing).
 
-**Distinctive platform capability:** One capability end to end: watch sensors (Sensor Service Kit: heart rate, pedometer, wear detection) → on-device compliance rules and score → signed tier. HUKS (Universal Keystore Kit) is the trust link in that same chain, not a separate feature.
+**Distinctive platform capability:** One capability end to end: the history (Health Sim in the place of HUAWEI Health on the emulators) → the score and the wear rules on the phone → a signed tier. The watch (Sensor Service Kit: heart rate, pedometer, wear detection) adds signed proofs of wear, which are shown and not counted into the score. HUKS (Universal Keystore Kit) is the trust link in that chain, not a separate feature.
 
 ## Target
 

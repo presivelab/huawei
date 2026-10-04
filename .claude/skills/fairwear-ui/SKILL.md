@@ -1,6 +1,6 @@
 ---
 name: fairwear-ui
-description: Visual and information rules for every FairWear screen. Use before any change under entry/src/main/ets/view, entry/src/main/ets/ui, entry/src/main/ets/widget or watch/src/main/ets/pages and watch/src/main/ets/ui, and whenever a screen, card, watch face, colour, icon or UI text is added or changed.
+description: Visual and information rules for every FairWear screen. Use before any change under entry/src/main/ets/view, entry/src/main/ets/ui, entry/src/main/ets/widget or watch/src/main/ets/pages and watch/src/main/ets/watchlink/SlotRing.ets, and whenever a screen, card, watch face, colour, icon or UI text is added or changed.
 ---
 
 # FairWear UI
@@ -15,7 +15,7 @@ Any change in:
 
 - `entry/src/main/ets/view/`, `entry/src/main/ets/ui/`, `entry/src/main/ets/pages/`
 - `entry/src/main/ets/widget/` (home-screen card)
-- `watch/src/main/ets/pages/`, `watch/src/main/ets/ui/`
+- `watch/src/main/ets/pages/`, `watch/src/main/ets/watchlink/SlotRing.ets`
 - resource colours and strings of `entry` and `watch`
 
 Read this file first, then use the HarmonyOS skills from the challenge repository for the code itself:
@@ -63,7 +63,7 @@ No hex colour in an `.ets` file. One accent colour per card. Each metric has one
 Build screens from the UI kit, not from hand-made rows and columns:
 
 - phone: `entry/src/main/ets/ui/kit/`
-- watch: `watch/src/main/ets/ui/kit/`
+- watch: no kit folder; the watch screen is `watch/src/main/ets/pages/Index.ets` and the slot ring is `watch/src/main/ets/watchlink/SlotRing.ets`
 
 | Component       | Use                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------- |

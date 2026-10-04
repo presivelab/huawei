@@ -11,6 +11,13 @@ export const KIND_OFF: string = 'O';
 
 const NONE_TEXT: string = 'none';
 
+/** The daily goals the two rings of the first watch page are drawn against. Display only. */
+export const STEPS_GOAL: number = 10000;
+export const EXERCISE_GOAL_MIN: number = 30;
+// A scripted stretch counts as exercise when its heart rate starts at 100 bpm or more: the brisk walk and
+// the workout of the built-in day. A reading of the script for the screen, not a measurement.
+const EXERCISE_HR_FROM: number = 100;
+
 export class DayArc {
   fromMin: number;
   toMin: number;
@@ -86,4 +93,40 @@ export function offWristText(script: FeedStretch[]): string {
     }
   }
   return parts.length === 0 ? NONE_TEXT : parts.join(', ');
+}
+
+/** Steps of the whole scripted day: steps per minute times the length of every stretch. */
+export function stepsOf(script: FeedStretch[]): number {
+  let total = 0;
+  for (let i = 0; i < script.length; i++) {
+    total += script[i].stepsPerMin * (script[i].toMin - script[i].fromMin);
+  }
+  return total;
+}
+
+/** Minutes of the scripted day spent in a stretch that counts as exercise. */
+export function exerciseMinutesOf(script: FeedStretch[]): number {
+  let total = 0;
+  for (let i = 0; i < script.length; i++) {
+    if (!script[i].charging && script[i].hrLow >= EXERCISE_HR_FROM) {
+      total += script[i].toMin - script[i].fromMin;
+    }
+  }
+  return total;
+}
+
+/** 12090 -> "12,090". */
+export function groupedText(n: number): string {
+  let text = `${Math.floor(n)}`;
+  let out = '';
+  while (text.length > 3) {
+    out = `,${text.substring(text.length - 3)}${out}`;
+    text = text.substring(0, text.length - 3);
+  }
+  return text + out;
+}
+
+/** A value against its goal as a ring share 0..100. */
+export function goalShare(value: number, goal: number): number {
+  return goal <= 0 || value <= 0 ? 0 : Math.min(100, Math.round(value * 100 / goal));
 }

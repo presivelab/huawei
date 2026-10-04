@@ -6,7 +6,7 @@
     },
     {
       "name": "WatchAbility_desc",
-      "value": "Shows the simulated day"
+      "value": "Shows the simulated activity rings and the simulated wear day"
     },
     {
       "name": "WatchAbility_label",
@@ -30,7 +30,7 @@
     },
     {
       "name": "day_title",
-      "value": "Today's script"
+      "value": "Wear today · for FairWear"
     },
     {
       "name": "worn",
@@ -47,6 +47,26 @@
     {
       "name": "shared_line",
       "value": "Shared with FairWear when it asks"
+    },
+    {
+      "name": "activity_title",
+      "value": "Activity records"
+    },
+    {
+      "name": "steps",
+      "value": "Steps"
+    },
+    {
+      "name": "exercise",
+      "value": "Exercise"
+    },
+    {
+      "name": "unit_min",
+      "value": "min"
+    },
+    {
+      "name": "swipe_hint",
+      "value": "Swipe up: wear today"
     }
   ]
 }

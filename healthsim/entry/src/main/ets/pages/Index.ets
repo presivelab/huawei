@@ -1,81 +1,102 @@
 import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI';
 import { common, Want } from '@kit.AbilityKit';
 import {
-  HISTORY_DAYS,
+  EXERCISE_GOAL_MIN,
+  grouped,
+  METRIC_EXERCISE,
+  METRIC_HEART,
+  METRIC_HRV,
+  METRIC_SLEEP,
+  METRIC_STEPS,
+  METRIC_VO2MAX,
+  metricUnit,
   NO_VALUE,
-  simHistory,
-  SimDayRow,
+  simActivity,
+  SimActivity,
+  simMetricToday,
   simPeople,
   SimPerson,
-  simPersonName
+  simPersonName,
+  simRecentBars,
+  STEPS_GOAL
 } from '../data/SimData';
 import {
   ABOUT_BODY,
   ABOUT_TITLE,
+  ACTIVITY_TITLE,
   APP_TITLE,
   APPS_TITLE,
   FAIRWEAR_LINE,
   FAIRWEAR_MISSING,
   FAIRWEAR_NAME,
   FAIRWEAR_NOTE,
-  HISTORY_NOTE,
-  HISTORY_TITLE,
-  LABEL_ACTIVE,
-  LABEL_RESTING,
-  LABEL_SLEEP,
+  FAIRWEAR_SIMULATED,
+  FAIRWEAR_WEAR,
+  HEALTH_NOTE,
+  LABEL_EXERCISE,
   LABEL_STEPS,
-  LABEL_WORN,
   OPEN_FAIRWEAR,
   PERSON_LABEL,
-  TAB_APPS,
-  TAB_HISTORY,
-  TAB_TODAY,
-  TODAY_NOTE,
-  UNIT_BPM,
-  UNIT_MIN,
-  UNIT_STEPS
+  PERSON_NOTE,
+  TAB_HEALTH,
+  TAB_ME
 } from '../data/SimTexts';
 import { CARD, SimBanner } from '../ui/SimBanner';
+import { DEFAULT_PERSON, KEY_METRIC, KEY_PERSON, metricColor, metricLabel, metricSub, metricSymbol } from '../ui/SimMetric';
 
 const CARD_GAP: number = 14;
-const DEFAULT_PERSON: string = 'ania';
 const FAIRWEAR_BUNDLE: string = 'com.fairwear.app';
+const TAB_INDEX_ME: number = 1;
+const RING_OUTER: number = 132;
+const RING_INNER: number = 92;
+const RING_STROKE: number = 14;
+const BAR_HEIGHT: number = 36;
+const BAR_MIN: number = 4;
 
-// One figure of the Today tab: a name, the value and its unit.
-interface TodayItem {
-  label: string;
+// One metric as a card of the Health tab: the newest value and the last seven days as small bars.
+interface MetricCard {
+  metric: string;
   value: string;
-  unit: string;
-  symbol: Resource;
+  bars: number[];
 }
 
-// The start page of Health Sim: the banner, the person of the simulation, and three tabs. Today and
-// History show that person's days; Apps holds the FairWear card, which opens FairWear as an add-on.
+function cardOf(personId: string, metric: string): MetricCard {
+  return { metric: metric, value: simMetricToday(personId, metric), bars: simRecentBars(personId, metric) };
+}
+
+// The start page of Health Sim: the banner and two tabs. Health shows the newest day of the demo person
+// ("Activity records" with two rings, then one card per metric; a card opens that metric's 30 days). Me
+// holds the demo-person picker and the connected apps, where the FairWear card opens FairWear as an add-on.
 @Entry
 @Component
 struct Index {
-  @State personId: string = DEFAULT_PERSON;
-  @State rows: SimDayRow[] = simHistory(DEFAULT_PERSON);
+  @StorageLink(KEY_PERSON) personId: string = DEFAULT_PERSON;
+  @State activity: SimActivity | null = simActivity(DEFAULT_PERSON);
+  @State cards: MetricCard[] = [];
+  @State tiles: MetricCard[] = [];
   @State tab: number = 0;
   @State openError: string = '';
 
-  private pick(id: string): void {
-    this.personId = id;
-    this.rows = simHistory(id);
+  aboutToAppear(): void {
+    this.load(this.personId);
   }
 
-  private todayItems(): TodayItem[] {
-    if (this.rows.length === 0) {
-      return [];
-    }
-    const day = this.rows[0];
-    return [
-      { label: LABEL_STEPS, value: day.steps, unit: UNIT_STEPS, symbol: $r('sys.symbol.steps') },
-      { label: LABEL_RESTING, value: day.restingHr, unit: UNIT_BPM, symbol: $r('sys.symbol.heart') },
-      { label: LABEL_SLEEP, value: day.sleep, unit: '', symbol: $r('sys.symbol.sleep') },
-      { label: LABEL_ACTIVE, value: day.active, unit: UNIT_MIN, symbol: $r('sys.symbol.flame') },
-      { label: LABEL_WORN, value: day.worn, unit: '', symbol: $r('sys.symbol.watch') }
-    ];
+  private load(id: string): void {
+    this.activity = simActivity(id);
+    this.cards = [cardOf(id, METRIC_HEART), cardOf(id, METRIC_SLEEP), cardOf(id, METRIC_STEPS)];
+    this.tiles = [cardOf(id, METRIC_VO2MAX), cardOf(id, METRIC_HRV)];
+  }
+
+  private pick(id: string): void {
+    this.personId = id;
+    this.load(id);
+  }
+
+  private openMetric(metric: string): void {
+    AppStorage.setOrCreate(KEY_METRIC, metric);
+    this.getUIContext().getRouter().pushUrl({ url: 'pages/MetricPage' }).catch(() => {
+      // The page stays where it is; there is nothing to recover.
+    });
   }
 
   private openFairWear(): void {
@@ -96,75 +117,215 @@ struct Index {
     }
   }
 
-  @Builder
-  personPicker() {
-    Column({ space: 6 }) {
-      Text(PERSON_LABEL)
-        .fontSize($r('sys.float.Body_S'))
-        .fontColor($r('sys.color.font_secondary'))
-        .padding({ left: 16 })
-      Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
-        ForEach(simPeople(), (person: SimPerson) => {
-          Button(person.name)
-            .buttonStyle(person.id === this.personId ? ButtonStyleMode.EMPHASIZED : ButtonStyleMode.NORMAL)
-            .height(40)
-            .id(`hs_person_${person.id}`)
-            .accessibilityText(person.name + (person.id === this.personId ? ', selected' : ''))
-            .onClick(() => {
-              this.pick(person.id);
-            })
-        }, (person: SimPerson) => `${person.id}|${person.id === this.personId}`)
-      }
-      .width('100%')
-      .padding({ left: 16, right: 16 })
-    }
-    .width('100%')
-    .alignItems(HorizontalAlign.Start)
-    .padding({ top: 10, bottom: 10 })
+  private spoken(metric: string, value: string): string {
+    const unit = metricUnit(metric);
+    return value === NO_VALUE ? `${metricLabel(metric)}, not measured` :
+      `${metricLabel(metric)}, ${value}${unit.length > 0 ? ` ${unit}` : ''}`;
   }
 
   @Builder
-  todayTab() {
-    Scroll() {
-      Column({ space: CARD_GAP }) {
-        Column({ space: 14 }) {
-          Text(this.rows.length > 0 ? this.rows[0].title : NO_VALUE)
+  ringLine(metric: string, label: string, value: string, goal: string) {
+    Row({ space: 10 }) {
+      Circle()
+        .width(10)
+        .height(10)
+        .fill(metricColor(metric))
+      Column({ space: 2 }) {
+        Text(label)
+          .fontSize($r('sys.float.Body_M'))
+          .fontColor($r('sys.color.font_secondary'))
+        Text() {
+          Span(value)
             .fontSize($r('sys.float.Subtitle_L'))
             .fontWeight(FontWeight.Bold)
             .fontColor($r('sys.color.font_primary'))
-            .id('hs_today_date')
-          ForEach(this.todayItems(), (item: TodayItem) => {
-            Row({ space: 12 }) {
-              SymbolGlyph(item.symbol)
-                .fontSize(22)
-                .fontColor([$r('sys.color.icon_secondary')])
-              Text(item.label)
-                .fontSize($r('sys.float.Body_L'))
-                .fontColor($r('sys.color.font_primary'))
-                .layoutWeight(1)
-              Text() {
-                Span(item.value)
-                  .fontSize($r('sys.float.Subtitle_L'))
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor($r('sys.color.font_primary'))
-                Span(item.unit.length > 0 && item.value !== NO_VALUE ? ` ${item.unit}` : '')
-                  .fontSize($r('sys.float.Body_M'))
-                  .fontColor($r('sys.color.font_secondary'))
-              }
-              .maxLines(1)
-            }
-            .width('100%')
-            .constraintSize({ minHeight: 44 })
-            .alignItems(VerticalAlign.Center)
-            .accessibilityGroup(true)
-            .accessibilityText(item.value === NO_VALUE ? `${item.label}, not measured` :
-              `${item.label}, ${item.value} ${item.unit}`)
-          }, (item: TodayItem) => `${this.personId}|${item.label}|${item.value}`)
+          Span(` / ${goal}`)
+            .fontSize($r('sys.float.Body_M'))
+            .fontColor($r('sys.color.font_secondary'))
         }
-        .attributeModifier(CARD)
-        .id('hs_today')
+        .maxLines(1)
+      }
+      .alignItems(HorizontalAlign.Start)
+    }
+    .alignItems(VerticalAlign.Center)
+    .accessibilityGroup(true)
+    .accessibilityText(value === NO_VALUE ? `${label}, not measured` : `${label}, ${value} of ${goal}`)
+  }
 
-        Text(TODAY_NOTE)
+  @Builder
+  activityCard() {
+    Column({ space: 16 }) {
+      Row({ space: 8 }) {
+        Text(ACTIVITY_TITLE)
+          .fontSize($r('sys.float.Subtitle_M'))
+          .fontWeight(600)
+          .fontColor($r('sys.color.font_primary'))
+          .layoutWeight(1)
+        Text(this.activity === null ? NO_VALUE : this.activity.title)
+          .fontSize($r('sys.float.Body_S'))
+          .fontColor($r('sys.color.font_secondary'))
+          .id('hs_today_date')
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+
+      Row({ space: 20 }) {
+        Stack() {
+          Progress({
+            value: this.activity === null ? 0 : this.activity.stepsShare,
+            total: 100,
+            type: ProgressType.Ring
+          })
+            .width(RING_OUTER)
+            .height(RING_OUTER)
+            .style({ strokeWidth: RING_STROKE })
+            .color(metricColor(METRIC_STEPS))
+            .backgroundColor($r('app.color.hs_track'))
+          Progress({
+            value: this.activity === null ? 0 : this.activity.exerciseShare,
+            total: 100,
+            type: ProgressType.Ring
+          })
+            .width(RING_INNER)
+            .height(RING_INNER)
+            .style({ strokeWidth: RING_STROKE })
+            .color(metricColor(METRIC_EXERCISE))
+            .backgroundColor($r('app.color.hs_track'))
+        }
+        .width(RING_OUTER)
+        .height(RING_OUTER)
+        .accessibilityLevel('no')
+
+        Column({ space: 14 }) {
+          this.ringLine(METRIC_STEPS, LABEL_STEPS, this.activity === null ? NO_VALUE : this.activity.steps,
+            `${grouped(STEPS_GOAL)} ${metricUnit(METRIC_STEPS)}`)
+          this.ringLine(METRIC_EXERCISE, LABEL_EXERCISE,
+            this.activity === null ? NO_VALUE : this.activity.exercise,
+            `${EXERCISE_GOAL_MIN} ${metricUnit(METRIC_EXERCISE)}`)
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+    }
+    .attributeModifier(CARD)
+    .id('hs_activity')
+    .onClick(() => {
+      this.openMetric(METRIC_EXERCISE);
+    })
+  }
+
+  @Builder
+  valueText(card: MetricCard) {
+    Text() {
+      Span(card.value)
+        .fontSize(24)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('sys.color.font_primary'))
+      Span(metricUnit(card.metric).length > 0 && card.value !== NO_VALUE ? ` ${metricUnit(card.metric)}` : '')
+        .fontSize($r('sys.float.Body_M'))
+        .fontColor($r('sys.color.font_secondary'))
+    }
+    .maxLines(1)
+  }
+
+  @Builder
+  cardHead(metric: string) {
+    Row({ space: 8 }) {
+      SymbolGlyph(metricSymbol(metric))
+        .fontSize(20)
+        .fontColor([metricColor(metric)])
+      Text(metricLabel(metric))
+        .fontSize($r('sys.float.Subtitle_M'))
+        .fontWeight(600)
+        .fontColor($r('sys.color.font_primary'))
+        .layoutWeight(1)
+      SymbolGlyph($r('sys.symbol.chevron_right'))
+        .fontSize(16)
+        .fontColor([$r('sys.color.font_tertiary')])
+    }
+    .width('100%')
+    .alignItems(VerticalAlign.Center)
+  }
+
+  @Builder
+  metricCard(card: MetricCard) {
+    Column({ space: 10 }) {
+      this.cardHead(card.metric)
+      Row({ space: 12 }) {
+        Column({ space: 2 }) {
+          this.valueText(card)
+          Text(metricSub(card.metric))
+            .fontSize($r('sys.float.Body_S'))
+            .fontColor($r('sys.color.font_secondary'))
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Row({ space: 4 }) {
+          ForEach(card.bars, (share: number) => {
+            Column()
+              .width(6)
+              .height(share < 0 ? 2 : Math.max(BAR_MIN, Math.round(BAR_HEIGHT * share / 100)))
+              .borderRadius(3)
+              .backgroundColor(share < 0 ? $r('app.color.hs_track') : metricColor(card.metric))
+          }, (share: number, index: number) => `${this.personId}|${card.metric}|${index}|${share}`)
+        }
+        .height(BAR_HEIGHT)
+        .alignItems(VerticalAlign.Bottom)
+        .accessibilityLevel('no')
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Bottom)
+    }
+    .attributeModifier(CARD)
+    .id(`hs_card_${card.metric}`)
+    .accessibilityGroup(true)
+    .accessibilityText(this.spoken(card.metric, card.value))
+    .onClick(() => {
+      this.openMetric(card.metric);
+    })
+  }
+
+  @Builder
+  metricTile(card: MetricCard) {
+    Column({ space: 8 }) {
+      this.cardHead(card.metric)
+      this.valueText(card)
+      Text(metricSub(card.metric))
+        .fontSize($r('sys.float.Body_S'))
+        .fontColor($r('sys.color.font_secondary'))
+    }
+    .attributeModifier(CARD)
+    .layoutWeight(1)
+    .id(`hs_card_${card.metric}`)
+    .accessibilityGroup(true)
+    .accessibilityText(this.spoken(card.metric, card.value))
+    .onClick(() => {
+      this.openMetric(card.metric);
+    })
+  }
+
+  @Builder
+  healthTab() {
+    Scroll() {
+      Column({ space: CARD_GAP }) {
+        this.activityCard()
+
+        ForEach(this.cards, (card: MetricCard) => {
+          this.metricCard(card)
+        }, (card: MetricCard) => `${this.personId}|${card.metric}|${card.value}`)
+
+        Row({ space: CARD_GAP }) {
+          ForEach(this.tiles, (card: MetricCard) => {
+            this.metricTile(card)
+          }, (card: MetricCard) => `${this.personId}|${card.metric}|${card.value}`)
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Top)
+
+        Text(HEALTH_NOTE)
           .fontSize($r('sys.float.Body_S'))
           .fontColor($r('sys.color.font_secondary'))
           .padding({ left: 4, right: 4 })
@@ -184,86 +345,34 @@ struct Index {
   }
 
   @Builder
-  historyTab() {
+  meTab() {
     Scroll() {
       Column({ space: CARD_GAP }) {
-        Column({ space: 4 }) {
-          Row({ space: 8 }) {
-            Text(HISTORY_TITLE)
-              .fontSize($r('sys.float.Subtitle_M'))
-              .fontWeight(600)
-              .fontColor($r('sys.color.font_primary'))
-              .layoutWeight(1)
-            Text(`${LABEL_STEPS} · ${LABEL_SLEEP}`)
-              .fontSize($r('sys.float.Body_S'))
-              .fontColor($r('sys.color.font_secondary'))
+        Column({ space: 10 }) {
+          Text(PERSON_LABEL)
+            .fontSize($r('sys.float.Subtitle_M'))
+            .fontWeight(600)
+            .fontColor($r('sys.color.font_primary'))
+          Text(PERSON_NOTE)
+            .fontSize($r('sys.float.Body_S'))
+            .fontColor($r('sys.color.font_secondary'))
+          Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
+            ForEach(simPeople(), (person: SimPerson) => {
+              Button(person.name)
+                .buttonStyle(person.id === this.personId ? ButtonStyleMode.EMPHASIZED : ButtonStyleMode.NORMAL)
+                .height(40)
+                .id(`hs_person_${person.id}`)
+                .accessibilityText(person.name + (person.id === this.personId ? ', selected' : ''))
+                .onClick(() => {
+                  this.pick(person.id);
+                })
+            }, (person: SimPerson) => `${person.id}|${person.id === this.personId}`)
           }
           .width('100%')
-          .alignItems(VerticalAlign.Center)
-          .padding({ bottom: 8 })
-
-          ForEach(this.rows, (row: SimDayRow) => {
-            Column({ space: 4 }) {
-              Row({ space: 8 }) {
-                Text(row.title)
-                  .fontSize($r('sys.float.Body_M'))
-                  .fontColor($r('sys.color.font_primary'))
-                  .layoutWeight(1)
-                Text(row.steps)
-                  .fontSize($r('sys.float.Body_M'))
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('sys.color.font_primary'))
-                  .textAlign(TextAlign.End)
-                  .width(72)
-                Text(row.sleep)
-                  .fontSize($r('sys.float.Body_M'))
-                  .fontColor($r('sys.color.font_secondary'))
-                  .textAlign(TextAlign.End)
-                  .width(96)
-              }
-              .width('100%')
-              .alignItems(VerticalAlign.Center)
-
-              Progress({ value: row.stepsShare, total: 100, type: ProgressType.Linear })
-                .style({ strokeWidth: 4, enableSmoothEffect: false })
-                .color($r('sys.color.icon_emphasize'))
-                .backgroundColor($r('sys.color.comp_background_tertiary'))
-                .width('100%')
-            }
-            .width('100%')
-            .padding({ top: 6, bottom: 6 })
-            .accessibilityGroup(true)
-            .accessibilityText(`${row.title}, ` +
-              (row.steps === NO_VALUE ? 'steps not measured' : `${row.steps} steps`) + ', ' +
-              (row.sleep === NO_VALUE ? 'sleep not measured' : `sleep ${row.sleep}`))
-          }, (row: SimDayRow) => `${this.personId}|${row.date}`)
         }
         .attributeModifier(CARD)
-        .id('hs_history')
+        .id('hs_person')
 
-        Text(HISTORY_NOTE)
-          .fontSize($r('sys.float.Body_S'))
-          .fontColor($r('sys.color.font_secondary'))
-          .padding({ left: 4, right: 4 })
-      }
-      .padding({
-        left: 16,
-        right: 16,
-        top: 4,
-        bottom: 24
-      })
-      .alignItems(HorizontalAlign.Start)
-    }
-    .width('100%')
-    .height('100%')
-    .align(Alignment.Top)
-    .scrollBar(BarState.Off)
-  }
-
-  @Builder
-  appsTab() {
-    Scroll() {
-      Column({ space: CARD_GAP }) {
         Text(APPS_TITLE)
           .fontSize($r('sys.float.Subtitle_M'))
           .fontWeight(600)
@@ -294,6 +403,10 @@ struct Index {
           Text(FAIRWEAR_NOTE)
             .fontSize($r('sys.float.Body_M'))
             .fontColor($r('sys.color.font_secondary'))
+          Text(FAIRWEAR_WEAR)
+            .fontSize($r('sys.float.Body_M'))
+            .fontColor($r('sys.color.font_secondary'))
+            .id('hs_fairwear_wear')
 
           Button(OPEN_FAIRWEAR)
             .buttonStyle(ButtonStyleMode.EMPHASIZED)
@@ -310,6 +423,11 @@ struct Index {
               .fontColor($r('sys.color.warning'))
               .id('hs_open_error')
           }
+
+          Text(FAIRWEAR_SIMULATED)
+            .fontSize($r('sys.float.Body_S'))
+            .fontColor($r('sys.color.font_tertiary'))
+            .id('hs_fairwear_simulated')
         }
         .attributeModifier(CARD)
         .id('hs_fairwear_card')
@@ -350,31 +468,33 @@ struct Index {
           .fontColor($r('sys.color.font_primary'))
           .layoutWeight(1)
           .id('hs_title')
-        Text(`${simPersonName(this.personId)} · ${HISTORY_DAYS} days`)
+        Text(`${PERSON_LABEL} · ${simPersonName(this.personId)}`)
           .fontSize($r('sys.float.Body_M'))
-          .fontColor($r('sys.color.font_secondary'))
+          .fontColor($r('sys.color.font_primary'))
+          .padding({ left: 12, right: 12 })
+          .height(40)
+          .borderRadius(20)
+          .backgroundColor($r('sys.color.comp_background_tertiary'))
+          .id('hs_person_chip')
+          .accessibilityText(`${PERSON_LABEL}, ${simPersonName(this.personId)}. Change it under Me.`)
+          .onClick(() => {
+            this.tab = TAB_INDEX_ME;
+          })
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: 12 })
+      .padding({ left: 16, right: 16, top: 12, bottom: 10 })
       .alignItems(VerticalAlign.Center)
-
-      this.personPicker()
 
       Tabs({ barPosition: BarPosition.End, index: this.tab }) {
         TabContent() {
-          this.todayTab()
+          this.healthTab()
         }
-        .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.heart')) }, TAB_TODAY))
+        .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.heart')) }, TAB_HEALTH))
 
         TabContent() {
-          this.historyTab()
+          this.meTab()
         }
-        .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.calendar')) }, TAB_HISTORY))
-
-        TabContent() {
-          this.appsTab()
-        }
-        .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.list_bullet')) }, TAB_APPS))
+        .tabBar(new BottomTabBarStyle({ normal: new SymbolGlyphModifier($r('sys.symbol.person')) }, TAB_ME))
       }
       .layoutWeight(1)
       .width('100%')

@@ -2,7 +2,7 @@
 
 These are the briefs a team member handed to coding-agent sessions as their standing instructions during
 HackYeah 2026 (3–4 October 2026). They are kept as written, in Polish, so that `AI_WORKFLOW.md` can point to
-the full text. Each file starts with one added line saying it is a public-safe copy; apart from that only a leftover paste marker was removed from `3` and `4`.
+the full text. Each file starts with one added line saying it is a public-safe copy; apart from that only a leftover paste marker was removed from `3` and `4`, and a private repository name from `14`.
 They contain no credentials, e-mail addresses or user names; the paths in them (`C:\dev\…`) are the
 development machine's working folders.
 
@@ -26,6 +26,13 @@ disagree, the repository and `docs/` are right. The decisions still in force are
 | `11-DANE_WYMAGANIA_BRAKI.md` | Data: what is collected, what the score needs, what is missing | 4 Oct 02:01 | complements `00` |
 | `12-TELEFON_RAPORT_UI.md` | Phone report: what goes where on the screens and how to build it natively | 4 Oct 02:18 | complements `00` |
 | `13-MOCK_TELEFON_ARKUI.md` | Phone screens from the design canvas as working ArkUI on the emulator | 4 Oct 02:27 | complements `00` |
+| `14-FIXY_PO_AUDYCIE.md` | Fixes after the claude.ai audit of 4 Oct 06:40: sections 1–4 the code fixes (consent switches on both paths, the home card label, partner fixes), 5 the documents, 6 build and emulators, 7 git | 4 Oct, morning | sections 1–4 in force; sections 5–7 replaced by `15` |
+| `15-TRZECH_AGENTOW.md` | Round of three parallel sessions: A1 consent and logic (14, sections 1–4), A2 watch face and visits, A3 Health Sim closer to the HUAWEI Health layout, documents and merge | 4 Oct, morning | replaced sections 5–7 of `14` |
+
+Order of use: `00` first (it replaced `1`–`9` and `10`), then `11`–`13`, then `14`, then `15`. `15` replaced
+sections 5–7 of `14` (documents, build and emulators, git) with its own work for the third session; sections 1–4
+of `14` stayed the specification of the code fixes and `15` points to them. The briefs were written in Polish;
+the code, the UI texts and the documents of the repository are in English.
 
 Not in this folder:
 
