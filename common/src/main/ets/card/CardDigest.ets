@@ -10,6 +10,7 @@ import { healthSourceLabel } from '../health/HealthStatusLabel';
 
 export const CARD_NO_VALUE: string = '—';
 export const CARD_COVERAGE_NONE: number = -1;
+const HALF_STEPS: number = 2;
 
 const MAX_LABEL_LENGTH: number = 48;
 
@@ -97,6 +98,10 @@ function normaliseCoverage(value: number): number {
   }
   if (value > 100) {
     return 100;
+  }
+  // The engine's coverage is a multiple of 0.5 and is shown exactly (87.5%); any other value is rounded.
+  if (Math.round(value * HALF_STEPS) === value * HALF_STEPS) {
+    return value;
   }
   return Math.round(value);
 }

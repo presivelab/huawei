@@ -23,6 +23,17 @@ export enum HesComponentId {
   HRR = 'hrr'
 }
 
+/**
+ * The product a score is calculated for (HES vNext). Each profile has its own base weights; the curves,
+ * minimum and target counts, windows and tier boundaries are the same for both.
+ *   HEALTH_WELLNESS    monthly health insurance
+ *   LONGEVITY_WELLNESS life insurance (polisa na życie)
+ */
+export enum HesProfile {
+  HEALTH_WELLNESS = 'HEALTH_WELLNESS',
+  LONGEVITY_WELLNESS = 'LONGEVITY_WELLNESS'
+}
+
 export enum HesStatus {
   OK = 'ok',
   INSUFFICIENT_DATA = 'insufficient_data'
@@ -45,7 +56,7 @@ export interface HesComponentDefinition {
   id: HesComponentId;
   label: string;           // the name a screen shows
   unit: string;            // unit of the raw value
-  weightPermille: number;  // base weight in thousandths (150 = 15%); integers keep the rounding exact
+  weightPermille: number;  // base weight of the profile, in thousandths (150 = 15%); integers keep rounding exact
   requiredCore: boolean;   // Core components are all required for a score
   minCount: number;        // valid observations needed for the component to be available
   targetCount: number;     // valid observations at which data quality is 1.0
@@ -89,10 +100,11 @@ export interface HesComponentResult {
 }
 
 export interface HesResult {
+  profile: HesProfile;       // the weights the score was calculated with
   status: HesStatus;
   score: number;             // integer 0..100; HES_MISSING when the Core set is incomplete
   tier: string;              // 'A' | 'B' | 'C', or 'NONE' when there is no score
-  coverage: number;          // Evidence Coverage, integer percent
+  coverage: number;          // Evidence Coverage, percent in steps of 0.5 (never rounded)
   confidence: HesConfidence;
   components: HesComponentResult[];  // always all eight, in the order of HES_COMPONENTS
 }

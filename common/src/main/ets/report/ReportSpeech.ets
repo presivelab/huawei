@@ -43,7 +43,7 @@ function spokenRaw(raw: string): string {
   return text.split(' h ').join(' hours ');
 }
 
-/** "Score 92, tier A, coverage 100 percent"; without a score: "No score yet, coverage 43 percent". */
+/** "Score 92, tier A, coverage 100 percent"; without a score: "No score yet, coverage 47.5 percent". */
 export function scoreSpoken(report: PersonaReport): string {
   if (!hasScore(report)) {
     return `No score yet, coverage ${report.coveragePct} percent`;

@@ -1,6 +1,7 @@
 // Test fixture: the fixed preview of the six personas, written by hand before the scoring engine existed.
 // The tests use it as an independent expectation for the engine's reports; the app no longer ships it.
-import { benefitLevel, benefitReason } from '../../main/ets/report/Benefit';
+import { HES_DEFAULT_PROFILE } from '../../main/ets/hes/HesCurves';
+import { benefitLevel, benefitReason, discountPct } from '../../main/ets/report/Benefit';
 import {
   BAR_NO_DATA,
   ComponentId,
@@ -21,9 +22,10 @@ import {
  * Fixed preview reports of the six demo personas.
  *
  * Score, tier, coverage, confidence, eligibility and benefit are the expected results of the personas
- * and must not be tuned. Component values, days and seven-day bars are illustrative. The screens label
- * all of it as preview data. When the scoring engine is part of the build, the tests of this file check
- * the engine against the same expected results.
+ * for the default profile (health insurance, HES vNext weights) and must not be tuned. Component values,
+ * days and seven-day bars are illustrative; the weights are the health-insurance weights of the components
+ * shown. The screens label all of it as preview data. When the scoring engine is part of the build, the tests
+ * of this file check the engine against the same expected results.
  */
 
 export const PREVIEW_PERIOD: string = '4 Sep – 3 Oct';
@@ -228,9 +230,11 @@ function expected(id: string, name: string, hes: number, tier: string, coverageP
 function report(e: Expected, components: ComponentRow[], wearSummary: WearSummary, live: LiveNow,
   whatIf: string): PersonaReport {
   const scored: boolean = e.hes >= 0 && e.tier !== ReportTier.NONE;
+  const benefit: string = benefitLevel(e.eligible, e.tier, scored);
   return {
     id: e.id,
     name: e.name,
+    profile: HES_DEFAULT_PROFILE,
     period: PREVIEW_PERIOD,
     periodIso: PREVIEW_PERIOD_ISO,
     hes: e.hes,
@@ -238,8 +242,9 @@ function report(e: Expected, components: ComponentRow[], wearSummary: WearSummar
     coveragePct: e.coveragePct,
     confidence: e.confidence,
     eligible: e.eligible,
-    benefit: benefitLevel(e.eligible, e.tier, scored),
+    benefit: benefit,
     benefitReason: benefitReason(e.eligible, e.tier, scored, wearSummary.flagged, wearSummary.suspicious),
+    discountPct: discountPct(HES_DEFAULT_PROFILE, benefit),
     pointsToNext: e.pointsToNext,
     components: components,
     wear: wearSummary,
@@ -253,14 +258,14 @@ function ania(): PersonaReport {
   return report(
     expected('ania', 'Ania', 92, ReportTier.A, 100, ReportConfidence.HIGH, true, 0),
     [
-      steps(measured(95, '9,412', '/day', 13, 28, [62, 80, 71, 90, 68, 95, 84])),
-      active(measured(93, '212', 'min/week', 15, 28, [55, 70, 40, 88, 76, 92, 64])),
-      restingHr(measured(92, '56', 'bpm', 15, 28, [60, 58, 62, 57, 59, 56, 58])),
-      sleep(measured(90, '7 h 24', 'min', 11, 28, [78, 82, 74, 86, 80, 88, 84])),
+      steps(measured(95, '9,412', '/day', 15, 28, [62, 80, 71, 90, 68, 95, 84])),
+      active(measured(93, '212', 'min/week', 20, 28, [55, 70, 40, 88, 76, 92, 64])),
+      restingHr(measured(92, '56', 'bpm', 13, 28, [60, 58, 62, 57, 59, 56, 58])),
+      sleep(measured(90, '7 h 24', 'min', 13, 28, [78, 82, 74, 86, 80, 88, 84])),
       sleepRegularity(measured(96, '±22', 'min', 15, 28, [90, 86, 92, 88, 94, 90, 92])),
-      vo2max(measured(90, '47', 'ml/kg/min', 15, 4, [70, 72, 72, 74, 74, 76, 76])),
-      hrv(measured(88, '58', 'ms', 10, 27, [64, 70, 58, 72, 66, 74, 68])),
-      hrRecovery(measured(88, '34', 'bpm in 60 s', 6, 9,
+      vo2max(measured(90, '47', 'ml/kg/min', 12, 4, [70, 72, 72, 74, 74, 76, 76])),
+      hrv(measured(88, '58', 'ms', 7, 27, [64, 70, 58, 72, 66, 74, 68])),
+      hrRecovery(measured(88, '34', 'bpm in 60 s', 5, 9,
         [BAR_NO_DATA, 70, BAR_NO_DATA, BAR_NO_DATA, 76, BAR_NO_DATA, 80]))
     ],
     wear(28, 29, 0, false, periodDays([10, 22], [], [], 0, [100, 100, 92, 100, 100, 96, 100])),
@@ -268,19 +273,19 @@ function ania(): PersonaReport {
     '');
 }
 
-// B/75, coverage 85%, High: flagged after three suspicious breaks, so no benefit. Days as on the
+// B/75, coverage 87.5%, High: flagged after three suspicious breaks, so no benefit. Days as on the
 // Evidence mock-up: suspicious on 3, 17 and 24, short on 10, sick on 11, 12 and 25.
 function marek(): PersonaReport {
   return report(
-    expected('marek', 'Marek', 75, ReportTier.B, 85, ReportConfidence.HIGH, false, 5),
+    expected('marek', 'Marek', 75, ReportTier.B, 87.5, ReportConfidence.HIGH, false, 5),
     [
-      steps(measured(78, '7,820', '/day', 15, 26, [58, 72, 64, 80, 52, 76, 70])),
-      active(measured(72, '142', 'min/week', 18, 26, [48, 66, 30, 74, 58, 80, 62])),
-      restingHr(measured(70, '68', 'bpm', 18, 25, [66, 70, 68, 72, 67, 69, 68])),
-      sleep(measured(76, '6 h 48', 'min', 13, 24, [70, 76, 62, 80, 72, 78, 74])),
-      sleepRegularity(measured(80, '±38', 'min', 18, 24, [74, 80, 68, 82, 78, 84, 76])),
+      steps(measured(78, '7,820', '/day', 17, 26, [58, 72, 64, 80, 52, 76, 70])),
+      active(measured(72, '142', 'min/week', 23, 26, [48, 66, 30, 74, 58, 80, 62])),
+      restingHr(measured(70, '68', 'bpm', 14, 25, [66, 70, 68, 72, 67, 69, 68])),
+      sleep(measured(76, '6 h 48', 'min', 14, 24, [70, 76, 62, 80, 72, 78, 74])),
+      sleepRegularity(measured(80, '±38', 'min', 17, 24, [74, 80, 68, 82, 78, 84, 76])),
       noVo2max(),
-      hrv(measured(74, '41', 'ms', 12, 22, [52, 60, 46, 62, 56, 64, 58])),
+      hrv(measured(74, '41', 'ms', 9, 22, [52, 60, 46, 62, 56, 64, 58])),
       hrRecovery(measured(70, '25', 'bpm in 60 s', 6, 5,
         [BAR_NO_DATA, BAR_NO_DATA, 62, BAR_NO_DATA, BAR_NO_DATA, 68, BAR_NO_DATA]))
     ],
@@ -289,16 +294,16 @@ function marek(): PersonaReport {
     '');
 }
 
-// B/73, coverage 70%, Medium: one suspicious break, which never flags, so partial benefit.
+// B/71, coverage 75%, Medium: one suspicious break, which never flags, so partial benefit.
 function kasia(): PersonaReport {
   return report(
-    expected('kasia', 'Kasia', 73, ReportTier.B, 70, ReportConfidence.MEDIUM, true, 7),
+    expected('kasia', 'Kasia', 71, ReportTier.B, 75, ReportConfidence.MEDIUM, true, 9),
     [
-      steps(measured(70, '6,950', '/day', 19, 24, [50, 64, 58, 72, 46, 70, 62])),
-      active(measured(68, '124', 'min/week', 22, 24, [42, 60, 34, 70, 52, 74, 56])),
-      restingHr(measured(76, '64', 'bpm', 22, 22, [62, 66, 63, 65, 64, 66, 64])),
-      sleep(measured(78, '6 h 55', 'min', 15, 21, [72, 78, 66, 80, 74, 82, 76])),
-      sleepRegularity(measured(74, '±44', 'min', 22, 21, [68, 74, 62, 78, 70, 80, 72])),
+      steps(measured(70, '6,950', '/day', 20, 24, [50, 64, 58, 72, 46, 70, 62])),
+      active(measured(63, '124', 'min/week', 27, 24, [42, 60, 34, 70, 52, 74, 56])),
+      restingHr(measured(76, '64', 'bpm', 17, 22, [62, 66, 63, 65, 64, 66, 64])),
+      sleep(measured(78, '6 h 55', 'min', 16, 21, [72, 78, 66, 80, 74, 82, 76])),
+      sleepRegularity(measured(74, '±44', 'min', 20, 21, [68, 74, 62, 78, 70, 80, 72])),
       noVo2max(),
       noHrv(),
       noHrRecovery()
@@ -308,19 +313,19 @@ function kasia(): PersonaReport {
     '');
 }
 
-// B/79, coverage 90%, High: one point to A. Components as on the "Why this tier" mock-up.
+// B/79, coverage 92.5%, High: one point to A. Components as on the "Why this tier" mock-up.
 function tomek(): PersonaReport {
   return report(
-    expected('tomek', 'Tomek', 79, ReportTier.B, 90, ReportConfidence.HIGH, true, 1),
+    expected('tomek', 'Tomek', 79, ReportTier.B, 92.5, ReportConfidence.HIGH, true, 1),
     [
-      steps(measured(86, '8,640', '/day', 14, 28, [66, 82, 74, 88, 70, 90, 80])),
-      active(measured(67, '118', 'min/week', 17, 28, [40, 58, 32, 66, 50, 72, 54])),
-      restingHr(measured(74, '66', 'bpm', 17, 27, [64, 68, 66, 67, 65, 68, 66])),
-      sleep(measured(67, '6 h 15', 'min', 12, 27, [60, 68, 54, 70, 62, 72, 64])),
-      sleepRegularity(measured(96, '±24', 'min', 17, 27, [90, 88, 94, 90, 92, 94, 92])),
-      vo2max(measured(89, '82nd', 'percentile', 17, 4, [80, 80, 82, 82, 82, 82, 82])),
+      steps(measured(86, '8,640', '/day', 16, 28, [66, 82, 74, 88, 70, 90, 80])),
+      active(measured(67, '118', 'min/week', 22, 28, [40, 58, 32, 66, 50, 72, 54])),
+      restingHr(measured(74, '66', 'bpm', 14, 27, [64, 68, 66, 67, 65, 68, 66])),
+      sleep(measured(67, '6 h 15', 'min', 14, 27, [60, 68, 54, 70, 62, 72, 64])),
+      sleepRegularity(measured(96, '±24', 'min', 16, 27, [90, 88, 94, 90, 92, 94, 92])),
+      vo2max(measured(89, '82nd', 'percentile', 13, 4, [80, 80, 82, 82, 82, 82, 82])),
       noHrv(),
-      hrRecovery(measured(58, '22', 'bpm in 60 s', 6, 6,
+      hrRecovery(measured(58, '22', 'bpm in 60 s', 5, 6,
         [BAR_NO_DATA, 52, BAR_NO_DATA, 58, BAR_NO_DATA, BAR_NO_DATA, 56]))
     ],
     wear(29, 29, 0, false, periodDays([19], [], [], 0, [])),
@@ -328,19 +333,19 @@ function tomek(): PersonaReport {
     'Sleeping 7 h a night would be enough for Tier A.');
 }
 
-// C/59, coverage 75%, Medium: wear is fine, the score is C, so no benefit.
+// C/58, coverage 80%, High: wear is fine, the score is C, so no benefit.
 function ewa(): PersonaReport {
   return report(
-    expected('ewa', 'Ewa', 59, ReportTier.C, 75, ReportConfidence.MEDIUM, true, POINTS_UNKNOWN),
+    expected('ewa', 'Ewa', 58, ReportTier.C, 80, ReportConfidence.HIGH, true, POINTS_UNKNOWN),
     [
-      steps(measured(52, '4,870', '/day', 17, 25, [36, 48, 30, 54, 40, 58, 44])),
-      active(measured(50, '74', 'min/week', 20, 25, [24, 40, 18, 46, 30, 52, 34])),
-      restingHr(measured(64, '72', 'bpm', 20, 23, [70, 74, 72, 73, 71, 74, 72])),
+      steps(measured(52, '4,870', '/day', 19, 25, [36, 48, 30, 54, 40, 58, 44])),
+      active(measured(50, '74', 'min/week', 25, 25, [24, 40, 18, 46, 30, 52, 34])),
+      restingHr(measured(64, '72', 'bpm', 16, 23, [70, 74, 72, 73, 71, 74, 72])),
       sleep(measured(66, '6 h 20', 'min', 15, 22, [58, 66, 52, 68, 60, 70, 62])),
-      sleepRegularity(measured(62, '±58', 'min', 20, 22, [54, 62, 48, 66, 58, 68, 60])),
+      sleepRegularity(measured(62, '±58', 'min', 19, 22, [54, 62, 48, 66, 58, 68, 60])),
       noVo2max(),
       noHrv(),
-      hrRecovery(measured(62, '20', 'bpm in 60 s', 8, 4,
+      hrRecovery(measured(62, '20', 'bpm in 60 s', 6, 4,
         [BAR_NO_DATA, BAR_NO_DATA, BAR_NO_DATA, 50, BAR_NO_DATA, BAR_NO_DATA, 54]))
     ],
     wear(26, 25, 0, false, periodDays([5, 9, 16, 27], [], [], 0, [])),
@@ -348,10 +353,10 @@ function ewa(): PersonaReport {
     '');
 }
 
-// No score, coverage 43%: fourteen days of history and too few nights. Counters as on the mock-up.
+// No score, coverage 47.5%: fourteen days of history and too few nights. Counters as on the mock-up.
 function ola(): PersonaReport {
   return report(
-    expected('ola', 'Ola', HES_NONE, ReportTier.NONE, 43, ReportConfidence.INSUFFICIENT, false, POINTS_UNKNOWN),
+    expected('ola', 'Ola', HES_NONE, ReportTier.NONE, 47.5, ReportConfidence.INSUFFICIENT, false, POINTS_UNKNOWN),
     [
       steps(measured(HES_NONE, '6,120', '/day', 0, 14, [44, 60, 52, 66, 48, 70, 58])),
       active(measured(HES_NONE, '96', 'min/week', 0, 14, [30, 48, 26, 56, 40, 60, 44])),

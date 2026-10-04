@@ -1,6 +1,6 @@
-# HES-Lite v1.0 in FairWear
+# HES vNext in FairWear
 
-HES-Lite (Health Evidence Score) turns a history of completed days into one integer score from 0 to 100, a tier
+HES (Health Evidence Score) turns a history of completed days into one integer score from 0 to 100, a tier
 A / B / C, an Evidence Coverage percentage and a Data Confidence label. It is deterministic rules: no learned
 model, no network, no clock. A missing measurement is never guessed and never counted as zero.
 
@@ -8,7 +8,15 @@ This engine was rebuilt from the written specification `HES_Lite_Final_Hackathon
 phone brief), because the package that was to contain it did not arrive. It is pure logic in the `common`
 module and has no UI.
 
-All weights, curves, thresholds and minimum counts are prototype product assumptions, not clinically tested.
+HES vNext keeps every curve, minimum count, window and threshold of HES-Lite v1.0 and changes three things:
+
+- **Two score profiles**, one per insurance product, each with its own base weights (below). The profile is
+  part of every result (`HesResult.profile`) and of every report (`PersonaReport.profile`).
+- **HRV looks at the recent 14 nights** (`HES_HRV_WINDOW_DAYS`), not the 28-day window.
+- **A discount per profile and benefit level** (`discountPct` in `report/Benefit.ets`, `PersonaReport.discountPct`).
+
+All weights, curves, thresholds, windows and minimum counts are research-informed product assumptions, not
+clinically or actuarially validated coefficients. Future validation must use real cohort/outcome data.
 
 **Consent.** FairWear's consent filters the data before scoring: every field of a data type that is switched off
 is treated as not measured. This holds for the starting history and for each day added by "Close the day", on
@@ -39,21 +47,84 @@ steps of the 24 h before it. It decides eligibility, not the score.
 The wear month is next to it, in `common/src/main/ets/wear/`: `WearMonth.ets` (the rules) and `WearPersonas.ets`
 (a 30-day wear record per persona).
 
-Tests: `common/src/test/Hes.test.ets` (75, every line of specification section 15 as its own test, then sections
-2 to 11), `HesPersonas.test.ets` (16), `HesSession.test.ets` (11), `WearMonth.test.ets` (22).
+Tests: `common/src/test/Hes.test.ets` (85, every line of specification section 15 as its own test, then sections
+2 to 11 and the vNext profiles), `HesPersonas.test.ets` (20), `HesSession.test.ets` (11), `HesFuzz.test.ets` (4),
+`WearMonth.test.ets` (22).
+
+## Profiles and weights
+
+`HesProfile` (`hes/HesTypes.ets`), weights in `hesWeightPermille` (`hes/HesCurves.ets`). The default profile,
+used wherever none is named, is `HEALTH_WELLNESS`; `HES_COMPONENTS` carries its weights.
+
+| Component                | `HEALTH_WELLNESS` (monthly health insurance) | `LONGEVITY_WELLNESS` (life insurance) |
+| ------------------------ | -------------------------------------------- | ------------------------------------- |
+| VO₂max (crf)             | 12.5%                                        | 22.5%                                 |
+| Resting heart rate, Core | 12.5%                                        | 15%                                   |
+| Active minutes, Core     | 20%                                          | 15%                                   |
+| Daily steps, Core        | 15%                                          | 17.5%                                 |
+| Sleep regularity, Core   | 15%                                          | 10%                                   |
+| Sleep duration, Core     | 12.5%                                        | 7.5%                                  |
+| HRV                      | 7.5%                                         | 7.5%                                  |
+| Heart-rate recovery      | 5%                                           | 5%                                    |
+| **Core only**            | **75%**                                      | **65%**                               |
+
+Coverage with the Core set alone is 75% or 65%, so without VO₂max, HRV or heart-rate recovery the confidence
+is Medium at most. A profile changes only the weights: component scores, availability and the Core rule are
+the same in both. `HesSession.setProfile` recalculates the same completed days with the other weights.
+
+## Discount
+
+Discount only, never a surcharge. Illustrative product assumptions, not actuarial values.
+
+| Benefit level (`Benefit.ets`)  | Health insurance (monthly premium) | Life insurance (yearly premium) |
+| ------------------------------ | ---------------------------------- | ------------------------------- |
+| FULL: eligible and tier A      | 15%                                | 10%                             |
+| PARTIAL: eligible and tier B   | 8%                                 | 5%                              |
+| NONE: tier C, not eligible, no score | 0%                           | 0%                              |
 
 ## How a score is calculated
 
 1. The history is a list of completed days, oldest first, one entry per calendar day. Today is not in it.
-2. Each of the eight components counts its valid readings in its window (28 days; 60 days for heart-rate
-   recovery; 90 days for VO₂max). With fewer than the minimum, the component is missing.
+2. Each of the eight components counts its valid readings in its window (28 days; 14 nights for HRV; 60 days
+   for heart-rate recovery; 90 days for VO₂max). With fewer than the minimum, the component is missing.
 3. An available component gets a raw value (mean, median, latest, or timing SD) and a score on its curve.
 4. If any of the five Core components is missing there is no score and no tier: status `insufficient_data`,
    tier `NONE`, confidence "Insufficient data". Coverage is still reported.
 5. Otherwise the score is the weighted mean of the available components, rounded to an integer. Missing
    components are left out of both the numerator and the denominator.
-6. Coverage is the sum of the base weights of the available components. Confidence is coverage times the
-   weighted data quality.
+6. Coverage is the sum of the profile's base weights of the available components, exact to 0.5 (87.5%, never
+   88%). A missing component lowers it by exactly its weight. Confidence is coverage times the weighted data
+   quality.
+7. A reading that is not a finite number (NaN, Infinity) is no reading. A raw value that overflows makes the
+   component missing. The engine never returns NaN or Infinity.
+
+## HES vNext conformance
+
+The vNext sections this build was checked against. The other sections are the HES-Lite ones in the table
+"Files and specification sections" above; vNext did not change them.
+
+| vNext section                                     | Where                                                                                              | Test                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1 Profiles, selectable                            | `hesWeightPermille`, `computeHes(history, profile)`; Report tab: `ProfileSwitch.ets`, `engineReportFor` | `Hes.test.ets` "HES vNext profiles", `ProfileReports.test.ets`                         |
+| 3 One HRV and one heart-rate recovery protocol    | `HesDay.hrvPercentile`, `HesDay.hrr1`; format `fwhs1` (see below)                                  | `HealthSimPayload.test.ets`                                                            |
+| 7 Evidence Coverage, exact                        | `coverage` in `HesComposite.ets`                                                                   | `Hes.test.ets` "Ania without HRV", "a coverage of 42.5 stays 42.5"                     |
+| 10 Confidence from the exact coverage             | `confidenceIndex` in `HesConfidence.ets`                                                           | `Hes.test.ets` "HES-Lite data confidence", `HesPersonas.test.ets`                      |
+| 16 Never NaN, never Infinity                      | `isValidFor` in `HesSufficiency.ets`, `evaluateComponent` in `HesComponents.ets`                   | `HesFuzz.test.ets`: 1000 seeded histories, both profiles, 0 violations (2352 before) |
+| 17 Coverage decreases exactly by the missing weight | `coverage`                                                                                       | `Hes.test.ets` "Coverage is lower by exactly the HRV weight (7.5 points: 100 -> 92.5)" |
+
+### Deviations from the spec
+
+- **MVPA** is the mean of the valid days times 7, not SUM / 4: a missing day is not zero minutes.
+- **SD is the sample SD** (n - 1) in sleep regularity.
+- **"Why this tier" has no duplicates**: with five available components the lists are 3 + 2.
+- **Coverage is exact to 0.5 points** and shown that way (87.5%); a whole value has no decimal (75%).
+
+### One HRV and one heart-rate recovery protocol
+
+Health Sim hands over one HRV value per night, the overnight percentile, and one heart-rate recovery value
+per session, HRR1 from one post-exercise test. The format `fwhs1` has no field for a second protocol, so
+protocols cannot be mixed in a history. A real source must filter to one protocol before it hands the data
+over; the engine does not tell protocols apart.
 
 ## Personas
 
@@ -62,17 +133,22 @@ Tests: `common/src/test/Hes.test.ets` (75, every line of specification section 1
 persona parameters were tuned to reach the team's fixed table. The engine's weights, curves and thresholds were
 not changed for it.
 
-| Persona | Engine result | Coverage | Confidence        | Available components                             |
-| ------- | ------------- | -------- | ----------------- | ------------------------------------------------ |
-| Ania    | A / 92        | 100%     | High              | all eight                                        |
-| Marek   | B / 75        | 85%      | High              | Core + VO₂max                                    |
-| Kasia   | B / 73        | 70%      | Medium            | Core only                                        |
-| Tomek   | B / 79        | 90%      | High              | Core + VO₂max + heart-rate recovery              |
-| Ewa     | C / 59        | 75%      | Medium            | Core + heart-rate recovery                       |
-| Ola     | no score      | 43%      | Insufficient data | resting heart rate, MVPA, steps (8 of 14 nights) |
+| Persona | Health insurance           | Life insurance             | Available components                             |
+| ------- | -------------------------- | -------------------------- | ------------------------------------------------ |
+| Ania    | A / 92, 100%, High → 15%   | A / 91, 100%, High → 10%   | all eight                                        |
+| Marek   | B / 75, 87.5%, High → 0%   | B / 75, 87.5%, High → 0%   | Core + VO₂max (flagged, so not eligible)         |
+| Kasia   | B / 71, 75%, Medium → 8%   | B / 71, 65%, Medium → 5%   | Core only                                        |
+| Tomek   | B / 79, 92.5%, High → 8%   | A / 80, 92.5%, High → 10%  | Core + VO₂max + heart-rate recovery              |
+| Ewa     | C / 58, 80%, High → 0%     | C / 59, 70%, Medium → 0%   | Core + heart-rate recovery                       |
+| Ola     | no score, 47.5%            | no score, 47.5%            | resting heart rate, MVPA, steps (8 of 14 nights) |
 
-All six match the fixed table. The unrounded values are 92.000, 74.996, 72.988, 79.000 and 58.999, so no score
-sits near a rounding edge.
+Each cell is tier / score, coverage, confidence → discount. The persona parameters were not changed for vNext;
+these are the engine's results with the new weights. Tomek shows the difference between the products: his
+VO₂max weighs 22.5% for life insurance, which lifts him to A there. Unrounded health scores are 92.373, 74.890,
+71.367, 78.501 and 57.559; life scores 91.183, 74.511, 71.452, 79.682 and 59.385. Tomek's health score
+(78.501) and Marek's life score (74.511) sit close to a rounding edge, so a change to the persona generator can
+move them by one point; the tests pin all of them to three decimals. One closed day moves Ewa to B / 62
+(health) or B / 63 (life).
 
 Wear month (30 days, 4 September to 3 October 2026, default thresholds):
 
@@ -104,15 +180,16 @@ Engine:
 1. **Missing numbers are -1, not optional fields.** The specification writes `rawValue?` and `score?`; the
    repository's convention is `HEALTH_MISSING = -1`. `HES_MISSING` is the same value.
 2. **Weights are held in thousandths.** 0.15 + 0.15 + 0.125 is not exactly 0.425 in floating point, so a
-   coverage of 42.5% could round either way. With whole numbers 42.5 always rounds to 43 and 84.50 to 85.
+   coverage could come out as 42.499999. With whole numbers the coverage is exactly 42.5 and a score of 84.50
+   always rounds to 85. Coverage itself is never rounded: it moves in steps of 0.5.
 3. **Rounding is half up** (`floor(x + 0.5)`), as the test list asks: 84.49 gives 84, 84.50 gives 85.
 4. **MVPA with missing days.** The specification divides the 28-day sum by 4. With missing days that counts
    each of them as zero minutes, against "missing metrics are not treated as zero". The weekly value is the
    mean of the valid days times 7, which is the same number when all 28 days are valid.
 5. **An MVPA day is valid only with both** the moderate and the vigorous minutes present.
 6. **SD is the sample SD** (divisor n - 1). The specification says "SD" without the divisor.
-7. **HRV has no aggregation in the specification.** The median of the valid nights in the 28-day window is
-   used. The window is not given either; 28 days is used, as for the other nightly values.
+7. **HRV has no aggregation in the specification.** The median of the valid nights is used. vNext sets the
+   window to the recent 14 nights (v1.0 used 28 days).
 8. **Heart-rate recovery has no aggregation either.** The median of the valid sessions of the last 60 days is
    used.
 9. **A resting heart rate of 0 bpm or less is no reading** (the rule the watch already applies). Sleep duration
@@ -124,7 +201,7 @@ Engine:
 12. **Component scores are not rounded**; only the final score is. A screen rounds them for display.
 13. **Confidence boundaries are inclusive with a tolerance of 1e-9**, so an index meant to be exactly 0.80 is
     High even if floating point delivers 0.7999999999.
-14. **Confidence uses the rounded coverage percentage**, as the function in specification section 13 does.
+14. **Confidence uses the exact coverage percentage** (87.5, not 88).
 15. **"Why this tier" list sizes.** The specification says "2-3". Strongest takes up to 3 but at most half of
     the available components, rounded up; improvement takes up to 3 of the remaining ones, so nothing is in
     both lists (5 available give 3 + 2). Equal scores keep the order of the weight table. Without a score both
@@ -156,8 +233,16 @@ Personas and wear month:
 
 ## The report on the phone
 
+**Profile on the Report tab.** Under the score card a switch, "Health insurance" | "Life insurance", scores
+the same completed days with the other weights (`ReportService.reportFor`, `engineReportFor`): score, tier,
+coverage, confidence, points to the next tier, the "Why this tier" lists and the discount line follow it;
+wear and the live values do not. The choice is kept with its persona and in memory only, so another persona
+or a restart starts on health insurance. **Share is always for health insurance**: the code, the partner
+view, the benefit behind the code and the home-screen card use `report(id)`, and Share says "For: Health
+insurance". Tomek on "Life insurance" reads 80 · A while his code carries tier B. The claim is unchanged.
+
 `common/src/main/ets/report/EngineReports.ets` builds the phone's view model (`PersonaReport`, the shape the
-fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (33).
+fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (36), `ProfileReports.test.ets` (8).
 
 On the phone the screens get it through `entry/src/main/ets/report/EngineReportService.ets`, which
 `ServiceLocator.ets` puts in use: one `HesSession` per persona, created the first time the persona is opened.
@@ -206,7 +291,8 @@ fixture (`common/src/test/fixtures/PreviewReports.ets`) the engine's reports are
 34. **`DayDetail.breaks` holds only what the rule counts as a break** (at least 120 minutes off the wrist and
     not on the charger). A day the watch did not observe has no breaks and 0 worn and charging minutes.
 35. **Close the day and reset work per persona.** Each persona has its own session; closing a day for one
-    does not touch another. One closed day moves Ewa from C / 59 to B / 64; reset gives C / 59 again. The live
+    does not touch another. One closed day moves Ewa from C / 58 to B / 62 (health insurance); reset gives
+    C / 58 again. Reset keeps the session's profile. The live
     heart rate never changes a score and is never stored. Today's step count changes nothing until the day is
     closed; closing the day stores it as that day's steps (decision 18), so a closed day can move the score.
 36. **With data from Health Sim the history and the wear month come from Health Sim; the day that "Close the

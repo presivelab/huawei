@@ -4,7 +4,7 @@
 
 ```
 WATCH 5 → HUAWEI Health (phone) → [Health Service Kit + user authorization]
-        → FairWear on the phone (HES-Lite + wear rules) → signed tier → QR → partner
+        → FairWear on the phone (HES vNext + wear rules) → signed tier → QR → partner
 
 FairWear watch app → live heart rate + wear state (not part of HES)
 ```
@@ -16,7 +16,7 @@ HUAWEI Health and does not look like it; every screen says "SIMULATED DATA".
 ```
 Phone:  FairWear ── startAbilityForResult(AuthAbility, fwScopes) ──▶ Health Sim: its own consent screen
         FairWear ◀── resultCode 0 + parameters['fwhs1'] (histories and wear months, JSON) ── "Allow"
-        FairWear: its own consent (GDPR Art. 9) → strict decode → HES-Lite and wear rules → report
+        FairWear: its own consent (GDPR Art. 9) → strict decode → HES vNext and wear rules → report
         Health Sim card "FairWear" ── startAbility ──▶ FairWear (opens it the way an add-on is opened)
 
 Watch:  FairWear watch ── startAbilityForResult(WatchExportAbility) ──▶ Health Sim watch
@@ -107,10 +107,10 @@ the day" and Health Sim data do not move it. Shown, never scored.
 | HUAWEI Health authorization screen                                    | Not shown. A DEMO placeholder stands in its place; FairWear does not copy Huawei's screen.                                                                                                                                                                                                                                                                                                                           |
 | Consent logic, status transitions, per-data-type switches             | Real, covered by tests (`common/src/test/Health.test.ets`).                                                                                                                                                                                                                                                                                                                                                          |
 | Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not built. The demo personas are generated as completed days for the score (`hes/HesPersonas.ets`) and do not pass through the health source layer, whose demo source is empty.                                                                                                                                                                                                                                      |
-| Scoring (HES-Lite), tier, coverage                                    | Real engine, calculated on the phone (`common/src/main/ets/hes/`, `docs/HES.md`), on the synthetic histories of six demo personas. It does not read HUAWEI Health and is not fed by the watch.                                                                                                                                                                                                                       |
+| Scoring (HES vNext), tier, coverage                                   | Real engine, calculated on the phone (`common/src/main/ets/hes/`, `docs/HES.md`), on the synthetic histories of six demo personas. It does not read HUAWEI Health and is not fed by the watch.                                                                                                                                                                                                                       |
 | Wear compliance, breaks, the selective non-wear flag                  | Real rules (`common/src/main/ets/wear/`, `rules/SelectiveNonWear.ets`) on a synthetic 30-day wear record per persona.                                                                                                                                                                                                                                                                                                |
 | Live heart rate and today's steps on the phone                        | Demo values set on the Report screen. Shown, never scored; today's steps enter the history when the day is closed.                                                                                                                                                                                                                                                                                                   |
-| VO₂max and HRV                                                        | Watch measurements HES-Lite uses when present, as percentiles; synthetic in the personas. A missing one lowers coverage, never the score.                                                                                                                                                                                                                                                                            |
+| VO₂max and HRV                                                        | Watch measurements HES vNext uses when present, as percentiles; synthetic in the personas. A missing one lowers coverage, never the score.                                                                                                                                                                                                                                                                            |
 | Watch demo feed                                                       | Simulated. A fixed script of heart rate, steps and charging (night on the charger, worn hours, one break, a walk, a workout) replaces the sensor readings. It runs only on the demo clock, the dial reads "DEMO ×300 · FEED", and the signed day packet carries the clock label `DEMO_X300_FEED`. It goes through the same wear rule and recorder as sensor readings (`common/src/main/ets/watchlink/DemoFeed.ets`). |
 
 ## Permissions

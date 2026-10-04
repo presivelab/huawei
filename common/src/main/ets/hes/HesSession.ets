@@ -4,9 +4,12 @@
 //   - the live heart rate and today's steps are shown and never change the score;
 //   - a live heart rate is never used as a resting heart rate;
 //   - closing the day appends one completed day to the history and the score is calculated again;
-//   - reset goes back to the starting history.
+//   - reset goes back to the starting history;
+//   - the profile (health or life insurance) only changes the weights; switching it recalculates the score
+//     for the same completed days and keeps the live values. Reset keeps the profile.
+import { HES_DEFAULT_PROFILE } from './HesCurves';
 import { computeHes } from './HesEngine';
-import { copyHesDay, emptyHesDay, HesDay, HesResult, HES_MISSING } from './HesTypes';
+import { copyHesDay, emptyHesDay, HesDay, HesProfile, HesResult, HES_MISSING } from './HesTypes';
 
 /** Where the values of a newly completed day come from (everything except today's live steps). */
 export interface HesDaySource {
@@ -21,17 +24,31 @@ export class HesSession {
   private closed: number = 0;
   private liveHr: number = HES_MISSING;
   private stepsToday: number = HES_MISSING;
+  private scoreProfile: HesProfile;
   private current: HesResult;
 
   /**
    * `start` is the history of completed days, oldest first. `source` supplies the days that get closed;
    * with null a closed day carries only today's steps.
    */
-  constructor(start: HesDay[], source: HesDaySource | null) {
+  constructor(start: HesDay[], source: HesDaySource | null, profile: HesProfile = HES_DEFAULT_PROFILE) {
     this.start = HesSession.copyOf(start);
     this.days = HesSession.copyOf(start);
     this.source = source;
-    this.current = computeHes(this.days);
+    this.scoreProfile = profile;
+    this.current = computeHes(this.days, this.scoreProfile);
+  }
+
+  /** The profile the score is calculated with. */
+  profile(): HesProfile {
+    return this.scoreProfile;
+  }
+
+  /** Recalculates the score for the same completed days with the weights of another profile. */
+  setProfile(profile: HesProfile): HesResult {
+    this.scoreProfile = profile;
+    this.current = computeHes(this.days, this.scoreProfile);
+    return this.current;
   }
 
   private static copyOf(days: HesDay[]): HesDay[] {
@@ -94,7 +111,7 @@ export class HesSession {
     }
     this.days.push(day);
     this.stepsToday = HES_MISSING;
-    this.current = computeHes(this.days);
+    this.current = computeHes(this.days, this.scoreProfile);
     return this.current;
   }
 
@@ -104,7 +121,7 @@ export class HesSession {
     this.closed = 0;
     this.liveHr = HES_MISSING;
     this.stepsToday = HES_MISSING;
-    this.current = computeHes(this.days);
+    this.current = computeHes(this.days, this.scoreProfile);
     return this.current;
   }
 }

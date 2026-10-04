@@ -29,7 +29,7 @@ technology, digital wellbeing).
 | --- | --- |
 | Originality | Selective non-wear: Marek and Kasia wear the watch on the same 26 of 30 days, but only Marek's breaks follow a raised resting heart rate and fewer steps, so only he is flagged. The partner gets a signed, single-use A/B/C tier and nothing else. `common/src/main/ets/wear/`, `docs/screenshots/final/a2-evidence-marek-*` |
 | Usefulness | For people in a programme that rewards activity and sleep habits, and for the partner that runs it: a benefit without handing over raw health data, a reason for every day and an appeal. Benefits only, never a penalty. "Who it is for" above, `docs/DEMO_SCRIPT.md` |
-| Technical execution | 458 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES-Lite and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
+| Technical execution | 510 logic tests in `common` and 6 in `watch` (`docs/test-results.txt`): HES vNext with two profiles (health insurance, life insurance) and the six personas, the flag rule, strict claim decoding, replay and tamper checks with real ECDSA, the hash chain of watch days. Missing data gives "no score yet", never a guess. Lint 0 errors. |
 | Platform capabilities | Sensor Service Kit on the watch, HUKS keys on the phone and the watch, Crypto Architecture Kit, Ability Kit between two apps (Health Sim), Form Kit card, icon shortcut, phone and wearable built from one `common` module. Table "Platform capabilities" below |
 | Demo | The video above; the script and plan B in `docs/DEMO_SCRIPT.md`; what is real and what is simulated in the table below |
 | Reproducibility | "How to install" below (versions, emulators, commands); the logic tests run on any OS with Node; how AI tools were used in `AI_WORKFLOW.md`, the team's briefs in `docs/prompts/`; requirement by requirement in `docs/REQUIREMENTS_CHECK.md` |
@@ -111,8 +111,11 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 ## What is in this build
 
 - Health source layer, consent logic and the phone add-on screens are in place (`docs/ARCHITECTURE.md`).
-- The score is calculated on the phone by HES-Lite v1.0 (`common/src/main/ets/hes/`): deterministic rules and
-  curves, no learned model and no network. It runs on the histories of six demo personas, which are synthetic
+- The score is calculated on the phone by HES vNext (`common/src/main/ets/hes/`): deterministic rules and
+  curves, no learned model and no network. Two profiles weigh the same signals differently: monthly health
+  insurance (`HEALTH_WELLNESS`, the default) and life insurance (`LONGEVITY_WELLNESS`); each has its own
+  illustrative discount (health 15% for A, 8% for B; life 10% / 5%; never a surcharge). The profile is chosen in
+  code (`HesSession.setProfile`); no screen switches it yet. It runs on the histories of six demo personas, which are synthetic
   and generated from a seed; the source pill on the Report tab reads "HUAWEI Health · Demo data". All weights,
   curves, thresholds and minimum counts are prototype product assumptions, not clinically tested. Description,
   persona results and decisions: `docs/HES.md`.
@@ -160,10 +163,10 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
 
 | Part                              | State                                                                                                                                                                                                        |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Score (HES-Lite), tier, coverage  | **Real** engine, calculated on the phone. The history it runs on is **synthetic**: six demo personas generated from a seed.                                                                                  |
+| Score (HES vNext), tier, coverage | **Real** engine, calculated on the phone. The history it runs on is **synthetic**: six demo personas generated from a seed.                                                                                  |
 | Wear compliance and the flag      | **Real** rules, on a **synthetic** 30-day wear record per persona.                                                                                                                                           |
 | Live heart rate and today's steps | Shown, **never scored**. The score uses completed days only; today's steps enter the history when the day is closed, the live heart rate is never stored.                                                    |
-| VO₂max and HRV                    | HES-Lite uses both (as percentiles, `common/src/main/ets/hes/`) when they are present. In a real product they are watch measurements read from HUAWEI Health; in this demo they come from Health Sim and are **simulated** (synthetic in the built-in personas). A missing one lowers coverage and never the score.                                      |
+| VO₂max and HRV                    | HES vNext uses both (as percentiles, `common/src/main/ets/hes/`) when they are present. In a real product they are watch measurements read from HUAWEI Health; in this demo they come from Health Sim and are **simulated** (synthetic in the built-in personas). A missing one lowers coverage and never the score.                                      |
 | HUAWEI Health connection          | **Health Sim**, our own simulator app (`healthsim/`, bundle `com.fairwear.healthsim`), stands in for HUAWEI Health on the emulators; FairWear asks it for data with `startAbilityForResult` after its consent; without it, built-in demo data. The adapter for the real Health Service Kit stays a **stub** until Huawei grants the app access; FairWear does not copy Huawei's screen.                        |
 | Watch to phone                    | Signed day packets carried by a development relay over `hdc` (`tools/watch-phone-relay.mjs`). The Wear Engine code path exists and was not run: it needs paired devices and Wear Engine approval.            |
 | Watch days                        | **Real** recording and signing on the watch while the app is open; on the emulator the recorded days came from the labelled demo feed (the emulator sends heart rate 0). Verified watch days are shown, **not scored**. |
@@ -184,8 +187,8 @@ settings.
 
 **The consent switches are real on both paths.** A data type switched off in FairWear's own consent is missing in
 the history the score is calculated from and in every day "Close the day" adds, whether the days come from
-Health Sim or from the built-in demo histories. With HRV off, Ania reads A / 93 with 90% coverage on both paths,
-and the coverage stays at 90% however many days are closed.
+Health Sim or from the built-in demo histories. With HRV off, Ania reads A / 93 with 92.5% coverage on both paths,
+and the coverage stays at 92.5% however many days are closed.
 
 More detail per part: `docs/ARCHITECTURE.md`, `docs/HES.md`, `docs/WATCH_LINK.md`.
 
@@ -211,7 +214,7 @@ node tools/logic-tests/runner.js "$HOME/fw-ts/node_modules/typescript" "$PWD" wa
 | Changed tier, reused or expired nonce, unknown key, oversized token | `ClaimVerifier.test.ets` (real ECDSA), `ShareFlow.test.ets` |
 | No score, so no code | `ShareFlow.test.ets` |
 | Flag rule (one never, three always, two above 30% of breaks) | `WearMonth.test.ets`, `Claim.test.ets` |
-| HES-Lite specification, persona results | `Hes.test.ets`, `HesPersonas.test.ets`, `EngineReports.test.ets` |
+| HES vNext specification, persona results, the two profiles, never NaN or Infinity | `Hes.test.ets`, `HesPersonas.test.ets`, `EngineReports.test.ets`, `ProfileReports.test.ets`, `HesFuzz.test.ets` |
 | Close the day and reset | `HesSession.test.ets`, `EngineReports.test.ets` |
 | Consent switches on both paths and after "Close the day" | `ConsentScopes.test.ets` |
 | Receipts, visit notes, follow-up, the visit claim and its checks | `Visits.test.ets`, `VisitClaim.test.ets` (real ECDSA) |

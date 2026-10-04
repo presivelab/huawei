@@ -1,6 +1,6 @@
 # Visits and the day dial
 
-Two additions next to the score. Neither changes HES-Lite, the tier claim (`TierClaim`, seven keys) or
+Two additions next to the score. Neither changes the score (HES vNext), the tier claim (`TierClaim`, seven keys) or
 `PartnerVerifier`: they are separate paths with their own code and their own tests.
 
 - **Day dial** — a 24-hour picture of the newest completed day on the Report tab.

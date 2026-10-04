@@ -8,7 +8,7 @@ The first plan (`IMPLEMENTATION.md`, written with Claude on claude.ai) is not in
 
 **User problem:** Programmes that reward regular activity and sleep (for example an insurer's) need wearable data they can trust, and users shouldn't have to hand over raw health data to get a benefit. Today both sides lose: people can game wear-based programs by taking the watch off on bad days, while honest users share far more than necessary. FairWear computes wear compliance and an explainable evidence tier on the device and gives the partner only a signed A/B/C tier, never raw heart-rate data.
 
-**Desired demonstration:** A native ArkTS/ArkUI app in two modules. The watch (wearable emulator) records signed, hash-chained wear days. The phone (phone emulator) scores six synthetic demo personas with HES-Lite, detects selective non-wear, shows "Why this tier" and an Evidence calendar where a day can be appealed, and shares a signed A/B/C tier as a QR code that a demo partner verifies. Raw data never leaves the device. The full script is `docs/DEMO_SCRIPT.md`.
+**Desired demonstration:** A native ArkTS/ArkUI app in two modules. The watch (wearable emulator) records signed, hash-chained wear days. The phone (phone emulator) scores six synthetic demo personas with HES vNext (two profiles: health insurance and life insurance), detects selective non-wear, shows "Why this tier" and an Evidence calendar where a day can be appealed, and shares a signed A/B/C tier as a QR code that a demo partner verifies. Raw data never leaves the device. The full script is `docs/DEMO_SCRIPT.md`.
 
 **Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing).
 
@@ -41,13 +41,13 @@ The recorded demo follows `docs/DEMO_SCRIPT.md` (part A, about four minutes):
 
 - [x] `entry` launches on the phone emulator and `watch` launches on the wearable emulator; both use the `common` module (`docs/test-results.txt`, `docs/screenshots/`).
 - [x] On the wearable emulator, the watch shows heart rate, steps and wear state; without a heart-rate reading the wear state is unknown or off-wrist, never invented (`LiveWear.test.ets`, `WatchLinkFlow.test.ets`, `docs/screenshots/i3-watch-wear-state.jpeg`). Changing the heart rate in the emulator's Virtual sensor panel was not run.
-- [x] Ania: A / 92, full benefit. Kasia: B / 73, partial benefit, no flag. Marek: B / 75, flagged for selective non-wear, not eligible, no benefit (`HesPersonas.test.ets`, `WearMonth.test.ets`, `EngineReports.test.ets`, `docs/screenshots/final/`).
+- [x] Ania: A / 92, full benefit. Kasia: B / 71, partial benefit, no flag. Marek: B / 75, flagged for selective non-wear, not eligible, no benefit (`HesPersonas.test.ets`, `WearMonth.test.ets`, `EngineReports.test.ets`, `docs/screenshots/final/`).
 - [x] A signed claim verifies in the partner view; a tampered payload, a reused nonce and an unknown key are rejected without a crash (`ClaimVerifier.test.ets`, `ShareFlow.test.ets`, `docs/screenshots/final/a4-partner-*`).
 - [x] The pure-logic tests pass under Node (`tools/run-logic-tests.sh common` and `watch`; counts in `docs/test-results.txt`).
 
 ## Scope boundaries
 
-- In scope: the `common` HAR (data contract, HES-Lite and the six personas, wear month and the selective non-wear flag, report view models, claim codec and verifier, Watch Link logic of both sides), the phone screens, the watch screens with live sensors and the Watch Link recorder, tests, submission documents.
+- In scope: the `common` HAR (data contract, HES vNext and the six personas, wear month and the selective non-wear flag, report view models, claim codec and verifier, Watch Link logic of both sides), the phone screens, the watch screens with live sensors and the Watch Link recorder, tests, submission documents.
 - Out of scope: reading real HUAWEI Health data (Health Service Kit needs Huawei's approval; the adapter is a stub); Wear Engine on paired devices (not run); a separate partner system; QR scanning with a camera; penalties of any kind (benefits only); an actuarial model; `conductor-dev`.
 - Health Sim: our own simulator app (`healthsim/`) stands in for HUAWEI Health on the emulators. FairWear asks it for data with `startAbilityForResult` after its consent, on the phone (histories of the six people) and on the watch (the script of the demo day); without it FairWear uses its built-in demo data.
 - Mocked or simulated behavior:

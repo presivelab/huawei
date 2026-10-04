@@ -59,6 +59,7 @@ function withSimSource(r: PersonaReport): PersonaReport {
   return {
     id: r.id,
     name: r.name,
+    profile: r.profile,
     period: r.period,
     periodIso: r.periodIso,
     hes: r.hes,
@@ -68,6 +69,7 @@ function withSimSource(r: PersonaReport): PersonaReport {
     eligible: r.eligible,
     benefit: r.benefit,
     benefitReason: r.benefitReason,
+    discountPct: r.discountPct,
     pointsToNext: r.pointsToNext,
     components: rows,
     wear: r.wear,

@@ -10,7 +10,10 @@ import {
   healthSourceLabel,
   HealthStatus,
   HesPersonas,
-  PersonaReport
+  HesProfile,
+  PersonaReport,
+  profileChoice,
+  profileFromChoice
 } from 'common';
 import { EngineReportService } from './EngineReportService';
 import { ReportService } from './ReportService';
@@ -32,6 +35,10 @@ import { ReportService } from './ReportService';
 export const KEY_PERSONA: string = 'fwPersonaId';               // id of the persona on screen
 export const KEY_REPORT_REVISION: string = 'fwReportRevision';  // bumped when a report's content changes
 export const DEFAULT_PERSONA_ID: string = HesPersonas.IDS[0];   // 'ania'
+// The score profile chosen on the Report tab, kept with the persona it was chosen for (profileChoice).
+// Empty: health insurance. In memory only, so another persona or a restart starts on health insurance.
+export const KEY_REPORT_PROFILE: string = 'fwReportProfile';
+export const NO_PROFILE_CHOICE: string = '';
 
 const engine: EngineReportService = new EngineReportService();
 const service: ReportService = engine;
@@ -120,11 +127,30 @@ export function selectedPersonaId(): string {
 }
 
 export function selectPersona(id: string): void {
+  // A persona picked from the list starts on health insurance, also when it is picked again later.
+  AppStorage.setOrCreate<string>(KEY_REPORT_PROFILE, NO_PROFILE_CHOICE);
   AppStorage.setOrCreate<string>(KEY_PERSONA, service.report(id).id);
 }
 
 export function selectedReport(): PersonaReport {
   return service.report(selectedPersonaId());
+}
+
+/** The profile the Report tab shows for this persona. */
+export function profileOf(choice: string, personaId: string): HesProfile {
+  return profileFromChoice(choice, personaId);
+}
+
+/** The Report tab: this profile for the selected persona. Share and the partner stay on health insurance. */
+export function selectProfile(profile: HesProfile): void {
+  AppStorage.setOrCreate<string>(KEY_REPORT_PROFILE, profileChoice(selectedPersonaId(), profile));
+}
+
+/** The selected persona's report with the weights of the profile chosen on the Report tab. */
+export function selectedProfileReport(): PersonaReport {
+  const id: string = selectedPersonaId();
+  const choice: string = AppStorage.get<string>(KEY_REPORT_PROFILE) ?? NO_PROFILE_CHOICE;
+  return service.reportFor(id, profileFromChoice(choice, id));
 }
 
 /** The days of the selected persona's wear month in detail; `[n - 1]` is day `n` of `wear.days`. */

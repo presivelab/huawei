@@ -92,7 +92,7 @@ export default function whySectionsTest() {
 
     it('the weight is written as the report carries it', 0, () => {
       const tomek: PersonaReport = previewReport('tomek');
-      expect(weightText(tomek.components[0])).assertEqual('14%');
+      expect(weightText(tomek.components[0])).assertEqual('16%');
     });
   });
 }

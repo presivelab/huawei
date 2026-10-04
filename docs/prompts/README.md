@@ -2,8 +2,8 @@
 
 These are the briefs a team member handed to coding-agent sessions as their standing instructions during
 HackYeah 2026 (3–4 October 2026). They are kept as written, in Polish, so that `AI_WORKFLOW.md` can point to
-the full text. Each file starts with one added line saying it is a public-safe copy; apart from that only a leftover paste marker was removed from `3` and `4`, and a private repository name from `14`.
-They contain no credentials, e-mail addresses or user names; the paths in them (`C:\dev\…`) are the
+the full text. Each file starts with one added line saying it is a public-safe copy; apart from that only a leftover paste marker was removed from `3` and `4`, a private repository name from `14-FIXY_PO_AUDYCIE.md` and a user name from `14-HES_VNEXT_DOKONCZENIE.md`.
+They contain no credentials, e-mail addresses or user names; the paths in them (`C:dev…`) are the
 development machine's working folders.
 
 A brief describes what was asked at the time, not the state of the code. Where a brief and the repository
@@ -29,6 +29,7 @@ disagree, the repository and `docs/` are right. The decisions still in force are
 | `14-FIXY_PO_AUDYCIE.md` | Fixes after the claude.ai audit of 4 Oct 06:40: sections 1–4 the code fixes (consent switches on both paths, the home card label, partner fixes), 5 the documents, 6 build and emulators, 7 git | 4 Oct, morning | sections 1–4 in force; sections 5–7 replaced by `15` |
 | `15-TRZECH_AGENTOW.md` | Round of three parallel sessions: A1 consent and logic (14, sections 1–4), A2 watch face and visits, A3 Health Sim closer to the HUAWEI Health layout, documents and merge | 4 Oct, morning | replaced sections 5–7 of `14` |
 | `14-TEKSTY_UI_DO_ZASOBOW.md` | UI texts of `entry`, `watch` and the card moved into string resources (`$r`), English unchanged; sentences built in `common` left for a second step | 4 Oct 08:10 | prepared by Claude in the review session, not run yet |
+| `14-HES_VNEXT_DOKONCZENIE.md` | HES vNext on top of the two profiles: exact coverage, no NaN or Infinity, the profile switch on the Report tab, documents | 4 Oct 08:20 | done on `feature/hes-vnext-fix`; what differs from the brief is in `AI_WORKFLOW.md` |
 
 Order of use: `00` first (it replaced `1`–`9` and `10`), then `11`–`13`, then `14`, then `15`. `15` replaced
 sections 5–7 of `14` (documents, build and emulators, git) with its own work for the third session; sections 1–4

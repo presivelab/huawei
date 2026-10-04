@@ -288,7 +288,7 @@ export {
   VerifyResult
 } from './src/main/ets/claim/PartnerVerifier';
 export { DeviceRandom } from './src/main/ets/platform/DeviceRandom';
-// HES-Lite v1.0: the scoring engine, rebuilt from the specification. Pure logic. See docs/HES.md.
+// HES vNext: the scoring engine with the two score profiles. Pure logic. See docs/HES.md.
 export {
   copyHesDay,
   emptyHesDay,
@@ -298,6 +298,7 @@ export {
   HesConfidence,
   HesDay,
   HesPoint,
+  HesProfile,
   HesResult,
   HesStatus,
   HesWhy,
@@ -305,11 +306,16 @@ export {
 } from './src/main/ets/hes/HesTypes';
 export { piecewiseScore } from './src/main/ets/hes/HesPiecewise';
 export {
+  hesComponentsFor,
   hesDefinition,
+  hesProfileLabel,
+  hesWeightPermille,
   HES_COMPONENTS,
   HES_CONFIDENCE_HIGH_MIN,
   HES_CONFIDENCE_MEDIUM_MIN,
+  HES_DEFAULT_PROFILE,
   HES_HRR_WINDOW_DAYS,
+  HES_HRV_WINDOW_DAYS,
   HES_TIER_A_MIN,
   HES_TIER_B_MIN,
   HES_VO2MAX_WINDOW_DAYS,
@@ -408,7 +414,10 @@ export {
   BENEFIT_PARTIAL_LABEL,
   benefitLabel,
   benefitLevel,
-  benefitReason
+  benefitReason,
+  DISCOUNT_NONE_LINE,
+  discountLine,
+  discountPct
 } from './src/main/ets/report/Benefit';
 export {
   FW_TAB_EVIDENCE,
@@ -437,7 +446,14 @@ export {
   engineReportFromPerson,
   engineSessionFrom,
   HEALTH_SIM_LABEL,
-  wearMonthFrom
+  wearMonthFrom,
+  engineReportFor,
+  engineReportFromPersonFor,
+  profileChoice,
+  profileFromChoice,
+  profileNote,
+  SHARE_PROFILE,
+  shareProfileLine
 } from './src/main/ets/report/EngineReports';
 // Health Sim: the simulator app that stands in for HUAWEI Health hands its data over in this format.
 export { dayWithScopes } from './src/main/ets/health/HealthSimPayload';

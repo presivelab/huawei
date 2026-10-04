@@ -98,5 +98,12 @@ export default function cardDigestTest() {
       expect(buildCardDigest(HealthStatus.DEMO, -5, true).coveragePct).assertEqual(CARD_COVERAGE_NONE);
       expect(buildCardDigest(HealthStatus.DEMO, 84.6, true).coveragePct).assertEqual(85);
     });
+
+    it('a coverage on a half point is kept as it is: 87.5%', 0, () => {
+      const digest = buildCardDigest(HealthStatus.DEMO, 87.5, true);
+      expect(digest.coveragePct).assertEqual(87.5);
+      expect(cardCoverageText(digest)).assertEqual('87.5%');
+      expect(cardCoverageText(buildCardDigest(HealthStatus.DEMO, 75, true))).assertEqual('75%');
+    });
   });
 }

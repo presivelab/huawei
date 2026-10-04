@@ -10,12 +10,15 @@
 //   - heart-rate recovery: no aggregation is given either. The median of the valid sessions is used;
 //   - VO2max: the latest valid estimate, as written;
 //   - sleep duration is scored in hours (the curve's unit); the history carries minutes;
-//   - component scores are kept unrounded. Only the final score is rounded (section 4.2).
-import { HES_COMPONENTS, HES_DAYS_PER_WEEK } from './HesCurves';
+//   - component scores are kept unrounded. Only the final score is rounded (section 4.2);
+//   - a raw value that is not a finite number at or above zero makes the component not available
+//     (HES vNext section 16). Each reading is finite, but a mean of very large readings can overflow
+//     to Infinity; such a component has no raw value and no score, like any other missing component.
+import { HES_DAYS_PER_WEEK, HES_DEFAULT_PROFILE, hesComponentsFor } from './HesCurves';
 import { hesMean, hesMedian, hesSampleSd, hesUnwrapClock, sleepRelativeMinutes, sleepTimingSd } from './HesMath';
 import { piecewiseScore } from './HesPiecewise';
 import { isSufficient, quality, validDays } from './HesSufficiency';
-import { HesComponentDefinition, HesComponentId, HesComponentResult, HesDay, HES_MISSING } from './HesTypes';
+import { HesComponentDefinition, HesComponentId, HesComponentResult, HesDay, HesProfile, HES_MISSING } from './HesTypes';
 
 const MINUTES_PER_HOUR: number = 60;
 const PERMILLE: number = 1000;
@@ -98,6 +101,11 @@ export function rawValueOf(id: HesComponentId, valid: HesDay[]): number {
   }
 }
 
+/** A raw value the curves can score: a finite number at or above zero. Never NaN or Infinity. */
+function isUsableRaw(rawValue: number): boolean {
+  return Number.isFinite(rawValue) && rawValue >= 0;
+}
+
 /** Score of a raw value on the component's curve, 0..100, not rounded. */
 export function componentScore(def: HesComponentDefinition, rawValue: number): number {
   return piecewiseScore(rawValue, def.curve);
@@ -109,12 +117,18 @@ export function componentScore(def: HesComponentDefinition, rawValue: number): n
  */
 export function evaluateComponent(def: HesComponentDefinition, history: HesDay[]): HesComponentResult {
   const valid = validDays(def, history);
-  const available = isSufficient(valid.length, def.minCount);
+  let available = isSufficient(valid.length, def.minCount);
   let rawValue = HES_MISSING;
   let score = HES_MISSING;
   if (available) {
-    rawValue = rawValueOf(def.id, valid);
-    score = componentScore(def, rawValue);
+    const raw = rawValueOf(def.id, valid);
+    const points = isUsableRaw(raw) ? componentScore(def, raw) : HES_MISSING;
+    if (Number.isFinite(points) && points >= 0) {
+      rawValue = raw;
+      score = points;
+    } else {
+      available = false;
+    }
   }
   return {
     id: def.id,
@@ -133,11 +147,13 @@ export function evaluateComponent(def: HesComponentDefinition, history: HesDay[]
   };
 }
 
-/** All eight components, in the order of HES_COMPONENTS. */
-export function evaluateComponents(history: HesDay[]): HesComponentResult[] {
+/** All eight components with the base weights of `profile`, in the order of HES_COMPONENTS. */
+export function evaluateComponents(history: HesDay[],
+  profile: HesProfile = HES_DEFAULT_PROFILE): HesComponentResult[] {
+  const defs = hesComponentsFor(profile);
   const out: HesComponentResult[] = [];
-  for (let i = 0; i < HES_COMPONENTS.length; i++) {
-    out.push(evaluateComponent(HES_COMPONENTS[i], history));
+  for (let i = 0; i < defs.length; i++) {
+    out.push(evaluateComponent(defs[i], history));
   }
   return out;
 }

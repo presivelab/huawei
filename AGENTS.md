@@ -108,7 +108,8 @@ two disagree.
   Without a score no code is signed; a score without eligibility is shared as "Eligible: no" and the reason
   never enters the claim.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
-- Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
+- Scoring: HES vNext (the curves of HES-Lite v1.0, two profiles: health insurance and life insurance;
+  `common/src/main/ets/hes/`), the six personas and the wear month
   (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
   `feature/hes-lite` → `feature/engine-reports`; the package `fairwear-ui` never arrived. Description and
   decisions: `docs/HES.md`.

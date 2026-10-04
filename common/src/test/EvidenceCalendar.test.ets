@@ -69,9 +69,9 @@ export default function evidenceCalendarTest() {
     it('a period that is not a date still gives a calendar', 0, () => {
       const r: PersonaReport = previewReport('ania');
       const copy: PersonaReport = {
-        id: r.id, name: r.name, period: r.period, periodIso: 'this month', hes: r.hes, tier: r.tier,
+        id: r.id, name: r.name, profile: r.profile, period: r.period, periodIso: 'this month', hes: r.hes, tier: r.tier,
         coveragePct: r.coveragePct, confidence: r.confidence, eligible: r.eligible, benefit: r.benefit,
-        benefitReason: r.benefitReason, pointsToNext: r.pointsToNext, components: r.components, wear: r.wear,
+        benefitReason: r.benefitReason, discountPct: r.discountPct, pointsToNext: r.pointsToNext, components: r.components, wear: r.wear,
         live: r.live, whatIf: r.whatIf
       };
       const cells = calendarCells(copy);

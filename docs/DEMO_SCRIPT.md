@@ -43,12 +43,12 @@ Everything in the app was built during HackYeah 2026.
 | 0:00 | Health Sim · Health           | start on Health Sim                                                                       | the banner "SIMULATED DATA · stands in for HUAWEI Health"; "Activity records" with the Steps and Exercise rings; one card per metric. Our simulator, laid out like a health app, not a HUAWEI app |
 | 0:05 | Health Sim · Me               | tab **Me** → Connected apps → **Open FairWear**; if the system asks "Allow Health Sim to open FairWear?", **Allow** | the FairWear card: "Simulated integration point · real HUAWEI Health has no such card"; FairWear opens on its welcome screen: "HUAWEI Health · Not connected"; what is read, what never leaves the phone |
 | 0:10 | Connect → Health Sim | **Connect HUAWEI Health**; if the system asks "Allow FairWear to open Health Sim?", **Allow**; in Health Sim **Allow** | Health Sim opens with the banner "SIMULATED DATA · stands in for HUAWEI Health" and its own consent (the first jump after an install may go straight to Health Sim, without the system's question): the full list of data types. It is our simulator, not a HUAWEI app |
-| 0:20 | FairWear consent              | scroll down, tick the box, **Agree and continue** (leave the switches on)                        | FairWear's own consent (GDPR Art. 9), one switch per data type. Leave them on: with HRV off Ania reads 93 · A, coverage 90% and the numbers below change                                                                                                                       |
+| 0:20 | FairWear consent              | scroll down, tick the box, **Agree and continue** (leave the switches on)                        | FairWear's own consent (GDPR Art. 9), one switch per data type. Leave them on: with HRV off Ania reads 93 · A, coverage 92.5% and the numbers below change                                                                                                                       |
 | 0:30 | Report · Ania                 | —                                                                                         | 92 · A, coverage 100%, confidence High, "Full benefit · Eligible", 30 of 30 days, "Health Sim · Simulated data"                                                                          |
-| 0:45 | Report · Marek, then Kasia    | persona chip → Marek, then Kasia                                                          | both 26 of 30 days; Marek B / 75 with "No benefit" and "3 suspicious breaks"; Kasia B / 73 with "Partial benefit": the same wear, a different pattern                                  |
+| 0:45 | Report · Marek, then Kasia    | persona chip → Marek, then Kasia                                                          | both 26 of 30 days; Marek B / 75 with "No benefit" and "3 suspicious breaks"; Kasia B / 71 with "Partial benefit": the same wear, a different pattern                                  |
 | 1:05 | Evidence › Calendar · Marek   | persona chip → Marek, **Evidence**, tap Thu 17 Sep                                        | "Flagged" and the flag rule; "Off the wrist 13:05 for 5 h 35 min after resting HR +9 bpm and 46% fewer steps in the 24 h before"; **Appeal this day** → "Appeal sent", score unchanged |
 | 1:30 | Why this tier · Tomek         | persona chip → Tomek, **Why this tier**                                                   | 79 · B, one point to A; Strongest / To improve / Missing data; the one change that reaches A; "How it's calculated"                                                                    |
-| 1:50 | Report · Ewa, Live card       | persona chip → Ewa; move the heart-rate slider; **Close the day**; **Reset demo**         | the slider changes only the Live card; Close the day: the toast "Day closed · HES 64 · Tier B" (from C / 59); Reset: "Demo reset · HES 59 · Tier C"                                    |
+| 1:50 | Report · Ewa, Live card       | persona chip → Ewa; move the heart-rate slider; **Close the day**; **Reset demo**         | the slider changes only the Live card; Close the day: the toast "Day closed · HES 62 · Tier B" (from C / 58); Reset: "Demo reset · HES 58 · Tier C"                                    |
 | 2:10 | Share · Marek                 | persona chip → Marek, **Share**                                                           | QR code; "What the partner sees": "Eligible: no · 3 suspicious breaks. The reason stays on this phone."; "HUKS key" under the QR code; **Technical details**: Key ID, One-time number, Signed at                                         |
 | 2:30 | Partner view · demo           | **Open partner view (demo)** → **Use the code from this phone**                           | "Signature valid", the checks in order, "The code does not say why."                                                                                                                   |
 | 2:45 | Try to cheat                  | **Verify the same code again**; **Change tier to A and verify**                           | "Already used · stopped at: not used before"; "Invalid signature · stopped at: signature"; back on Share: "Used once · no longer valid"                                                |
@@ -59,19 +59,19 @@ Everything in the app was built during HackYeah 2026.
 | 3:55 | Settings                      | **Disconnect HUAWEI Health**                                                              | back to "Not connected"; consent is asked again from step 1                                                                                                                            |
 
 Consent switches, for a longer demo: with HRV switched off in FairWear's consent, Ania reads 93 · A, coverage
-90%, confidence High. This is the same on the Health Sim path ("Health Sim · Simulated data") and on the
-built-in path ("HUAWEI Health · Demo data"). "Close the day" keeps the coverage at 90%: "Why this tier" lists
+92.5%, confidence High. This is the same on the Health Sim path ("Health Sim · Simulated data") and on the
+built-in path ("HUAWEI Health · Demo data"). "Close the day" keeps the coverage at 92.5%: "Why this tier" lists
 HRV under "Missing data" as "Not measured".
 
 Optional: Health Sim › any metric card opens that metric's last 30 days; the home-screen card (long-press the icon → Widgets: source, coverage and whether a score is ready,
 never the tier); the icon shortcut "How Watch Link works"; `node tools/watch-phone-relay.mjs once --drop <seq>`
 with the older of two unsent days as `<seq>` → "… of … days verified" and "1 day never reached this phone".
 
-Close the day per persona, for a longer demo: Tomek reaches A on the fourth closed day; Ania stays A; Marek
+Close the day per persona, for a longer demo: Tomek reaches A on the sixth closed day; Ania stays A; Marek
 stays flagged; Ola does not reach a score (she wears the watch too rarely at night). Reset after each.
 
-**Scores near a tier edge.** Ewa (C / 59, 1 point to B) and Tomek (B / 79, 1 point to A) sit on an edge on
-purpose. One **Close the day** moves Ewa to B / 64; Tomek reaches A after four. Close a day only where this
+**Scores near a tier edge.** Ewa (C / 58, 2 points to B) and Tomek (B / 79, 1 point to A) sit on an edge on
+purpose. One **Close the day** moves Ewa to B / 62; Tomek reaches A after six. Close a day only where this
 script says so, and **Reset demo** before you move to the next persona.
 
 **After installing the build with signed ACKs.** A watch paired with an older build counts as not paired
@@ -107,7 +107,7 @@ The watch then reads `Pairing: Paired · phone <code>`.
 - Health Sim is not installed, or does not answer: nothing breaks. On the phone the Connect page says
   "Health Sim is not installed: built-in demo data" and offers the labelled demo placeholder (**Simulate
   consent**); the Report then reads "HUAWEI Health · Demo data" with the same six results (and, with HRV
-  switched off in the consent, the same 93 · A and 90% for Ania). Start the recording on FairWear's welcome
+  switched off in the consent, the same 93 · A and 92.5% for Ania). Start the recording on FairWear's welcome
   screen instead of Health Sim. On the watch the
   button answers "Health Sim not on this watch · built-in script" and the dial reads "DEMO ×300 · FEED".
   The rest of the script is the same. If the system's question "Allow FairWear to open Health Sim?" was

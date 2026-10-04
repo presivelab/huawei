@@ -5,8 +5,10 @@ import {
   BENEFIT_PARTIAL_LABEL,
   benefitLabel,
   benefitLevel,
-  benefitReason
+  benefitReason,
+  discountPct
 } from '../main/ets/report/Benefit';
+import { HesProfile } from '../main/ets/hes/HesTypes';
 import {
   BenefitLevel,
   ComponentId,
@@ -82,6 +84,16 @@ export default function reportTest() {
       expect(benefitLevel(true, 'D', true)).assertEqual(BenefitLevel.NONE);
     });
 
+    it('discount per profile: health 15 / 8 / 0, life 10 / 5 / 0, never negative', 0, () => {
+      expect(discountPct(HesProfile.HEALTH_WELLNESS, BenefitLevel.FULL)).assertEqual(15);
+      expect(discountPct(HesProfile.HEALTH_WELLNESS, BenefitLevel.PARTIAL)).assertEqual(8);
+      expect(discountPct(HesProfile.HEALTH_WELLNESS, BenefitLevel.NONE)).assertEqual(0);
+      expect(discountPct(HesProfile.LONGEVITY_WELLNESS, BenefitLevel.FULL)).assertEqual(10);
+      expect(discountPct(HesProfile.LONGEVITY_WELLNESS, BenefitLevel.PARTIAL)).assertEqual(5);
+      expect(discountPct(HesProfile.LONGEVITY_WELLNESS, BenefitLevel.NONE)).assertEqual(0);
+      expect(discountPct(HesProfile.HEALTH_WELLNESS, 'unknown')).assertEqual(0);
+    });
+
     it('benefit labels and reasons are readable text, never an enum name', 0, () => {
       expect(benefitLabel(BenefitLevel.FULL)).assertEqual(BENEFIT_FULL_LABEL);
       expect(benefitLabel(BenefitLevel.PARTIAL)).assertEqual(BENEFIT_PARTIAL_LABEL);
@@ -99,11 +111,11 @@ export default function reportTest() {
     it('preview: the six personas equal the expected results', 0, () => {
       expect(previewReports().length).assertEqual(6);
       expectPersona('ania', 92, ReportTier.A, 100, ReportConfidence.HIGH, BenefitLevel.FULL, true);
-      expectPersona('marek', 75, ReportTier.B, 85, ReportConfidence.HIGH, BenefitLevel.NONE, false);
-      expectPersona('kasia', 73, ReportTier.B, 70, ReportConfidence.MEDIUM, BenefitLevel.PARTIAL, true);
-      expectPersona('tomek', 79, ReportTier.B, 90, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
-      expectPersona('ewa', 59, ReportTier.C, 75, ReportConfidence.MEDIUM, BenefitLevel.NONE, true);
-      expectPersona('ola', HES_NONE, ReportTier.NONE, 43, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
+      expectPersona('marek', 75, ReportTier.B, 87.5, ReportConfidence.HIGH, BenefitLevel.NONE, false);
+      expectPersona('kasia', 71, ReportTier.B, 75, ReportConfidence.MEDIUM, BenefitLevel.PARTIAL, true);
+      expectPersona('tomek', 79, ReportTier.B, 92.5, ReportConfidence.HIGH, BenefitLevel.PARTIAL, true);
+      expectPersona('ewa', 58, ReportTier.C, 80, ReportConfidence.HIGH, BenefitLevel.NONE, true);
+      expectPersona('ola', HES_NONE, ReportTier.NONE, 47.5, ReportConfidence.INSUFFICIENT, BenefitLevel.NONE,
         false);
     });
 
@@ -261,13 +273,13 @@ export default function reportTest() {
       expect(json.indexOf('92')).assertEqual(-1);
       const ola = previewReport('ola');
       const olaJson = encodeCardDigest(buildCardDigest(HealthStatus.DEMO, ola.coveragePct, hasScore(ola)));
-      expect(olaJson.indexOf('"coveragePct":43') >= 0).assertTrue();
+      expect(olaJson.indexOf('"coveragePct":47.5') >= 0).assertTrue();
       expect(olaJson.indexOf('"resultReady":false') >= 0).assertTrue();
     });
 
     it('spoken texts: score ring, metric tile, month bar', 0, () => {
       expect(scoreSpoken(previewReport('ania'))).assertEqual('Score 92, tier A, coverage 100 percent');
-      expect(scoreSpoken(previewReport('ola'))).assertEqual('No score yet, coverage 43 percent');
+      expect(scoreSpoken(previewReport('ola'))).assertEqual('No score yet, coverage 47.5 percent');
       expect(metricSpoken('Steps', '9,412', '/day', true)).assertEqual('Steps, 9412 per day');
       expect(metricSpoken('Sleep', '7 h 24', 'min', true)).assertEqual('Sleep, 7 hours 24 minutes');
       expect(metricSpoken('Sleep regularity', '±22', 'min', true))

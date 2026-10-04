@@ -87,54 +87,54 @@ export default function consentScopesTest() {
   describe('Consent scopes', () => {
     it('with no scopes given the six personas have the results they had before', 0, () => {
       expectResult(engineSession('ania').result(), 92, 'A', 100, HesConfidence.HIGH);
-      expectResult(engineSession('marek').result(), 75, 'B', 85, HesConfidence.HIGH);
-      expectResult(engineSession('kasia').result(), 73, 'B', 70, HesConfidence.MEDIUM);
-      expectResult(engineSession('tomek').result(), 79, 'B', 90, HesConfidence.HIGH);
-      expectResult(engineSession('ewa').result(), 59, 'C', 75, HesConfidence.MEDIUM);
+      expectResult(engineSession('marek').result(), 75, 'B', 87.5, HesConfidence.HIGH);
+      expectResult(engineSession('kasia').result(), 71, 'B', 75, HesConfidence.MEDIUM);
+      expectResult(engineSession('tomek').result(), 79, 'B', 92.5, HesConfidence.HIGH);
+      expectResult(engineSession('ewa').result(), 58, 'C', 80, HesConfidence.HIGH);
       const ola = engineSession('ola').result();
       expect(ola.status).assertEqual(HesStatus.INSUFFICIENT_DATA);
-      expect(ola.coverage).assertEqual(43);
+      expect(ola.coverage).assertEqual(47.5);
       expect(ola.confidence).assertEqual(HesConfidence.INSUFFICIENT_DATA);
     });
 
-    it('with no scopes given Ewa reaches B / 64 after one closed day, on both paths', 0, () => {
+    it('with no scopes given Ewa reaches B / 62 after one closed day, on both paths', 0, () => {
       const builtIn = engineSession('ewa');
-      expectResult(builtIn.closeDay(), 64, 'B', builtIn.result().coverage, builtIn.result().confidence);
+      expectResult(builtIn.closeDay(), 62, 'B', builtIn.result().coverage, builtIn.result().confidence);
       const sim = fromHealthSim('ewa', ALL_HEALTH_SCOPES);
-      expectResult(sim.result(), 59, 'C', 75, HesConfidence.MEDIUM);
-      expect(sim.closeDay().score).assertEqual(64);
+      expectResult(sim.result(), 58, 'C', 80, HesConfidence.HIGH);
+      expect(sim.closeDay().score).assertEqual(62);
       expect(sim.result().tier).assertEqual('B');
     });
 
-    it('Ania without HRV: A / 93, coverage 90%, High, the same on the built-in and the Health Sim path', 0, () => {
+    it('Ania without HRV: A / 93, coverage 92.5%, High, the same on the built-in and the Health Sim path', 0, () => {
       const scopes = without(HealthScope.HRV);
-      expectResult(engineSession('ania', scopes).result(), 93, 'A', 90, HesConfidence.HIGH);
-      expectResult(fromHealthSim('ania', scopes).result(), 93, 'A', 90, HesConfidence.HIGH);
+      expectResult(engineSession('ania', scopes).result(), 93, 'A', 92.5, HesConfidence.HIGH);
+      expectResult(fromHealthSim('ania', scopes).result(), 93, 'A', 92.5, HesConfidence.HIGH);
     });
 
-    it('Ania with the four basic types: A / 96, 70%, Medium, and eight closed days do not bring the rest back',
+    it('Ania with the four basic types: A / 96, 75%, Medium, and eight closed days do not bring the rest back',
       0, () => {
         const sessions: HesSession[] = [engineSession('ania', BASICS), fromHealthSim('ania', BASICS)];
         for (let s = 0; s < sessions.length; s++) {
           const session = sessions[s];
-          expectResult(session.result(), 96, 'A', 70, HesConfidence.MEDIUM);
+          expectResult(session.result(), 96, 'A', 75, HesConfidence.MEDIUM);
           for (let i = 0; i < 8; i++) {
             session.closeDay();
           }
           const after = session.result();
-          expect(after.coverage).assertEqual(70);
+          expect(after.coverage).assertEqual(75);
           expect(validCount(after, HesComponentId.CRF)).assertEqual(0);
           expect(validCount(after, HesComponentId.HRV)).assertEqual(0);
           expect(validCount(after, HesComponentId.HRR)).assertEqual(0);
         }
       });
 
-    it('Ania without sleep has no score, coverage 73%, on both paths', 0, () => {
+    it('Ania without sleep has no score, coverage 72.5%, on both paths', 0, () => {
       const scopes = without(HealthScope.SLEEP);
       const results: HesResult[] = [engineSession('ania', scopes).result(), fromHealthSim('ania', scopes).result()];
       for (let i = 0; i < results.length; i++) {
         expect(results[i].status).assertEqual(HesStatus.INSUFFICIENT_DATA);
-        expect(results[i].coverage).assertEqual(73);
+        expect(results[i].coverage).assertEqual(72.5);
       }
     });
 
@@ -177,7 +177,7 @@ export default function consentScopesTest() {
     });
 
     it('an unknown id gives the default persona with the scopes applied', 0, () => {
-      expectResult(engineSession('nobody', without(HealthScope.HRV)).result(), 93, 'A', 90, HesConfidence.HIGH);
+      expectResult(engineSession('nobody', without(HealthScope.HRV)).result(), 93, 'A', 92.5, HesConfidence.HIGH);
     });
   });
 }

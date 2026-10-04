@@ -1,12 +1,16 @@
-// HES-Lite v1.0: every number of the model in one place (specification sections 2, 3, 6, 7, 8 and 9).
+// HES vNext: every number of the model in one place. Curves, counts, windows and thresholds come from
+// HES-Lite v1.0 and are unchanged in vNext; vNext adds two score profiles with their own base weights and
+// shortens the HRV window to the recent 14 nights.
 // All weights, curves, thresholds and minimum counts are prototype product assumptions.
 // They are copied from the specification and are not tuned to make any persona fit.
-import { HesComponentDefinition, HesComponentId, HesPoint } from './HesTypes';
+import { HesComponentDefinition, HesComponentId, HesPoint, HesProfile } from './HesTypes';
 
 /** Rolling window of completed days for steps, MVPA, resting heart rate, sleep and HRV. */
 export const HES_WINDOW_DAYS: number = 28;
 /** MVPA is reported per week. */
 export const HES_DAYS_PER_WEEK: number = 7;
+/** HRV looks at the recent 14 nights (vNext; HES-Lite v1.0 used the 28-day window). */
+export const HES_HRV_WINDOW_DAYS: number = 14;
 /** Heart-rate recovery sessions count when they are at most this many days old (section 7). */
 export const HES_HRR_WINDOW_DAYS: number = 60;
 /** A VO2max estimate counts when it is at most this many days old (sections 6.1 and 7). */
@@ -128,14 +132,16 @@ const HRR_CURVE: HesPoint[] = [
 /**
  * The eight components in the order of the weight table (section 2.1), with the minimum and target counts
  * of section 7. The labels are the ones the phone screens use; the specification names are in the comments.
+ * `weightPermille` here is the weight of the default profile; `hesComponentsFor` gives the components with
+ * the weights of any profile.
  */
 export const HES_COMPONENTS: HesComponentDefinition[] = [
   {
-    // CRF / VO2max, 15%, Advanced. 1 valid estimate in 90 days, target 2.
+    // CRF / VO2max, Advanced. 1 valid estimate in 90 days, target 2.
     id: HesComponentId.CRF,
     label: 'VO₂max',
     unit: 'percentile',
-    weightPermille: 150,
+    weightPermille: 125,
     requiredCore: false,
     minCount: 1,
     targetCount: 2,
@@ -143,11 +149,11 @@ export const HES_COMPONENTS: HesComponentDefinition[] = [
     curve: CRF_CURVE
   },
   {
-    // Resting Heart Rate, 15%, Core. 10 valid days, target 14.
+    // Resting Heart Rate, Core. 10 valid days, target 14.
     id: HesComponentId.RHR,
     label: 'Resting heart rate',
     unit: 'bpm',
-    weightPermille: 150,
+    weightPermille: 125,
     requiredCore: true,
     minCount: 10,
     targetCount: 14,
@@ -155,11 +161,11 @@ export const HES_COMPONENTS: HesComponentDefinition[] = [
     curve: RHR_CURVE
   },
   {
-    // MVPA, 15%, Core. 14 valid days, target 21.
+    // MVPA, Core. 14 valid days, target 21.
     id: HesComponentId.MVPA,
     label: 'Active minutes',
     unit: 'min/week',
-    weightPermille: 150,
+    weightPermille: 200,
     requiredCore: true,
     minCount: 14,
     targetCount: 21,
@@ -167,7 +173,7 @@ export const HES_COMPONENTS: HesComponentDefinition[] = [
     curve: MVPA_CURVE
   },
   {
-    // Sleep Timing Regularity, 15%, Core. 14 valid nights, target 21.
+    // Sleep Timing Regularity, Core. 14 valid nights, target 21.
     id: HesComponentId.SLEEP_REGULARITY,
     label: 'Sleep timing regularity',
     unit: 'min',
@@ -179,11 +185,11 @@ export const HES_COMPONENTS: HesComponentDefinition[] = [
     curve: SLEEP_REGULARITY_CURVE
   },
   {
-    // Steps, 12.5%, Core. 14 valid days, target 21.
+    // Steps, Core. 14 valid days, target 21.
     id: HesComponentId.STEPS,
     label: 'Daily steps',
     unit: 'steps/day',
-    weightPermille: 125,
+    weightPermille: 150,
     requiredCore: true,
     minCount: 14,
     targetCount: 21,
@@ -191,7 +197,7 @@ export const HES_COMPONENTS: HesComponentDefinition[] = [
     curve: STEPS_CURVE
   },
   {
-    // Sleep Duration, 12.5%, Core. 14 valid nights, target 21.
+    // Sleep Duration, Core. 14 valid nights, target 21.
     id: HesComponentId.SLEEP_DURATION,
     label: 'Sleep duration',
     unit: 'h',
@@ -203,19 +209,19 @@ export const HES_COMPONENTS: HesComponentDefinition[] = [
     curve: SLEEP_DURATION_CURVE
   },
   {
-    // HRV, 10%, Advanced. 7 valid nights, target 14.
+    // HRV, Advanced. 7 valid nights of the recent 14, target 14.
     id: HesComponentId.HRV,
     label: 'HRV',
     unit: 'percentile',
-    weightPermille: 100,
+    weightPermille: 75,
     requiredCore: false,
     minCount: 7,
     targetCount: 14,
-    windowDays: HES_WINDOW_DAYS,
+    windowDays: HES_HRV_WINDOW_DAYS,
     curve: HRV_CURVE
   },
   {
-    // HRR, 5%, Advanced. 2 valid sessions in 60 days, target 3.
+    // HRR, Advanced. 2 valid sessions in 60 days, target 3.
     id: HesComponentId.HRR,
     label: 'Heart-rate recovery',
     unit: 'bpm',
@@ -236,4 +242,69 @@ export function hesDefinition(id: HesComponentId): HesComponentDefinition {
     }
   }
   throw new Error('Unknown HES component');
+}
+
+/** The profile a score uses when none is named: monthly health insurance. */
+export const HES_DEFAULT_PROFILE: HesProfile = HesProfile.HEALTH_WELLNESS;
+
+/**
+ * Base weights per profile, in thousandths; each profile sums to 1000 (HES vNext section 1).
+ *
+ *                      HEALTH_WELLNESS  LONGEVITY_WELLNESS
+ *   crf                      125               225
+ *   rhr                      125               150
+ *   mvpa                     200               150
+ *   steps                    150               175
+ *   sleepRegularity          150               100
+ *   sleepDuration            125                75
+ *   hrv                       75                75
+ *   hrr                       50                50
+ */
+export function hesWeightPermille(profile: HesProfile, id: HesComponentId): number {
+  const longevity: boolean = profile === HesProfile.LONGEVITY_WELLNESS;
+  switch (id) {
+    case HesComponentId.CRF:
+      return longevity ? 225 : 125;
+    case HesComponentId.RHR:
+      return longevity ? 150 : 125;
+    case HesComponentId.MVPA:
+      return longevity ? 150 : 200;
+    case HesComponentId.STEPS:
+      return longevity ? 175 : 150;
+    case HesComponentId.SLEEP_REGULARITY:
+      return longevity ? 100 : 150;
+    case HesComponentId.SLEEP_DURATION:
+      return longevity ? 75 : 125;
+    case HesComponentId.HRV:
+      return 75;
+    case HesComponentId.HRR:
+      return 50;
+    default:
+      return 0;
+  }
+}
+
+/** The eight components with the base weights of one profile, in the order of HES_COMPONENTS. */
+export function hesComponentsFor(profile: HesProfile): HesComponentDefinition[] {
+  const out: HesComponentDefinition[] = [];
+  for (let i = 0; i < HES_COMPONENTS.length; i++) {
+    const def = HES_COMPONENTS[i];
+    out.push({
+      id: def.id,
+      label: def.label,
+      unit: def.unit,
+      weightPermille: hesWeightPermille(profile, def.id),
+      requiredCore: def.requiredCore,
+      minCount: def.minCount,
+      targetCount: def.targetCount,
+      windowDays: def.windowDays,
+      curve: def.curve
+    });
+  }
+  return out;
+}
+
+/** The short name a screen shows for a profile. */
+export function hesProfileLabel(profile: HesProfile): string {
+  return profile === HesProfile.LONGEVITY_WELLNESS ? 'Life insurance' : 'Health insurance';
 }

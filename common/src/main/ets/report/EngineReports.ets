@@ -38,7 +38,9 @@ import { healthSourceLabel } from '../health/HealthStatusLabel';
 import { componentScore, equivalentMvpa } from '../hes/HesComponents';
 import {
   hesDefinition,
+  hesProfileLabel,
   HES_DAYS_PER_WEEK,
+  HES_DEFAULT_PROFILE,
   HES_MINUTES_PER_DAY,
   HES_TIER_A_MIN,
   HES_TIER_B_MIN
@@ -63,6 +65,7 @@ import {
   HesConfidence,
   HesDay,
   HesPoint,
+  HesProfile,
   HesResult,
   HesStatus,
   HES_MISSING
@@ -71,7 +74,7 @@ import { DEFAULT_THRESHOLDS } from '../model/defaults';
 import { Thresholds } from '../model/types';
 import { buildWearMonth, WearBreakResult, WearDayResult, WearDayState, WearMonthResult } from '../wear/WearMonth';
 import { WearPersonas } from '../wear/WearPersonas';
-import { benefitLevel, benefitReason } from './Benefit';
+import { benefitLevel, benefitReason, discountLine, discountPct } from './Benefit';
 import {
   BAR_NO_DATA,
   ComponentId,
@@ -446,9 +449,11 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
     steps: liveSteps >= 0 ? liveSteps : HES_MISSING
   };
   const counterfactual = engineWhatIf(result);
+  const benefit: string = benefitLevel(eligible, result.tier, scored);
   return {
     id: id,
     name: HesPersonas.displayName(id),
+    profile: result.profile,
     period: periodLine(month.period, history),
     periodIso: month.period,
     hes: scored ? result.score : HES_NONE,
@@ -456,8 +461,9 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
     coveragePct: result.coverage,
     confidence: confidenceOf(result.confidence),
     eligible: eligible,
-    benefit: benefitLevel(eligible, result.tier, scored),
+    benefit: benefit,
     benefitReason: benefitReason(eligible, result.tier, scored, month.flagged, month.suspiciousBreaks),
+    discountPct: discountPct(result.profile, benefit),
     pointsToNext: scored ? pointsToNextTier(result.score) : POINTS_UNKNOWN,
     components: rowsOf(result, history, scored, source),
     wear: wearOf(month),
@@ -510,7 +516,7 @@ function resultWith(result: HesResult, id: HesComponentId, toRaw: number): HesRe
     }
     components.push(c);
   }
-  return composeHes(components);
+  return composeHes(components, result.profile);
 }
 
 // The points of a curve between the value today and the top of the curve, the nearest first. For steps
@@ -741,6 +747,77 @@ export function wearMonthFrom(person: HealthSimPerson): WearMonthResult {
 export function engineReportFromPerson(person: HealthSimPerson, session: HesSession): PersonaReport {
   return build(knownId(person.id), session.result(), session.history(), wearMonthFrom(person),
     session.liveHeartRate(), session.liveSteps(), HEALTH_SIM_LABEL);
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The score profile chosen on the Report tab
+// ---------------------------------------------------------------------------------------------------------
+
+/**
+ * The profile the code for the partner is made with: health insurance, always. Share, the partner view,
+ * the benefit behind the code, the home-screen card and the spoken texts use the session's own report
+ * (`engineReportOf`), whatever profile the Report tab shows.
+ */
+export const SHARE_PROFILE: HesProfile = HES_DEFAULT_PROFILE;
+
+/** "For: Health insurance", the line on the Share tab that names the product the code is for. */
+export function shareProfileLine(): string {
+  return 'For: ' + hesProfileLabel(SHARE_PROFILE);
+}
+
+/**
+ * The report of a persona for one score profile, on the session's completed days and live values as they
+ * stand now. Only the weights differ: score, tier, coverage, confidence, the points to the next tier, the
+ * effective weights and the discount follow the profile; wear and the live values do not.
+ * The session is not changed, so its own report stays the one Share uses.
+ */
+export function engineReportFor(id: string, session: HesSession, profile: HesProfile): PersonaReport {
+  const known = knownId(id);
+  const history = session.history();
+  return build(known, computeHes(history, profile), history, wearMonthOf(known), session.liveHeartRate(),
+    session.liveSteps());
+}
+
+/** The same for a person whose data came from Health Sim. */
+export function engineReportFromPersonFor(person: HealthSimPerson, session: HesSession,
+  profile: HesProfile): PersonaReport {
+  const history = session.history();
+  return build(knownId(person.id), computeHes(history, profile), history, wearMonthFrom(person),
+    session.liveHeartRate(), session.liveSteps(), HEALTH_SIM_LABEL);
+}
+
+const CHOICE_SEPARATOR: string = '|';
+
+/**
+ * The profile choice of the Report tab as one stored text: the persona it was made for and the profile.
+ * It is kept with the persona, so another persona starts on the default profile again; it is kept in
+ * memory only, so a restart does too.
+ */
+export function profileChoice(personaId: string, profile: HesProfile): string {
+  return personaId + CHOICE_SEPARATOR + profile;
+}
+
+/** The profile the Report tab shows for this persona: the stored choice when it was made for it. */
+export function profileFromChoice(choice: string, personaId: string): HesProfile {
+  if (choice === profileChoice(personaId, HesProfile.LONGEVITY_WELLNESS)) {
+    return HesProfile.LONGEVITY_WELLNESS;
+  }
+  return HES_DEFAULT_PROFILE;
+}
+
+/**
+ * The line under the profile switch: the discount of this month for the profile on screen, and, away from
+ * the Share profile, that the code for the partner stays on health insurance. Without a score there is no
+ * code, so nothing is said about it.
+ */
+export function profileNote(report: PersonaReport): string {
+  const life: boolean = report.profile === HesProfile.LONGEVITY_WELLNESS;
+  const discount: string = discountLine(life ? HesProfile.LONGEVITY_WELLNESS : HES_DEFAULT_PROFILE,
+    report.discountPct);
+  if (!life || report.hes === HES_NONE) {
+    return discount;
+  }
+  return discount + ' · The code on Share is for ' + hesProfileLabel(SHARE_PROFILE).toLowerCase();
 }
 
 /** The report of one persona. An unknown id gives the default persona; it never throws. */

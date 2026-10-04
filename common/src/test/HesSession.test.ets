@@ -117,7 +117,7 @@ export default function hesSessionTest() {
       expect(session.history().length).assertEqual(44);
       expect(byId(session.result(), 'sleepDuration').available).assertFalse();
       expect(session.result().score).assertEqual(HES_MISSING);
-      expect(session.result().coverage).assertEqual(43);
+      expect(session.result().coverage).assertEqual(47.5);
     });
 
     it('the session does not change the history it was given', 0, () => {
