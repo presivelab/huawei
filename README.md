@@ -53,7 +53,8 @@ What we observed on the emulator with nothing set in the Virtual sensor panel: h
   values". The preview lives in `common/src/main/ets/report/PreviewReports.ets`; the one place that chooses
   where reports come from is `entry/src/main/ets/report/ServiceLocator.ets`.
 - After consent the phone shows three tabs: Report (the month of the selected demo persona), Evidence (the
-  watch days) and Share (not built yet). Benefit level: eligible and tier A is a full benefit, eligible and
+  watch days) and Share (the signed tier claim as a QR code, and a demo partner view that verifies it, refuses
+  the same code a second time and refuses a code whose tier was changed). Benefit level: eligible and tier A is a full benefit, eligible and
   tier B a partial benefit, anything else no benefit this month, always shown with its reason.
 - What is real and what is simulated: the table in `docs/ARCHITECTURE.md`.
 

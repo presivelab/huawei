@@ -463,5 +463,32 @@ export {
   withoutAppealsOf
 } from './src/main/ets/report/EvidenceCalendar';
 export { scoreEvidence, ScoreEvidence, weightText, whySections, WhySections } from './src/main/ets/report/WhySections';
+// Share and the partner view of the demo: the offer of a report, the signed token, the partner's reading.
+export {
+  CHECK_LABELS,
+  CheckRow,
+  checkRows,
+  CheckState,
+  claimBenefitLabel,
+  claimLedgerEntry,
+  claimLine,
+  claimPeriodText,
+  claimTierLine,
+  keySourceLabel,
+  LEDGER_DESTINATION_PARTNER,
+  LEDGER_KIND_CLAIM,
+  mintClaimToken,
+  ShareOffer,
+  shareOffer,
+  SHARE_NO_SCORE_REASON,
+  SHARE_NO_SCORE_TIER,
+  SHARE_REASON_STAYS,
+  stoppedAt,
+  tamperedTierToken,
+  tamperTargetTier,
+  tokenClaim,
+  tokenLengthLine,
+  verdictLine
+} from './src/main/ets/claim/ShareFlow';
 // The days of the wear month in detail: worn time, breaks and the reason of each day as text.
 export { DayBreak, DayDetail, dayDetailOf, engineDayDetails } from './src/main/ets/report/EngineReports';

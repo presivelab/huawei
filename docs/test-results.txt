@@ -1,6 +1,51 @@
 FairWear test results
 =====================
 
+2026-10-04 03:46 CEDT  branch feature/share-partner  (Share: signed claim and QR code; partner view: verification, use again, tamper tier)
+----------------------------------------------------
+Base: feature/phone-screens b9ce4b2; feature/engine-reports 7213345 merged in afterwards (1925b77).
+Node run (tools/run-logic-tests.sh): common 345/345 (336 from feature/engine-reports + 9 new), watch not rerun
+  (no watch file changed). No existing assertion was changed.
+  New, ShareFlow (9, not in the hypium list: real ECDSA P-256 signatures through tools/logic-tests/node-ports.ts):
+  Ania "Tier A · Eligible: yes · 4 Sep – 3 Oct", full benefit; Tomek tier B, partial benefit; Marek: the code is
+  made, says "Eligible: no", the claim has the seven keys and nothing about breaks or flags; Ola: no offer,
+  "Tier: not available", "Not enough data yet"; the same code again is "Already used" at the fifth check;
+  tier B changed to A under the old signature is "Invalid signature" at the third check and does not spend the
+  nonce; the ledger entry holds the exact token and its size in bytes; texts of the period, the key source and
+  the five checks.
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL, before and after the merge.
+tools/lint.sh (before the merge): entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues;
+  none in a changed file.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Phone emulator (127.0.0.1:5557, API 24), unsigned debug HAP of commit 4683558 (before the merge, reports from
+the fixed preview), consent and the persona sheet with uitest clicks, texts read from the uitest layout dump,
+light mode:
+  Share, Ania:   "Tier A · Eligible: yes", "Period 4 Sep – 3 Oct", system QR code, "305 of 512 characters",
+                 "HUKS key", "Tier from preview data", button "Open partner view (demo)" enabled.
+  Share, Marek:  "Tier B · Eligible: no", "Eligible: no · 3 suspicious breaks. The reason stays on this phone.",
+                 "306 of 512 characters", "HUKS key", button enabled.
+  Share, Ola:    "There is no code to show yet", "Tier: not available", "Not enough data yet", "No code yet.
+                 Without a score nothing is signed and nothing leaves this phone.", the button is disabled,
+                 "Share is available once you have a score.". No QR code.
+  Partner view with Marek's code:
+    "Use the code from this phone"   -> "Signature valid", "Tier B · Eligible: no · 4 Sep – 3 Oct",
+                                        "No benefit this month · The code does not say why.",
+                                        "Key: HUKS key (from the partner's key registry)", five checks passed
+    "Verify the same code again"     -> "Already used", "Already used · stopped at: not used before"
+    "Change tier to A and verify"    -> "Invalid signature", "Invalid signature · stopped at: signature",
+                                        checks four and five "Not run", no claim line shown
+  Back on Share: "Used once · no longer valid" and "Make a new code".
+  Ledger file in the app sandbox after Ania's and Marek's code: haps/entry/files/share/ledger.json, 838 bytes
+  (two entries); nothing was added for Ola.
+  Shots: docs/screenshots/final/a4-share-{ania,marek,marek-used,ola}-light.jpeg,
+  a4-partner-{marek-valid,already-used,invalid-signature}-light.jpeg. Before: docs/screenshots/design/
+  phone-share-tab-light.jpeg (the placeholder).
+Not run on the emulator: "Make a new code"; a code older than its 10 minutes; the software-key fallback (HUKS
+  succeeded); a scan of the QR code by a second device (the emulator has no camera, the token is handed over
+  inside the app); the partner view for Ania and Tomek (Node tests only); large system font.
+Two sessions drove the phone emulator at once at 03:38; since then every session takes C:\dev\_emu-phone.lock
+  before a deploy or a uitest call.
+
 2026-10-04 03:42 CEDT  branch feature/engine-reports  (G1: the phone reports come from the scoring engine)
 ----------------------------------------------------
 Base: feature/phone-screens b9ce4b2 (fast-forward). Commit 69b3417.
