@@ -37,12 +37,19 @@ light mode:
   Back on Share: "Used once · no longer valid" and "Make a new code".
   Ledger file in the app sandbox after Ania's and Marek's code: haps/entry/files/share/ledger.json, 838 bytes
   (two entries); nothing was added for Ola.
-  Shots: docs/screenshots/final/a4-share-{ania,marek,marek-used,ola}-light.jpeg,
+Second run, 03:48-03:51, the build after the merge (1925b77: reports from the scoring engine), same emulator, same method:
+  every line above read the same, except that "Tier from preview data" is no longer shown (the reports are
+  not a preview any more). Technical details opened: "Key ID" 762fa82f, "One-time number" (22 characters),
+  "Signed at". "Make a new code" on the used code: the note "Used once" goes and a new 306-character code is
+  shown.
+  Shots (taken in this second run): docs/screenshots/final/a4-share-{ania,marek,marek-used,ola}-light.jpeg,
   a4-partner-{marek-valid,already-used,invalid-signature}-light.jpeg. Before: docs/screenshots/design/
   phone-share-tab-light.jpeg (the placeholder).
-Not run on the emulator: "Make a new code"; a code older than its 10 minutes; the software-key fallback (HUKS
-  succeeded); a scan of the QR code by a second device (the emulator has no camera, the token is handed over
-  inside the app); the partner view for Ania and Tomek (Node tests only); large system font.
+Not run on the emulator: dark mode (the Dark tab of Settings > Display & brightness was tapped and the mode
+  stayed off; four shots that came out light were deleted); a code older than its 10 minutes; the software-key
+  fallback (HUKS succeeded); a scan of the QR code by a second device (the emulator has no camera, the token
+  is handed over inside the app); the partner view for Ania and Tomek (Node tests only); large system font;
+  the ledger file after an app restart.
 Two sessions drove the phone emulator at once at 03:38; since then every session takes C:\dev\_emu-phone.lock
   before a deploy or a uitest call.
 
