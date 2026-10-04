@@ -13,6 +13,7 @@ import {
 import {
   MSG_ACCEPTED,
   MSG_DUPLICATE,
+  MSG_INVALID_FORMAT,
   MSG_INVALID_SIGNATURE,
   MSG_UNKNOWN_KEY
 } from '../main/ets/watchlink/DayPacketVerifier';
@@ -347,5 +348,105 @@ export default function watchLinkFlowTest() {
       expect(await b.watch.closeDayNow()).assertEqual(0);
       b.dispose();
     });
+
+    it('a day packet seen while the relay is still writing it is left for the next look, then accepted', 0,
+      async () => {
+        const b = new Bench();
+        await b.watch.start();
+        await b.watch.pair();
+        await b.relay();
+        b.phone.confirmPair();
+        await b.relay();
+        b.watch.setDemoClock(true);
+        await b.run(12, 70);
+        expect(await b.watch.closeDayNow()).assertEqual(1);
+        const packet = b.watchStore.read('outbox/1.json');
+        expect(packet !== null).assertTrue();
+        if (packet !== null) {
+          // The app looks while half of the file is there, then while it is still empty of the rest.
+          b.phoneStore.writeAtomic('inbox/1.json', packet.substring(0, Math.floor(packet.length / 2)));
+          let report = await b.phone.scanInbox();
+          expect(report.processed).assertEqual(0);
+          expect(b.phoneStore.list('inbox').length).assertEqual(1);
+          expect(b.phoneStore.read('acks/1.json') === null).assertTrue();
+          // The write finishes: the next look reads the whole packet.
+          b.phoneStore.writeAtomic('inbox/1.json', packet);
+          report = await b.phone.scanInbox();
+          expect(report.accepted).assertEqual(1);
+          expect(b.phoneStore.list('inbox').length).assertEqual(0);
+          expect(b.phone.view().lastSeq).assertEqual(1);
+          expect(b.phone.view().log[0].message).assertEqual(MSG_ACCEPTED);
+        }
+        b.dispose();
+      });
+
+    it('an empty or cut pairing request is left for the next look, then asks for confirmation', 0, async () => {
+      const b = new Bench();
+      await b.watch.start();
+      const code = await b.watch.pair();
+      const request = b.watchStore.read('pair.json');
+      expect(request !== null).assertTrue();
+      if (request !== null) {
+        b.phoneStore.writeAtomic('inbox/pair.json', '');
+        let report = await b.phone.scanInbox();
+        expect(report.processed).assertEqual(0);
+        expect(b.phoneStore.read('acks/0.json') === null).assertTrue();
+        b.phoneStore.writeAtomic('inbox/pair.json', request);
+        report = await b.phone.scanInbox();
+        expect(report.pairRequested).assertTrue();
+        expect(b.phone.view().pendingPairKid).assertEqual(code);
+      }
+      b.dispose();
+    });
+
+    it('a file that really is broken is answered with Invalid format on the second look', 0, async () => {
+      const b = new Bench();
+      await b.watch.start();
+      await b.watch.pair();
+      await b.relay();
+      b.phone.confirmPair();
+      b.phoneStore.writeAtomic('inbox/1.json', '{"v":1,');
+      let report = await b.phone.scanInbox();
+      expect(report.processed).assertEqual(0);
+      expect(b.phoneStore.list('inbox').length).assertEqual(1);
+      report = await b.phone.scanInbox();
+      expect(report.rejected).assertEqual(1);
+      expect(b.phoneStore.list('inbox').length).assertEqual(0);
+      const ack = b.phoneStore.read('acks/1.json');
+      expect(ack !== null && ack.indexOf(MSG_INVALID_FORMAT) >= 0).assertTrue();
+      b.dispose();
+    });
+
+    it('an ACK seen half written on the watch is not lost: the packet leaves the outbox on the next look', 0,
+      async () => {
+        const b = new Bench();
+        await b.watch.start();
+        await b.watch.pair();
+        await b.relay();
+        b.phone.confirmPair();
+        await b.relay();
+        b.watch.setDemoClock(true);
+        await b.run(12, 70);
+        expect(await b.watch.closeDayNow()).assertEqual(1);
+        const packet = b.watchStore.read('outbox/1.json');
+        expect(packet !== null).assertTrue();
+        if (packet !== null) {
+          b.phoneStore.writeAtomic('inbox/1.json', packet);
+          await b.phone.scanInbox();
+        }
+        const ack = b.phoneStore.read('acks/1.json');
+        expect(ack !== null).assertTrue();
+        if (ack !== null) {
+          b.watchStore.writeAtomic('acks/1.json', ack.substring(0, Math.floor(ack.length / 2)));
+          b.watch.processAcks();
+          expect(b.watch.pendingCount()).assertEqual(1);
+          expect(b.watchStore.list('acks').length).assertEqual(1);
+          b.watchStore.writeAtomic('acks/1.json', ack);
+          b.watch.processAcks();
+          expect(b.watch.pendingCount()).assertEqual(0);
+          expect(b.watch.view().statusLine).assertEqual(STATUS_SYNCED);
+        }
+        b.dispose();
+      });
   });
 }
