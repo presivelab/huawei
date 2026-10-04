@@ -16,6 +16,7 @@ import engineReportsTest from './EngineReports.test';
 import tourContentTest from './TourContent.test';
 import evidenceCalendarTest from './EvidenceCalendar.test';
 import whySectionsTest from './WhySections.test';
+import healthSimPayloadTest from './HealthSimPayload.test';
 
 export default function testsuite() {
   claimTest();
@@ -36,4 +37,5 @@ export default function testsuite() {
   tourContentTest();
   evidenceCalendarTest();
   whySectionsTest();
+  healthSimPayloadTest();
 }

@@ -370,6 +370,15 @@ export class HesPersonas {
     return computeHes(HesPersonas.history(id));
   }
 
+  /**
+   * A demo session that starts from a history given from outside (the one Health Sim sent). Closing a day
+   * continues the persona's own series, as in `session`; an unknown id gives a session without a day source.
+   */
+  static sessionFrom(id: string, start: HesDay[]): HesSession {
+    const spec = HesPersonas.spec(id);
+    return new HesSession(start, spec === null ? null : new PersonaDaySource(spec));
+  }
+
   /** A demo session that starts from the persona's history (live values, close the day, reset). */
   static session(id: string): HesSession {
     const spec = HesPersonas.spec(id);
