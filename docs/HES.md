@@ -137,17 +137,25 @@ Personas and wear month:
 ## The report on the phone
 
 `common/src/main/ets/report/EngineReports.ets` builds the phone's view model (`PersonaReport`, the shape the
-fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (26).
+fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (33).
 
-| Function                      | Returns                                                                                             |
-| ----------------------------- | --------------------------------------------------------------------------------------------------- |
-| `enginePersonas()`            | the six ids and names, in the order of the preview                                                  |
-| `engineReport(id)`            | the report of a persona's starting history, no live values; an unknown id gives the default persona |
-| `engineReports()`             | the six reports, built once                                                                         |
-| `engineSession(id)`           | a `HesSession` of the persona: `setLive`, `closeDay`, `reset`                                       |
-| `engineReportOf(id, session)` | the report as the session stands now; live values only in `live`                                    |
-| `engineWhatIf(result)`        | the counterfactual of an engine result (component, values, new score and tier, sentence) or null    |
-| `nextTierOf(tier)`            | the tier `pointsToNext` counts to: A for B, B for C, empty otherwise                                |
+On the phone the screens get it through `entry/src/main/ets/report/EngineReportService.ets`, which
+`ServiceLocator.ets` puts in use: one `HesSession` per persona, created the first time the persona is opened.
+`closeSelectedDay()` closes the running day of the persona on screen, `resetSelected()` takes that persona back
+to its starting history, `setSelectedLive(hr, steps)` sets the live readings. `isPreview()` is false, so no
+screen writes "preview". The fixed preview (`PreviewReportService`) is still in the code as the second
+implementation of the same interface; it is not in use.
+
+| Function                      | Returns                                                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `enginePersonas()`            | the six ids and names, in the order of the preview                                                   |
+| `engineReport(id)`            | the report of a persona's starting history, no live values; an unknown id gives the default persona  |
+| `engineReports()`             | the six reports, built once                                                                          |
+| `engineSession(id)`           | a `HesSession` of the persona: `setLive`, `closeDay`, `reset`                                        |
+| `engineReportOf(id, session)` | the report as the session stands now; live values only in `live`                                     |
+| `engineWhatIf(result)`        | the counterfactual of an engine result (component, values, new score and tier, sentence) or null     |
+| `nextTierOf(tier)`            | the tier `pointsToNext` counts to: A for B, B for C, empty otherwise                                 |
+| `engineDayDetails(id)`        | the 30 days of the wear month as `DayDetail`: worn and charging minutes, the night, breaks, `reason` |
 
 25. **Eligible** is the wear month's verdict (compliance passes and no flag) and a score. Benefit and its reason
     come from `Benefit.ets`.
@@ -169,6 +177,17 @@ fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test
     and the bars; the period and the 30 day cells stay those of 4 September to 3 October.
 32. **A day cell's worn share is 0 to 100.** A day the watch did not observe has the state `UNKNOWN` and the
     share 0, because the model has no "missing" for that number: a screen reads the state before the share.
+33. **The reason of a day is written by the engine side, not by a screen.** `DayDetail.reason` is one line with
+    the numbers the wear rule compared: a suspicious day reads "Off the wrist 13:05 for 5 h 35 min after
+    resting HR +9 bpm and 46% fewer steps in the 24 h before" (Marek, 17 September); a short day reads "Worn
+    17 h 5 min of 20 h", with the charging time the rule counted, or "Night not worn"; a break with too few
+    heart-rate readings reads "break not judged (8 heart-rate readings before it, 12 needed)" (Kasia). It
+    never says why the watch was taken off.
+34. **`DayDetail.breaks` holds only what the rule counts as a break** (at least 120 minutes off the wrist and
+    not on the charger). A day the watch did not observe has no breaks and 0 worn and charging minutes.
+35. **Close the day and reset work per persona.** Each persona has its own session; closing a day for one
+    does not touch another. One closed day moves Ewa from C / 59 to B / 64; reset gives C / 59 again. A live
+    heart rate or step count never changes a score, before or after a closed day.
 
 ## What this is not
 

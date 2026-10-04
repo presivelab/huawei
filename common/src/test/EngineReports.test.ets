@@ -20,8 +20,10 @@ import {
 import { WearPersonas } from '../main/ets/wear/WearPersonas';
 import { benefitLevel, benefitReason } from '../main/ets/report/Benefit';
 import {
+  DayDetail,
   ENGINE_DEFAULT_ID,
   ENGINE_SOURCE,
+  engineDayDetails,
   enginePersonas,
   engineReport,
   engineReportOf,
@@ -601,6 +603,167 @@ export default function engineReportsTest() {
       // The cached report was not touched by the session.
       expect(engineReport('kasia').live.steps).assertEqual(HES_MISSING);
       expect(engineReport('kasia').hes).assertEqual(73);
+    });
+
+    it('closing the day adds one completed day and the score is calculated again from that history', 0, () => {
+      for (let i = 0; i < IDS.length; i++) {
+        const session = engineSession(IDS[i]);
+        const days = session.history().length;
+        const closed = session.closeDay();
+        expect(session.history().length).assertEqual(days + 1);
+        expect(session.closedDays()).assertEqual(1);
+        const again = computeHes(session.history());
+        expect(closed.score).assertEqual(again.score);
+        expect(closed.tier).assertEqual(again.tier);
+        expect(closed.coverage).assertEqual(again.coverage);
+        const r = engineReportOf(IDS[i], session);
+        expect(r.hes).assertEqual(again.score >= 0 ? again.score : HES_NONE);
+        expect(r.tier).assertEqual(again.tier);
+        session.reset();
+        expect(session.history().length).assertEqual(days);
+        expect(session.closedDays()).assertEqual(0);
+        expect(engineReportOf(IDS[i], session)).assertDeepEquals(engineReport(IDS[i]));
+      }
+    });
+
+    it('Ewa: one closed day moves her from C / 59 to B / 64; reset gives C / 59 again', 0, () => {
+      const session = engineSession('ewa');
+      expect(engineReportOf('ewa', session).hes).assertEqual(59);
+      expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.C);
+      session.closeDay();
+      expect(engineReportOf('ewa', session).hes).assertEqual(64);
+      expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.B);
+      session.reset();
+      expect(engineReportOf('ewa', session).hes).assertEqual(59);
+      expect(engineReportOf('ewa', session).tier).assertEqual(ReportTier.C);
+    });
+
+    it('live readings never change the score, before or after a closed day', 0, () => {
+      for (let i = 0; i < IDS.length; i++) {
+        const session = engineSession(IDS[i]);
+        const start = session.result().score;
+        session.setLive(150, 20000);
+        expect(session.result().score).assertEqual(start);
+        expect(engineReportOf(IDS[i], session).hes).assertEqual(engineReport(IDS[i]).hes);
+        session.setLive(HES_MISSING, HES_MISSING);
+        const closed = session.closeDay().score;
+        session.setLive(40, 0);
+        expect(session.result().score).assertEqual(closed);
+        session.setLive(190, 45000);
+        expect(session.result().score).assertEqual(closed);
+      }
+    });
+  });
+
+  describe('Engine reports: day details', () => {
+    it('thirty days per persona, the same days and states as the report and the wear month', 0, () => {
+      for (let i = 0; i < IDS.length; i++) {
+        const details: DayDetail[] = engineDayDetails(IDS[i]);
+        const r = engineReport(IDS[i]);
+        const month = WearPersonas.result(IDS[i]);
+        expect(details.length).assertEqual(30);
+        expect(details[0].date).assertEqual('2026-09-04');
+        expect(details[29].date).assertEqual('2026-10-03');
+        let suspicious = 0;
+        for (let d = 0; d < details.length; d++) {
+          const day = details[d];
+          expect(day.n).assertEqual(r.wear.days[d].n);
+          expect(day.state).assertEqual(r.wear.days[d].state);
+          expect(day.date).assertEqual(month.days[d].date);
+          expect(day.wornMin).assertEqual(month.days[d].wornMin);
+          expect(day.chargingMin).assertEqual(month.days[d].chargingMin);
+          expect(day.nightWorn).assertEqual(month.days[d].nightWorn);
+          for (let b = 0; b < day.breaks.length; b++) {
+            expect(day.breaks[b].minutes >= 120).assertTrue();
+            if (day.breaks[b].suspicious) {
+              suspicious++;
+              expect(day.breaks[b].judged).assertTrue();
+            }
+          }
+        }
+        expect(suspicious).assertEqual(r.wear.suspicious);
+      }
+      expect(engineDayDetails('nobody')).assertDeepEquals(engineDayDetails(ENGINE_DEFAULT_ID));
+    });
+
+    it('Marek, 17 September: the suspicious break and its reason as ready text', 0, () => {
+      const day = engineDayDetails('marek')[13];
+      expect(day.n).assertEqual(14);
+      expect(day.date).assertEqual('2026-09-17');
+      expect(day.state).assertEqual(DayState.SUSPICIOUS);
+      expect(day.breaks.length).assertEqual(1);
+      expect(day.breaks[0].startMin).assertEqual(13 * 60 + 5);
+      expect(day.breaks[0].minutes).assertEqual(335);
+      expect(day.breaks[0].judged).assertTrue();
+      expect(day.breaks[0].suspicious).assertTrue();
+      expect(day.breaks[0].restDeltaBpm).assertEqual(9);
+      expect(day.breaks[0].stepsRatio).assertEqual(0.54);
+      expect(day.reason).assertEqual(
+        'Off the wrist 13:05 for 5 h 35 min after resting HR +9 bpm and 46% fewer steps in the 24 h before');
+    });
+
+    it('Kasia: the break with 8 heart-rate readings is not judged and says so; one day is suspicious', 0, () => {
+      const details = engineDayDetails('kasia');
+      let notJudged = 0;
+      let suspicious = 0;
+      for (let d = 0; d < details.length; d++) {
+        const day = details[d];
+        for (let b = 0; b < day.breaks.length; b++) {
+          if (day.breaks[b].hrReadings24hBefore === 8) {
+            notJudged++;
+            expect(day.breaks[b].judged).assertFalse();
+            expect(day.breaks[b].suspicious).assertFalse();
+            expect(day.state).assertEqual(DayState.SHORT);
+            expect(day.reason).assertEqual(
+              'Not worn this day; break not judged (8 heart-rate readings before it, 12 needed)');
+          }
+        }
+        if (day.state === DayState.SUSPICIOUS) {
+          suspicious++;
+          expect(day.reason).assertEqual(
+            'Off the wrist all day after resting HR +8 bpm and 48% fewer steps in the 24 h before');
+        }
+      }
+      expect(notJudged).assertEqual(1);
+      expect(suspicious).assertEqual(1);
+    });
+
+    it('every day has a reason: the numbers the rule compared, one line, no forbidden wording', 0, () => {
+      for (let i = 0; i < IDS.length; i++) {
+        const details = engineDayDetails(IDS[i]);
+        for (let d = 0; d < details.length; d++) {
+          const day = details[d];
+          expect(day.reason.length > 0).assertTrue();
+          expect(day.reason.charAt(day.reason.length - 1) !== '.').assertTrue();
+          expect(day.reason.charAt(0)).assertEqual(day.reason.charAt(0).toUpperCase());
+          const text = ` ${day.reason.toLowerCase()} `;
+          for (let f = 0; f < FORBIDDEN.length; f++) {
+            expect(text.indexOf(FORBIDDEN[f]) < 0).assertTrue();
+          }
+          if (day.state === DayState.COMPLIANT) {
+            expect(day.reason.indexOf('Worn ') === 0 && day.reason.indexOf('the night counts') > 0).assertTrue();
+          } else if (day.state === DayState.SUSPICIOUS) {
+            expect(day.reason.indexOf('Off the wrist ')).assertEqual(0);
+          } else if (day.state === DayState.UNKNOWN) {
+            expect(day.reason).assertEqual('No record from the watch for this day');
+            expect(day.wornMin).assertEqual(0);
+            expect(day.breaks.length).assertEqual(0);
+          } else {
+            expect(day.reason.indexOf('Worn ') === 0 || day.reason.indexOf('Not worn this day') === 0 ||
+              day.reason.indexOf('Night not worn') === 0).assertTrue();
+          }
+        }
+      }
+      // A short day of Marek: the hours, with the charging time the rule counted.
+      const marek = engineDayDetails('marek');
+      let short = 0;
+      for (let d = 0; d < marek.length; d++) {
+        if (marek[d].state === DayState.SHORT) {
+          short++;
+          expect(marek[d].reason.indexOf(' of 20 h') > 0).assertTrue();
+        }
+      }
+      expect(short).assertEqual(1);
     });
   });
 

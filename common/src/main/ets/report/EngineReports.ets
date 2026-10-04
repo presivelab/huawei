@@ -8,7 +8,9 @@
  *   - raw values with units and the seven-day bars: the completed days of the history;
  *   - compliant days, nights, suspicious breaks, the flag and the 30 day cells: the wear month;
  *   - eligible = the wear month is eligible and there is a score; benefit and its reason: `Benefit.ets`;
- *   - live heart rate and today's steps: the session. They are shown and never scored.
+ *   - live heart rate and today's steps: the session. They are shown and never scored;
+ *   - the details of each day (worn time, charging, the night, breaks, the reason of the day): the wear
+ *     month again, as `DayDetail`.
  *
  * Decisions:
  *   - a value that does not exist stays missing: HES_NONE, POINTS_UNKNOWN, BAR_NO_DATA, an empty text.
@@ -23,7 +25,10 @@
  *     own average, on the same curve;
  *   - the wear month is the persona's fixed month. Closing a day in a session changes the score, the
  *     components and the bars; the period and the day cells stay as they are;
- *   - the points to the next tier are to B for tier C and to A for tier B (`nextTierOf`).
+ *   - the points to the next tier are to B for tier C and to A for tier B (`nextTierOf`);
+ *   - a day's `reason` states the numbers the wear rule compared. It never guesses why the watch was off;
+ *   - `DayDetail.breaks` lists the off-wrist stretches the rule counts as breaks (at least `gapMinMinutes`);
+ *     shorter moments off the wrist are not listed.
  */
 import { TIER_A, TIER_B, TIER_C } from '../claim/ClaimValidation';
 import { HealthStatus } from '../health/HealthRecords';
@@ -47,7 +52,9 @@ import {
   HesStatus,
   HES_MISSING
 } from '../hes/HesTypes';
-import { WearMonthResult } from '../wear/WearMonth';
+import { DEFAULT_THRESHOLDS } from '../model/defaults';
+import { Thresholds } from '../model/types';
+import { WearBreakResult, WearDayResult, WearDayState, WearMonthResult } from '../wear/WearMonth';
 import { WearPersonas } from '../wear/WearPersonas';
 import { benefitLevel, benefitReason } from './Benefit';
 import {
@@ -655,4 +662,161 @@ export function engineReport(id: string): PersonaReport {
     }
   }
   return all[0];
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Day details
+// ---------------------------------------------------------------------------------------------------------
+
+/** One break of a day: an off-wrist stretch, not on the charger, of at least `gapMinMinutes`. */
+export interface DayBreak {
+  startMin: number;             // local minute of the day the break started, 0..1439
+  minutes: number;              // length of the break
+  judged: boolean;              // enough heart-rate readings in the 24 h before it
+  suspicious: boolean;
+  restDeltaBpm: number;         // resting heart rate in the 24 h before, minus the person's baseline
+  stepsRatio: number;           // steps in the 24 h before / the person's usual steps (1.0 = as usual)
+  hrReadings24hBefore: number;  // heart-rate readings in the 24 h before the break
+}
+
+/** One day of the wear month, with the reason it counts the way it does as ready text. */
+export interface DayDetail {
+  n: number;                    // 1 is the first day of the period
+  date: string;                 // local calendar day, YYYY-MM-DD
+  state: string;                // DayState
+  wornMin: number;              // minutes on the wrist; 0 on a day the watch did not observe
+  chargingMin: number;          // minutes on the charger
+  nightWorn: boolean;           // the night counts
+  breaks: DayBreak[];
+  reason: string;               // one line for the screen; the screens do not work reasons out themselves
+}
+
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : `${n}`;
+}
+
+// 785 -> "13:05".
+function clockText(minuteOfDay: number): string {
+  const total = Math.max(0, Math.min(MINUTES_PER_DAY, hesRound(minuteOfDay)));
+  return `${pad2(Math.floor(total / MINUTES_PER_HOUR))}:${pad2(total % MINUTES_PER_HOUR)}`;
+}
+
+// 335 -> "5 h 35 min", 300 -> "5 h", 40 -> "40 min".
+function minutesText(minutes: number): string {
+  const total = Math.max(0, hesRound(minutes));
+  const h = Math.floor(total / MINUTES_PER_HOUR);
+  const m = total % MINUTES_PER_HOUR;
+  if (h === 0) {
+    return `${m} min`;
+  }
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+}
+
+// 9 -> "+9", -1 -> "−1", 0 -> "+0".
+function signedBpm(delta: number): string {
+  return delta < 0 ? `−${-delta}` : `+${delta}`;
+}
+
+// "Off the wrist 13:05 for 5 h 35 min after resting HR +9 bpm and 46% fewer steps in the 24 h before".
+function suspiciousText(gap: WearBreakResult): string {
+  const when = gap.startMin <= 0 && gap.minutes >= MINUTES_PER_DAY ? 'all day' :
+    `${clockText(gap.startMin)} for ${minutesText(gap.minutes)}`;
+  const fewer = hesRound((1 - gap.stepsRatio) * PERCENT);
+  return `Off the wrist ${when} after resting HR ${signedBpm(gap.restDeltaBpm)} bpm and ${fewer}% fewer ` +
+    'steps in the 24 h before';
+}
+
+function capitalised(text: string): string {
+  return text.length === 0 ? text : text.charAt(0).toUpperCase() + text.substring(1);
+}
+
+// Why an observed day without a suspicious break is not compliant: the hours, the night, or both; then the
+// breaks that could not be judged.
+function shortText(day: WearDayResult, th: Thresholds): string {
+  const parts: string[] = [];
+  if (day.wornMin <= 0) {
+    parts.push('not worn this day');
+  } else {
+    if (day.countedMin < th.minDailyHours * MINUTES_PER_HOUR) {
+      const credit = day.countedMin - day.wornMin;
+      parts.push(`worn ${minutesText(day.wornMin)} of ${th.minDailyHours} h` +
+        (credit > 0 ? ` (plus ${minutesText(credit)} of charging counted)` : ''));
+    }
+    if (th.nightRequired && !day.nightWorn) {
+      parts.push(`night not worn (${minutesText(day.nightWornMin)} of ${minutesText(th.nightMinWornMin)} ` +
+        'between 00:00 and 06:00)');
+    }
+  }
+  for (let i = 0; i < day.breaks.length; i++) {
+    const gap = day.breaks[i];
+    if (gap.counted && !gap.judged) {
+      parts.push(`break not judged (${gap.hrReadings24hBefore} heart-rate readings before it, ` +
+        `${th.minHrReadingsBeforeGap} needed)`);
+    }
+  }
+  return capitalised(parts.join('; '));
+}
+
+function reasonOf(day: WearDayResult, th: Thresholds): string {
+  if (day.state === WearDayState.UNKNOWN) {
+    return 'No record from the watch for this day';
+  }
+  if (day.state === WearDayState.SICK) {
+    return 'Sick day, left out of the month';
+  }
+  if (day.state === WearDayState.SUSPICIOUS) {
+    const parts: string[] = [];
+    for (let i = 0; i < day.breaks.length; i++) {
+      if (day.breaks[i].suspicious) {
+        parts.push(suspiciousText(day.breaks[i]));
+      }
+    }
+    return parts.join('; ');
+  }
+  if (day.state === WearDayState.COMPLIANT) {
+    return `Worn ${minutesText(day.wornMin)}, the night counts`;
+  }
+  return shortText(day, th);
+}
+
+/** The details of one day of a wear month. `n` is the day's place in the period, 1 for the first day. */
+export function dayDetailOf(day: WearDayResult, n: number, th: Thresholds): DayDetail {
+  const breaks: DayBreak[] = [];
+  for (let i = 0; i < day.breaks.length; i++) {
+    const gap = day.breaks[i];
+    if (gap.counted) {
+      breaks.push({
+        startMin: gap.startMin,
+        minutes: gap.minutes,
+        judged: gap.judged,
+        suspicious: gap.suspicious,
+        restDeltaBpm: gap.restDeltaBpm,
+        stepsRatio: gap.stepsRatio,
+        hrReadings24hBefore: gap.hrReadings24hBefore
+      });
+    }
+  }
+  return {
+    n: n,
+    date: day.date,
+    state: day.state,
+    wornMin: day.wornMin,
+    chargingMin: day.chargingMin,
+    nightWorn: day.nightWorn,
+    breaks: breaks,
+    reason: reasonOf(day, th)
+  };
+}
+
+/**
+ * The 30 days of a persona's wear month, oldest first: `engineDayDetails(id)[n - 1]` is day `n` of
+ * `PersonaReport.wear.days`. An unknown id gives the default persona; it never throws.
+ */
+export function engineDayDetails(id: string): DayDetail[] {
+  const month = wearMonthOf(knownId(id));
+  const out: DayDetail[] = [];
+  for (let i = 0; i < month.days.length; i++) {
+    out.push(dayDetailOf(month.days[i], i + 1, DEFAULT_THRESHOLDS));
+  }
+  return out;
 }
