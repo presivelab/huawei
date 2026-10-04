@@ -15,14 +15,21 @@ Everything in the app was built during HackYeah 2026.
 ### Before recording
 
 1. Start both emulators, then `tools/deploy.sh watch` and `tools/deploy.sh entry`. Install Health Sim on
-   both (`healthsim/README.md`: the `entry` HAP on the phone, the `watch` HAP on the watch).
+   both (`healthsim/README.md`: the `entry` HAP on the phone, the `watch` HAP on the watch). On the watch,
+   check that FairWear is the app in front after the install: on this machine another prototype
+   ("Health Demo") has come to the front more than once, and FairWear records only while it is open.
 2. Pair: on the watch, page with **Pair phone** → `node tools/watch-phone-relay.mjs` → on the phone
    **Pair watch …?** → **Confirm** → relay again.
 3. Watch: **Demo clock ×300**, then **Get today from Health Sim** (the page answers "Today from Health
-   Sim · used by the demo feed"), then **Demo feed: on**, then **Close day (demo)** once, so every shown day
-   starts at 00:00 (a day the feed starts at midday has no break with enough context). Let the watch seal
-   four more days (one every 4 min 48 s) and relay them: Evidence › Watch days says "All … days verified".
-   Leave the last sealed day unsent for step 3:15.
+   Sim · used by the demo feed"), then tap **Demo feed: off** (it then reads "Demo feed: on"), then **Close day (demo)** once, so
+   every shown day starts at 00:00 (a day the feed starts at midday has no break with enough context). That
+   first day stays in the list as "Not observed 24 h · The watch recorded nothing on this day". Let the watch
+   seal four more days (one every 4 min 48 s) and relay them: Evidence › Watch days says "All … days
+   verified". Leave the last sealed day unsent for step 3:15.
+   Timing: days keep sealing while the demo clock runs. Start the recording at the moment the watch seals the
+   day you leave unsent; the 3:05 step then falls between 3:00 and 4:48 after that seal, when the ring already
+   shows the break and the watch still says "1 to sync". Earlier the ring has no break yet; later it says
+   "2 to sync".
 4. Phone: close FairWear and start it again, so the recording starts on the clean welcome screen: a fresh
    start is always "Not connected" with **Connect HUAWEI Health** (consent is not kept across restarts).
    After Settings › **Disconnect HUAWEI Health** in the same session the button reads **Reconnect** and the
@@ -46,13 +53,13 @@ Everything in the app was built during HackYeah 2026.
 | 2:45 | Try to cheat                  | **Verify the same code again**; **Change tier to A and verify**                           | "Already used · stopped at: not used before"; "Invalid signature · stopped at: signature"; back on Share: "Used once · no longer valid"                                                |
 | 2:55 | What left this phone          | Share › **What left this phone**                                                          | every code shown, with its exact text and size                                                                                                                                         |
 | 3:05 | Watch dial                    | —                                                                                         | "FEED · Health Sim", the ring with charging, worn and the 12:00–15:00 break, "1 to sync"                                                                                                |
-| 3:15 | Relay → Evidence › Watch days | `node tools/watch-phone-relay.mjs once --tamper`, then `node tools/watch-phone-relay.mjs` | the relay prints `REJECTED (Invalid signature)` and the day is not taken in; the clean run: the day verified with worn / charging / off-wrist time and its break                       |
+| 3:15 | Relay → Evidence › Watch days | `node tools/watch-phone-relay.mjs once --tamper`, then `node tools/watch-phone-relay.mjs` | the relay prints `REJECTED (Invalid signature)` and the day is not taken in; the clean run: the day verified with worn / charging / off-wrist time and its break ("Off wrist 12:05–15:00" or "12:10–15:00"). With two days waiting, the tamper run rejects the first and takes the second with "Missing 1 day(s)" until the clean run                     |
 | 3:35 | How Watch Link works          | run the three checks                                                                      | "Invalid signature · Not taken in"; "Duplicate day"; "Accepted · Missing 1 day(s)", then "Fills the gap"; "Your stored days were not changed"                                          |
 | 3:55 | Settings                      | **Disconnect HUAWEI Health**                                                              | back to "Not connected"; consent is asked again from step 1                                                                                                                            |
 
 Optional: Health Sim › **Apps** › **Open FairWear** opens FairWear the way a host app opens an add-on; the home-screen card (long-press the icon → Widgets: source, coverage and whether a score is ready,
-never the tier); the icon shortcut "How Watch Link works"; `node tools/watch-phone-relay.mjs once --drop 3`
-→ "1 day missing".
+never the tier); the icon shortcut "How Watch Link works"; `node tools/watch-phone-relay.mjs once --drop <seq>`
+with the older of two unsent days as `<seq>` → "… of … days verified" and "1 day never reached this phone".
 
 Close the day per persona, for a longer demo: Tomek reaches A on the fourth closed day; Ania stays A; Marek
 stays flagged; Ola does not reach a score (she wears the watch too rarely at night). Reset after each.
