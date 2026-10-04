@@ -1,7 +1,7 @@
 import { common, OpenLinkOptions, Want } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { HealthScope } from 'common';
+import { decodeHealthSimPayload, HEALTH_SIM_PARAM, HealthScope, HealthSimPayload } from 'common';
 
 /*
  * Asks Health Sim for health data. Health Sim (com.fairwear.healthsim) is a separate app that stands in
@@ -23,7 +23,6 @@ const HEALTH_SIM_ABILITY: string = 'AuthAbility';
 // by name (error 16000018).
 const HEALTH_SIM_LINK: string = 'healthsim://authorize';
 const SCOPES_PARAM: string = 'fwScopes';
-const PAYLOAD_PARAM: string = 'fwhs1';
 const RESULT_GRANTED: number = 0;
 
 // Ability Kit error codes (UIAbilityContext.startAbilityForResult, openLink).
@@ -41,14 +40,16 @@ export class HealthSimAnswerKind {
 export interface HealthSimAnswer {
   kind: string;          // HealthSimAnswerKind
   text: string;          // OK: the data as Health Sim sent it; otherwise one sentence for the screen
+  payload: HealthSimPayload | null;   // the decoded data, set for OK only
 }
 
 export const HEALTH_SIM_REFUSED_TEXT: string = 'Health Sim did not allow access.';
 export const HEALTH_SIM_NOT_INSTALLED_TEXT: string = 'Health Sim is not installed: built-in demo data';
 export const HEALTH_SIM_ERROR_TEXT: string = 'Health Sim did not answer: built-in demo data';
+export const HEALTH_SIM_UNREADABLE_TEXT: string = 'Health Sim sent data FairWear cannot read: built-in demo data';
 
 function answer(kind: string, text: string): HealthSimAnswer {
-  const out: HealthSimAnswer = { kind: kind, text: text };
+  const out: HealthSimAnswer = { kind: kind, text: text, payload: null };
   return out;
 }
 
@@ -65,11 +66,18 @@ function answerFrom(path: string, result: common.AbilityResult): HealthSimAnswer
     return logAnswer(path, answer(HealthSimAnswerKind.REFUSED, HEALTH_SIM_REFUSED_TEXT), result.resultCode);
   }
   const params: Record<string, Object> | undefined = result.want === undefined ? undefined : result.want.parameters;
-  const payload: Object | undefined = params === undefined ? undefined : params[PAYLOAD_PARAM];
+  const payload: Object | undefined = params === undefined ? undefined : params[HEALTH_SIM_PARAM];
   if (payload === undefined || typeof payload !== 'string' || (payload as string).length === 0) {
     return logAnswer(path, answer(HealthSimAnswerKind.ERROR, HEALTH_SIM_ERROR_TEXT), result.resultCode);
   }
-  return logAnswer(path, answer(HealthSimAnswerKind.OK, payload as string), result.resultCode);
+  // Strict decode: anything FairWear cannot read in full is refused as a whole and the demo data is used.
+  const decoded: HealthSimPayload | null = decodeHealthSimPayload(payload as string);
+  if (decoded === null) {
+    hilog.warn(DOMAIN, TAG, 'healthsim answer: unreadable, chars=%{public}d', (payload as string).length);
+    return logAnswer(path, answer(HealthSimAnswerKind.ERROR, HEALTH_SIM_UNREADABLE_TEXT), result.resultCode);
+  }
+  const out: HealthSimAnswer = { kind: HealthSimAnswerKind.OK, text: payload as string, payload: decoded };
+  return logAnswer(path, out, result.resultCode);
 }
 
 function failure(path: string, code: number): HealthSimAnswer {
