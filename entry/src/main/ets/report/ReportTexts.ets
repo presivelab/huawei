@@ -167,6 +167,7 @@ export function dayStateNote(state: string): string {
 
 // --- "Why this tier" ---
 
+export const WHY_NO_SCORE_LABEL: string = 'Why no score yet';
 export const WHY_STRONGEST: string = 'Strongest';
 export const WHY_IMPROVE: string = 'To improve';
 export const WHY_MISSING: string = 'Missing data';
@@ -211,9 +212,10 @@ export function whyRowDetail(row: ComponentRow): string {
   return `${row.raw} ${row.unit} · weight ${weightText(row)}`;
 }
 
-// "14 days" under a measure that already has enough data.
+// "14 days" or "1 night" under a measure that already has data.
 export function countLine(row: ComponentRow): string {
-  return `${row.validCount} ${countUnit(row.id)}`;
+  const unit = countUnit(row.id);
+  return `${row.validCount} ${row.validCount === 1 ? unit.substring(0, unit.length - 1) : unit}`;
 }
 
 // --- Report tab: the live card and the demo controls ---

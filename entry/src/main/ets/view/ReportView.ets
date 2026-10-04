@@ -51,7 +51,8 @@ import {
   UNLOCK_STEPS,
   UNLOCK_TITLE,
   WEAR_TITLE,
-  WHY_LABEL
+  WHY_LABEL,
+  WHY_NO_SCORE_LABEL
 } from '../report/ReportTexts';
 import { CountBar } from '../ui/kit/CountBar';
 import { DayStrip, DayStripItem } from '../ui/kit/DayStrip';
@@ -530,6 +531,14 @@ export struct ReportView {
         }, (step: string) => step)
       }
       .width('100%')
+
+      TextLink({
+        text: WHY_NO_SCORE_LABEL,
+        linkId: 'fw_why_link_no_score',
+        onTap: () => {
+          this.nav.pushPathByName(ROUTE_WHY, null);
+        }
+      })
     }
     .attributeModifier(CARD_LARGE)
   }
