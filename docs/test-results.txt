@@ -1,6 +1,36 @@
 FairWear test results
 =====================
 
+2026-10-04 06:27 CEDT  branch feature/healthsim-watch  (Health Sim round, agent 3, D2: the Health Sim watch module)
+----------------------------------------------------
+Base: feature/watch-link-tour 4b5568a + feature/engine-reports 0f17cae (the base with DemoFeed's script API and
+  the FairWear watch button are from there). New here: healthsim/watch (module, two abilities, one page, one
+  pure helper) and the module list in healthsim/build-profile.json5. No FairWear code file changed.
+Node run (tools/run-logic-tests.sh): common 380/380, watch 6/6 (HealthSimCopies included: the copy
+  healthsim/watch/src/main/ets/fw/watchlink/DemoFeed.ets is the one from the base, untouched).
+ArkTS compile: Health Sim `hvigorw assembleHap --mode module -p module=watch@default` BUILD SUCCESSFUL, no
+  warning; FairWear watch BUILD SUCCESSFUL. Wording check 0 hits, enum-in-UI check 0 hits.
+  No Node test covers healthsim/watch/src/main/ets/model/DayScript.ets (what the screen prints); it was checked
+  on the emulator only.
+Wearable emulator 127.0.0.1:5555 (06:16-06:26), FairWear watch HAP from this branch:
+  Without Health Sim on the watch: Demo clock x300, "Get today from Health Sim" -> "Health Sim not on this
+    watch · built-in script" (a3-watch-no-healthsim).
+  Health Sim watch HAP installed (install -r, 96 KB; `bm dump -a` lists com.fairwear.healthsim): the same button
+    -> log "Export requested", "Day script handed over", FairWear: "Today from Health Sim · used by the demo
+    feed", healthsim/fwhsw1.json in the FairWear sandbox; Demo feed on -> dial "FEED · Health Sim · hh:mm"
+    (a3-watch-feed-healthsim).
+  A whole day on that script, sealed by the watch as #6, 2026-10-09: clock DEMO_X300_FEED, one break
+    startMin 725, endMin 900 (12:05-15:00), 173 heart-rate slots, resting 56 bpm and 12,153 steps in the 24 h
+    before. Relay: "#5 ACCEPTED", "#6 ACCEPTED"; phone "All 6 days verified", Fri 9 Oct worn 14 h 30 min,
+    charging 6 h 35 min, off wrist 2 h 55 min, 12,135 steps, "Off wrist 12:05-15:00"
+    (a3-phone-healthsim-day-light). #5 (Thu 8 Oct) is the day that was open before: it holds the minutes
+    recorded on the demo clock with the emulator's heart rate 0 during earlier checks (off wrist 8 h 25 min).
+  Health Sim watch screen: "SIMULATED DATA", "Health Sim", "Today's script", the 24-hour ring, "Worn 14 h 30 min",
+    "Charging 6 h 30 min", "Off wrist 12:00-15:00", "Shared with FairWear when it asks" (a3-healthsim-watch).
+Not done: Health Sim was not uninstalled again to repeat the missing path afterwards (it was run before the
+  install); the stored script after a restart of the FairWear watch app was not checked; dark and light do not
+  apply (the watch screen has one look).
+
 2026-10-04 06:12 CEDT  branch feature/watch-link-tour  (T6.3: a3 screenshots light and dark; inbox race fix eb6daf8 on the emulators)
 ----------------------------------------------------
 Base: feature/engine-reports 124ec58 + eb6daf8 (SettleGate: a file still being written is left for the next look).
