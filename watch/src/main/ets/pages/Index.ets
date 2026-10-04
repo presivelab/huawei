@@ -12,6 +12,8 @@ const TICK_MS = 1000;
 const PERMISSIONS: Permissions[] = ['ohos.permission.READ_HEALTH_DATA', 'ohos.permission.ACTIVITY_MOTION'];
 const MISSING = '—';
 const CLOCK_REAL = 'REAL';
+const FEED_FROM_HEALTH_SIM = 'Health Sim';
+const ASKING_HEALTH_SIM = 'Asking Health Sim…';
 
 function linkNote(link: SensorLink): string {
   if (link === SensorLink.ABSENT) {
@@ -62,14 +64,19 @@ struct ValueTile {
 struct ControlButton {
   @Prop label: string = '';
   @Prop labelColor: ResourceColor = $r('sys.color.font_primary');
+  // A page with four buttons uses the lower height, so the round screen cuts nothing.
+  @Prop compact: boolean = false;
   onTap: () => void = () => {
   };
 
   build() {
     Button(this.label, { type: ButtonType.Capsule })
       .width('100%')
-      .height(40)
+      .height(this.compact ? 32 : 40)
       .fontSize($r('app.float.button_font_size'))
+      // A long label ("Get today from Health Sim") shrinks instead of being cut off.
+      .labelStyle({ maxLines: 1, minFontSize: 8, maxFontSize: $r('app.float.button_font_size') })
+      .padding({ left: 6, right: 6 })
       .fontColor(this.labelColor)
       .backgroundColor($r('sys.color.comp_background_secondary'))
       .onClick(() => {
@@ -97,6 +104,8 @@ struct Index {
   @State feedOn: boolean = false;
   @State feedHr: number = 0;
   @State feedSteps: number = 0;
+  // Where the feed script comes from: Health Sim on this watch, or the one built into FairWear.
+  @State feedSource: string = '';
   @State clockLabel: string = CLOCK_REAL;
   @State recorderDate: string = '';
   @State recorderMinute: number = 0;
@@ -196,6 +205,7 @@ struct Index {
     this.feedOn = view.demoFeed;
     this.feedHr = view.feedHr;
     this.feedSteps = view.stepsToday;
+    this.feedSource = this.link.feedSource();
     this.clockLabel = view.clockLabel.length > 0 ? view.clockLabel : CLOCK_REAL;
     this.recorderDate = view.recorderDate;
     this.recorderMinute = view.recorderMinute;
@@ -303,6 +313,9 @@ struct Index {
   // Shown whenever recorder time is not real time. 'DEMO ×300' while the fast clock runs.
   private demoText(): string {
     if (this.demoOn) {
+      if (this.feedOn && this.feedSource === FEED_FROM_HEALTH_SIM) {
+        return `FEED · Health Sim · ${this.recorderTime()}`;
+      }
       return this.feedOn ? `DEMO ×300 · FEED · ${this.recorderTime()}` : `DEMO ×300 · ${this.recorderTime()}`;
     }
     return `DEMO TIME · ${this.recorderDate.substring(5)} ${this.recorderTime()}`;
@@ -321,7 +334,25 @@ struct Index {
     this.showLink();
   }
 
+  // Health Sim on this watch hands over the script of the demo day. Without Health Sim the built-in
+  // script stays in use and the watch says so.
+  private getFromHealthSim(): void {
+    if (this.lastAction === ASKING_HEALTH_SIM) {
+      return;
+    }
+    this.lastAction = ASKING_HEALTH_SIM;
+    this.link.fetchDayScript().then((taken: boolean) => {
+      this.lastAction = taken ? 'Today from Health Sim · used by the demo feed' :
+        'Health Sim not on this watch · built-in script';
+      this.showLink();
+    });
+  }
+
   private closeDay(): void {
+    // A second tap while the first is still sealing would seal an empty next day.
+    if (this.lastAction === 'Closing day…') {
+      return;
+    }
     this.lastAction = 'Closing day…';
     this.link.closeDay().then((seq: number) => {
       if (seq > 0) {
@@ -351,7 +382,7 @@ struct Index {
     this.resetArmed = false;
     this.pairShown = false;
     this.link.reset();
-    this.lastAction = 'Watch data reset · pair again on the phone';
+    this.lastAction = 'Watch data reset · on the phone: Forget watch, then Pair phone here';
     this.showLink();
   }
 
@@ -434,16 +465,20 @@ struct Index {
   @Builder
   DemoPage() {
     Column({ space: 7 }) {
-      Text('Watch link')
-        .fontSize($r('app.float.title_font_size'))
-        .fontWeight(FontWeight.Medium)
-        .fontColor($r('sys.color.font_primary'))
+      if (!this.demoOn) {
+        // On the demo clock the page has four buttons and no room for its title.
+        Text('Watch link')
+          .fontSize($r('app.float.title_font_size'))
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('sys.color.font_primary'))
+      }
       Text(this.statusLine)
         .fontSize($r('app.float.label_font_size'))
         .fontColor(this.statusColor())
 
       ControlButton({
         label: 'Close day (demo)',
+        compact: this.demoOn,
         onTap: () => {
           this.closeDay();
         }
@@ -451,15 +486,27 @@ struct Index {
       ControlButton({
         label: 'Demo clock ×300',
         labelColor: this.demoOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
+        compact: this.demoOn,
         onTap: () => {
           this.toggleDemo();
         }
       })
       if (this.demoOn) {
+        // The script of the demo day from Health Sim on this watch; the dial then reads "FEED · Health Sim".
+        ControlButton({
+          label: 'Get today from Health Sim',
+          labelColor: this.feedSource === FEED_FROM_HEALTH_SIM ? $r('sys.color.warning') :
+          $r('sys.color.font_primary'),
+          compact: true,
+          onTap: () => {
+            this.getFromHealthSim();
+          }
+        })
         // Only offered on the demo clock. The dial then reads "DEMO ×300 · FEED".
         ControlButton({
           label: this.feedOn ? 'Demo feed: on' : 'Demo feed: off',
           labelColor: this.feedOn ? $r('sys.color.warning') : $r('sys.color.font_primary'),
+          compact: true,
           onTap: () => {
             this.toggleFeed();
           }

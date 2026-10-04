@@ -17,6 +17,7 @@ import { MSG_UNKNOWN_KEY } from './DayPacketVerifier';
 import { parseJsonObject, readNumber } from './JsonRead';
 import { chainStateFromJson, chainStateToJson, newChainState, PacketSealer, WatchChainState } from './PacketSealer';
 import { DEMO_SPEED, RecorderClock } from './RecorderClock';
+import { SettleGate } from './SettleGate';
 import { SlotRecorder } from './SlotRecorder';
 import { Clock, Hasher, Signer, TextStore } from './WatchLinkPorts';
 import { daySigningString } from './WatchLinkSigning';
@@ -112,6 +113,8 @@ export class WatchLinkEngine {
   private packing: boolean = false;
   private started: boolean = false;
   private lastAck: string = '';
+  // acks/ files that may still be on their way: left for one more look before they are dropped.
+  private ackGate: SettleGate = new SettleGate();
   private lastState: SlotState = 'U';
   private feedOn: boolean = false;
   private feedHr: number = 0;
@@ -190,6 +193,12 @@ export class WatchLinkEngine {
   pause(): void {
     this.recorder.pause();
     this.saveClock(this.realClock.nowMs());
+    // The readings from before the pause say nothing about the time after it: until the first new sensor
+    // event the state is unknown (U), never off the wrist. The scripted feed keeps its own state.
+    if (!this.feedOn) {
+      this.machine = new WearStateMachine(this.recClock.isDemoSpeed() ? FRESHNESS_DEMO_CLOCK_MS :
+        FRESHNESS_REAL_CLOCK_MS);
+    }
   }
 
   isDemoClock(): boolean {
@@ -286,6 +295,10 @@ export class WatchLinkEngine {
     for (let i = 0; i < names.length; i++) {
       const path = `${ACKS_DIR}/${names[i]}`;
       const text = this.store.read(path);
+      // An ACK the relay is still writing is left for the next look (see SettleGate).
+      if (!this.ackGate.ready(names[i], text)) {
+        continue;
+      }
       this.store.remove(path);
       if (text === null) {
         continue;

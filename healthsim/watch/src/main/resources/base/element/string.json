@@ -1,0 +1,52 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Health Sim on the watch: the simulated day FairWear can ask for"
+    },
+    {
+      "name": "WatchAbility_desc",
+      "value": "Shows the simulated day"
+    },
+    {
+      "name": "WatchAbility_label",
+      "value": "Health Sim"
+    },
+    {
+      "name": "WatchExportAbility_desc",
+      "value": "Hands the simulated day to FairWear on this watch"
+    },
+    {
+      "name": "WatchExportAbility_label",
+      "value": "Health Sim export"
+    },
+    {
+      "name": "sim_banner",
+      "value": "SIMULATED DATA"
+    },
+    {
+      "name": "app_title",
+      "value": "Health Sim"
+    },
+    {
+      "name": "day_title",
+      "value": "Today's script"
+    },
+    {
+      "name": "worn",
+      "value": "Worn"
+    },
+    {
+      "name": "charging",
+      "value": "Charging"
+    },
+    {
+      "name": "off_wrist",
+      "value": "Off wrist"
+    },
+    {
+      "name": "shared_line",
+      "value": "Shared with FairWear when it asks"
+    }
+  ]
+}

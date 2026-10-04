@@ -1,0 +1,44 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#101416"
+    },
+    {
+      "name": "page",
+      "value": "#101416"
+    },
+    {
+      "name": "ink",
+      "value": "#F2EFE8"
+    },
+    {
+      "name": "muted",
+      "value": "#A7B0B3"
+    },
+    {
+      "name": "banner_bg",
+      "value": "#FDE68A"
+    },
+    {
+      "name": "banner_text",
+      "value": "#78350F"
+    },
+    {
+      "name": "ring_track",
+      "value": "#263034"
+    },
+    {
+      "name": "ring_worn",
+      "value": "#2BB3A3"
+    },
+    {
+      "name": "ring_charging",
+      "value": "#E0A526"
+    },
+    {
+      "name": "ring_off",
+      "value": "#8E7CC3"
+    }
+  ]
+}

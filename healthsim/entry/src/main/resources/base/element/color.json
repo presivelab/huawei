@@ -1,72 +1,8 @@
 {
   "color": [
     {
-      "name": "page",
-      "value": "#F4F1EA"
-    },
-    {
-      "name": "surface",
-      "value": "#FFFFFF"
-    },
-    {
-      "name": "ink",
-      "value": "#1D2A2F"
-    },
-    {
-      "name": "muted",
-      "value": "#66737A"
-    },
-    {
-      "name": "accent",
-      "value": "#0F766E"
-    },
-    {
-      "name": "accent_soft",
-      "value": "#DDEFEC"
-    },
-    {
-      "name": "on_accent",
-      "value": "#FFFFFF"
-    },
-    {
-      "name": "empty",
-      "value": "#EFEAE0"
-    },
-    {
-      "name": "banner_bg",
-      "value": "#FDE68A"
-    },
-    {
-      "name": "banner_text",
-      "value": "#78350F"
-    },
-    {
-      "name": "sick_bg",
-      "value": "#FDE2E1"
-    },
-    {
-      "name": "sick_text",
-      "value": "#B42318"
-    },
-    {
-      "name": "off_bg",
-      "value": "#E6E1F5"
-    },
-    {
-      "name": "off_text",
-      "value": "#4C3D8F"
-    },
-    {
-      "name": "pad_bg",
-      "value": "#FFE8CC"
-    },
-    {
-      "name": "pad_text",
-      "value": "#9A4A00"
-    },
-    {
       "name": "start_window_background",
-      "value": "#F4F1EA"
+      "value": "#F1F3F5"
     }
   ]
 }

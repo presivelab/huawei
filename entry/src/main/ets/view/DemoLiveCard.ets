@@ -1,8 +1,10 @@
 import {
   DEMO_CLOSE_DAY,
+  DEMO_DAY_CLOSED,
   DEMO_HR_LABEL,
   DEMO_NOTE,
   DEMO_RESET,
+  DEMO_RESET_DONE,
   DEMO_STEPS_LABEL,
   DEMO_TITLE,
   LIVE_CHIP,
@@ -21,7 +23,7 @@ import {
   SYMBOL_STEPS
 } from '../ui/kit/KitTokens';
 import { VALUE_TILE, ValueWithUnit } from '../ui/kit/ValueWithUnit';
-import { demoCloseDay, demoReset, demoSetLive } from './DemoActions';
+import { demoCloseDay, demoReset, demoResultLine, demoSetLive } from './DemoActions';
 import { CAPTION, CARD_LARGE, HEADING } from './Styles';
 
 const CARD_GAP: number = 14;
@@ -184,6 +186,7 @@ export struct DemoLiveCard {
           .id('fw_demo_close_day')
           .onClick(() => {
             demoCloseDay();
+            this.showResult(demoResultLine(DEMO_DAY_CLOSED));
           })
         Button(DEMO_RESET)
           .buttonStyle(ButtonStyleMode.NORMAL)
@@ -192,6 +195,7 @@ export struct DemoLiveCard {
           .id('fw_demo_reset')
           .onClick(() => {
             demoReset();
+            this.showResult(demoResultLine(DEMO_RESET_DONE));
           })
       }
       .width('100%')
@@ -200,6 +204,15 @@ export struct DemoLiveCard {
         .attributeModifier(CAPTION)
     }
     .attributeModifier(CARD_LARGE)
+  }
+
+  // A short toast with the new score; the report above updates as well.
+  private showResult(message: string): void {
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: message, duration: 2500 });
+    } catch (err) {
+      // No toast on this device: the report above shows the new values anyway.
+    }
   }
 
   build() {

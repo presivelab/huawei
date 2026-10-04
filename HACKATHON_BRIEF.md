@@ -2,71 +2,63 @@
 
 The user owns the decisions recorded here. Unresolved fields may remain blank; do not ask the user to complete them until the current work depends on them.
 
-Source of the decisions below: `IMPLEMENTATION.md` in the project root. Where this brief and `hackathon_challenge.md` disagree, the challenge statement wins.
+The first plan (`IMPLEMENTATION.md`, written with Claude on claude.ai) is not in this repository; the decisions it held that are still in force are written out below, and later team decisions replace it where they differ (the add-on for HUAWEI Health users, benefit levels instead of discount percentages, the seven-key claim, Watch Link). Where this brief and `hackathon_challenge.md` disagree, the challenge statement wins.
 
 ## Pitch
 
-**User problem:** Insurers that reward healthy habits need wearable data they can trust, and users shouldn't have to hand over raw health data to get a discount. Today both sides lose: people can game wear-based programs by taking the watch off on bad days, while honest users share far more than necessary. FairWear computes wear compliance and an explainable health tier on the device and gives the insurer only a signed A/B/C tier, never raw heart-rate data.
+**User problem:** Programmes that reward healthy habits (for example an insurer's) need wearable data they can trust, and users shouldn't have to hand over raw health data to get a benefit. Today both sides lose: people can game wear-based programs by taking the watch off on bad days, while honest users share far more than necessary. FairWear computes wear compliance and an explainable health tier on the device and gives the partner only a signed A/B/C tier, never raw heart-rate data.
 
-**Desired demonstration:** A native ArkTS/ArkUI app in two modules. The watch (wearable emulator) turns simulated heart rate and step count into today's wear compliance. The phone (phone emulator) shows 90 days of history, detects selective non-wear, computes a tier A/B/C, and produces a package for the insurer signed with a HUKS key. Raw data never leaves the device.
+**Desired demonstration:** A native ArkTS/ArkUI app in two modules. The watch (wearable emulator) records signed, hash-chained wear days. The phone (phone emulator) scores six synthetic demo personas with HES-Lite, detects selective non-wear, shows "Why this tier" and an Evidence calendar where a day can be appealed, and shares a signed A/B/C tier as a QR code that a demo partner verifies. Raw data never leaves the device. The full script is `docs/DEMO_SCRIPT.md`.
 
 **Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing).
 
-**Distinctive platform capability:** One capability end to end: watch sensors (Sensor Service Kit: heart rate, pedometer, wear detection) → on-device compliance engine → signed tier. HUKS (Universal Keystore Kit) is the trust link in that same chain, not a separate feature. Only kits available in OpenHarmony are used.
+**Distinctive platform capability:** One capability end to end: watch sensors (Sensor Service Kit: heart rate, pedometer, wear detection) → on-device compliance rules and score → signed tier. HUKS (Universal Keystore Kit) is the trust link in that same chain, not a separate feature.
 
 ## Target
 
-- Platform: HarmonyOS product, built only on kits that exist in OpenHarmony (Sensor, Universal Keystore, Crypto Architecture, Network, Ability, Basic Services, ArkData, ArkUI, Form). Not tested on Oniro; no such claim is made.
-- API level: minimum (compatible) API 20, compile API 23, target API 24
+- Platform: HarmonyOS product. Kits imported: Ability, ArkData, ArkTS, ArkUI, Basic Services, Core File, Crypto Architecture, Form, Performance Analysis (logging), Sensor Service, Universal Keystore, and Wear Engine (send path in code, not run; HarmonyOS only). Not tested on Oniro; no such claim is made.
+- API level: minimum (compatible) API 20 (`6.0.0(20)`), target API 24 (`6.1.1(24)`), built with the HarmonyOS 6.1.1 (API 24) SDK of DevEco Studio 6.1.1.280.
 - Device type: phone (`entry` module) + wearable (`watch` module, round 466×466)
-- Validation target: DevEco Studio emulators, one Phone and one Wearable, newest available image. Emulator names and image versions: [to be filled in once the virtual devices are created]
+- Validation target: DevEco Studio emulators: Phone, HarmonyOS 6.1.1 (API 24); Wearable, HarmonyOS 6.1.1 (API 24), round 466×466.
 
 ## Intended user flow
 
-Demo flow from `IMPLEMENTATION.md`. It is fixed; optional extras must not change it.
+The recorded demo follows `docs/DEMO_SCRIPT.md` (part A, about four minutes):
 
-1. Watch, wearable emulator: set heart rate and steps in the emulator's sensor simulation panel; the app reacts live.
-2. Watch: stop the heart-rate signal; after 60 s the wear-state dot turns red and the hours-worn counter stops.
-3. Phone, Consent: "Raw data never leaves your device", checkbox, Continue.
-4. Phone, Dashboard: persona Ania (labelled "Synthetic data") shows Tier A and a 15% discount with the wear-compliance ring.
-5. Phone: switch between Marek and Kasia. Both have about 87% wear compliance; only Marek is flagged for selective non-wear and gets 0%.
-6. Phone, Why and Wear calendar: factors with points, and the suspicious gaps in red with their explanation.
+1. Phone: connect HUAWEI Health (labelled DEMO placeholder), FairWear's own consent with a switch per data type.
+2. Phone, Report: persona Ania (labelled "Demo data") shows 92 · A, full benefit, 30 of 30 days worn.
+3. Phone: Marek and Kasia wear the watch on the same 26 of 30 days; only Marek is flagged for selective non-wear (three suspicious breaks), so he gets no benefit this month; Kasia gets a partial benefit.
+4. Phone, Evidence: the calendar of the month with the reason behind each day; "Appeal this day".
+5. Phone, Why this tier: strongest factors, what to improve, missing data, the one change that reaches the next tier.
+6. Phone, Report: the Live card and the demo controls ("Close the day" recalculates, "Reset demo").
 7. Phone, Share: the partner side issues a single-use nonce (in the demo the partner verifier runs inside the same app), the phone signs the seven-key claim over it with its HUKS key and shows the token as a QR code, next to "What the partner sees". Every code shown is recorded with its exact text in "What left this phone". A persona without a score gets no code.
 8. Phone, Partner view (demo): takes the code from the same phone (the emulator has no camera) and sees only tier, eligibility, period and the verification status. Verifying the same code again gives "Already used"; changing the tier gives "Invalid signature".
+9. Watch → phone: a signed day from the watch is relayed to the phone and verified; a changed day is refused, a held-back day shows as missing.
 
-**Approved UI direction:** sections 12 (phone UI, `entry`) and 13 (watch UI, `watch`) of `IMPLEMENTATION.md` are the UI direction approved by the team. Implement screens from those sections without asking about each screen; ask only where they leave a decision open.
+**UI direction:** the project skill `.claude/skills/fairwear-ui/SKILL.md` holds the look and wording rules every screen follows.
 
 ## Acceptance checks
 
-- [ ] `entry` launches on the phone emulator and `watch` launches on the wearable emulator; both use the `common` module.
-- [ ] On the wearable emulator, changing simulated heart rate and steps changes the watch screen; 60 s without a heart-rate reading switches the wear state to not worn.
-- [ ] Ania: Tier A, 15%. Kasia: Tier B, 8%, no flag. Marek: flagged for selective non-wear, not eligible, 0%.
-- [ ] A signed claim verifies in the Insurer view; a tampered payload, a reused nonce and a malformed key are rejected without a crash.
-- [ ] Hypium tests from section 14 of `IMPLEMENTATION.md` pass.
+- [x] `entry` launches on the phone emulator and `watch` launches on the wearable emulator; both use the `common` module (`docs/test-results.txt`, `docs/screenshots/`).
+- [x] On the wearable emulator, the watch shows heart rate, steps and wear state; without a heart-rate reading the wear state is unknown or off-wrist, never invented (`LiveWear.test.ets`, `WatchLinkFlow.test.ets`, `docs/screenshots/i3-watch-wear-state.jpeg`). Changing the heart rate in the emulator's Virtual sensor panel was not run.
+- [x] Ania: A / 92, full benefit. Kasia: B / 73, partial benefit, no flag. Marek: B / 75, flagged for selective non-wear, not eligible, no benefit (`HesPersonas.test.ets`, `WearMonth.test.ets`, `EngineReports.test.ets`, `docs/screenshots/final/`).
+- [x] A signed claim verifies in the partner view; a tampered payload, a reused nonce and an unknown key are rejected without a crash (`ClaimVerifier.test.ets`, `ShareFlow.test.ets`, `docs/screenshots/final/a4-partner-*`).
+- [x] The pure-logic tests pass under Node (`tools/run-logic-tests.sh common` and `watch`; counts in `docs/test-results.txt`).
 
 ## Scope boundaries
 
-- In scope: steps K0–K9 of `IMPLEMENTATION.md` — `common` HAR (data contract, synthetic generator, day aggregation, wear compliance, selective non-wear detector, risk scorer, discount policy, report builder, HUKS/software attestor, claim verifier), phone UI, watch UI with live sensors, tests, submission documents. Optional extras K11–K17 only after the K4–K5 tests are green and only until the feature freeze.
-- Out of scope: watch-to-phone synchronisation (emulators have no distributed features); HarmonyOS-only kits (Scan Kit, Health Service Kit, Live View); a separate insurer system; QR scanning with a camera; penalties of any kind (discount only); an actuarial model; `conductor-dev`.
+- In scope: the `common` HAR (data contract, HES-Lite and the six personas, wear month and the selective non-wear flag, report view models, claim codec and verifier, Watch Link logic of both sides), the phone screens, the watch screens with live sensors and the Watch Link recorder, tests, submission documents.
+- Out of scope: reading real HUAWEI Health data (Health Service Kit needs Huawei's approval; the adapter is a stub); Wear Engine on paired devices (not run); a separate partner system; QR scanning with a camera; penalties of any kind (benefits only); an actuarial model; `conductor-dev`.
+- Health Sim: our own simulator app (`healthsim/`) stands in for HUAWEI Health on the emulators. FairWear asks it for data with `startAbilityForResult` after its consent, on the phone (histories of the six people) and on the watch (the script of the demo day); without it FairWear uses its built-in demo data.
 - Mocked or simulated behavior:
 
-| Element                                     | Status                                                                                         |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Heart rate and steps on the watch           | Real API (Sensor Service Kit); values come from the emulator's sensor simulation               |
-| Wear state                                  | Real `WEAR_DETECTION` API where available; on the emulator inferred from the heart-rate signal |
-| Compliance engine, detector, tier, discount | Real code, computed on the device                                                              |
-| 90 days of history on the phone             | Synthetic, deterministic personas                                                              |
-| Watch-to-phone synchronisation              | Not on the emulator (no distributed features); described in ARCHITECTURE                       |
-| Claim signature                             | Real ECDSA; key in HUKS or a software key, labelled in the UI                                  |
-| Insurer                                     | A screen in the same app, not a separate system                                                |
-| Discount amounts                            | Illustrative, not actuarial                                                                    |
-
-## First-minute narrative
-
-- **0:00–0:15** Watch emulator: we set heart rate in the emulator's sensor panel; the live HR and today's wear ring react. When the HR signal stops, the watch is marked off-wrist after 60 s.
-- **0:15–0:30** Phone: Ania, 30 days computed on-device, ~94% wear compliance, Tier A, 15% discount; "Why?" shows the four factors.
-- **0:30–0:50** Marek vs Kasia: both ~87% compliance. Marek took the watch off right after days of elevated resting heart rate, so no discount this month; Kasia simply forgot it, so Tier B, 8%.
-- **0:50–1:10** Share with insurer: claim signed with a HUKS key; the insurer sees only tier, compliance and "signature OK". Tampering C→A gives INVALID SIGNATURE.
-- **1:10–1:20** Raw data never left the device; what is real vs simulated.
-
-The compliance figures above (~94%, ~87%) are targets until step K4 is done. After K4 they are replaced with the values the engine actually computes. If Marek and Kasia do not come out with similar compliance, the persona parameters (section 4 of `IMPLEMENTATION.md`) are tuned, not this narrative.
+| Element                                   | Status                                                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Heart rate and steps on the watch         | Real API (Sensor Service Kit); on the emulator the recorded days came from the labelled demo feed       |
+| Wear state                                | Real `WEAR_DETECTION` API where available; on the emulator inferred from the heart-rate signal         |
+| Score, wear rules, tier, benefit level    | Real code, computed on the device                                                                      |
+| History on the phone                      | Synthetic, deterministic personas                                                                      |
+| Watch-to-phone transfer                   | Signed day packets over a development relay (`hdc`); Wear Engine send path in code, not run            |
+| Claim signature                           | Real ECDSA; key in HUKS, a software-key fallback labelled in the UI                                    |
+| Partner                                   | A screen in the same app, not a separate system                                                        |
+| Benefit levels                            | Illustrative: eligible and A is a full benefit, eligible and B a partial benefit, anything else none   |

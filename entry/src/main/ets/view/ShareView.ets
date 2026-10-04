@@ -10,7 +10,7 @@ import {
   shareOffer,
   tokenLengthLine
 } from 'common';
-import { ROUTE_PARTNER } from '../addon/AddonTexts';
+import { ROUTE_LEDGER, ROUTE_PARTNER } from '../addon/AddonTexts';
 import { KEY_TAB } from '../nav/EntryRouter';
 import { SHARE_NEEDS_SCORE } from '../report/ReportTexts';
 import {
@@ -23,6 +23,7 @@ import {
 import { KEY_SHARE_REVISION, ShareCode, ShareService } from '../share/ShareService';
 import {
   CODE_USED,
+  LEDGER_LINK,
   NEW_CODE_LABEL,
   NO_CODE_SENTENCE,
   NOT_IN_CODE,
@@ -38,7 +39,8 @@ import {
   TECH_KEY_ID,
   TECH_NONCE,
   TECHNICAL_LABEL,
-  TIER_FROM_PREVIEW
+  TIER_FROM_PREVIEW,
+  TRY_AGAIN_LABEL
 } from '../share/ShareTexts';
 import { EmptyState } from '../ui/kit/EmptyState';
 import { InfoChip } from '../ui/kit/InfoChip';
@@ -51,6 +53,7 @@ import {
   SYMBOL_KEY_HELD,
   SYMBOL_TAB_SHARE
 } from '../ui/kit/KitTokens';
+import { TextLink } from '../ui/kit/TextLink';
 import { TierBadge } from '../ui/kit/TierBadge';
 import { BODY_SECONDARY, CAPTION, CARD_LARGE, HEADING } from './Styles';
 
@@ -74,6 +77,7 @@ export struct ShareView {
   @State report: PersonaReport = selectedReport();
   @State code: ShareCode | null = null;
   @State failure: string = '';
+  @State pending: number = 0;     // code requests in flight; the buttons wait for them (no double codes)
   @State technical: boolean = false;
   private preview: boolean = reportService().isPreview();
 
@@ -93,10 +97,13 @@ export struct ShareView {
     }
   }
 
-  // Shows the service's code when it belongs to the persona on screen.
+  // Shows the service's code when it belongs to the persona on screen and still says what the report says
+  // (after "Close the day" the tier can change; an old code is never shown next to a new tier).
   syncCode(): void {
     const have = ShareService.shared().current();
-    this.code = have !== null && have.personaId === this.report.id ? have : null;
+    const offer = this.offer();
+    this.code = have !== null && have.personaId === this.report.id && have.claim.tier === offer.tier &&
+      have.claim.eligible === offer.eligible && have.claim.period === offer.periodIso ? have : null;
   }
 
   private offer(): ShareOffer {
@@ -108,9 +115,12 @@ export struct ShareView {
       return;
     }
     this.failure = '';
+    this.pending += 1;
     ShareService.shared().codeFor(this.report, fresh).then((): void => {
+      this.pending -= 1;
       this.syncCode();
     }).catch((e: Error) => {
+      this.pending -= 1;
       this.failure = SIGN_FAILED + e.message;
     });
   }
@@ -220,6 +230,7 @@ export struct ShareView {
             })
             Button(NEW_CODE_LABEL)
               .buttonStyle(ButtonStyleMode.NORMAL)
+              .enabled(this.pending === 0)
               .id('fw_share_new_code')
               .onClick(() => {
                 this.request(true);
@@ -247,6 +258,13 @@ export struct ShareView {
           EmptyState({ symbol: SYMBOL_TAB_SHARE, sentence: NO_CODE_SENTENCE, textId: 'fw_share_no_code' })
         } else if (this.failure.length > 0) {
           EmptyState({ symbol: SYMBOL_INFO, sentence: this.failure })
+          Button(TRY_AGAIN_LABEL)
+            .buttonStyle(ButtonStyleMode.NORMAL)
+            .enabled(this.pending === 0)
+            .id('fw_share_try_again')
+            .onClick(() => {
+              this.request(false);
+            })
         } else {
           Row({ space: 12 }) {
             LoadingProgress()
@@ -281,6 +299,13 @@ export struct ShareView {
           .onClick(() => {
             this.nav.pushPathByName(ROUTE_PARTNER, null);
           })
+        TextLink({
+          text: LEDGER_LINK,
+          linkId: 'fw_share_ledger',
+          onTap: () => {
+            this.nav.pushPathByName(ROUTE_LEDGER, null);
+          }
+        })
         if (!this.offer().available) {
           Text(SHARE_NEEDS_SCORE)
             .attributeModifier(CAPTION)

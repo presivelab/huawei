@@ -32,6 +32,7 @@
  */
 import { TIER_A, TIER_B, TIER_C } from '../claim/ClaimValidation';
 import { HealthStatus } from '../health/HealthRecords';
+import { HealthSimPerson } from '../health/HealthSimPayload';
 import { healthSourceLabel } from '../health/HealthStatusLabel';
 import { componentScore, equivalentMvpa } from '../hes/HesComponents';
 import { hesDefinition, HES_DAYS_PER_WEEK, HES_TIER_A_MIN, HES_TIER_B_MIN } from '../hes/HesCurves';
@@ -54,7 +55,7 @@ import {
 } from '../hes/HesTypes';
 import { DEFAULT_THRESHOLDS } from '../model/defaults';
 import { Thresholds } from '../model/types';
-import { WearBreakResult, WearDayResult, WearDayState, WearMonthResult } from '../wear/WearMonth';
+import { buildWearMonth, WearBreakResult, WearDayResult, WearDayState, WearMonthResult } from '../wear/WearMonth';
 import { WearPersonas } from '../wear/WearPersonas';
 import { benefitLevel, benefitReason } from './Benefit';
 import {
@@ -75,6 +76,8 @@ import {
 export const ENGINE_DEFAULT_ID: string = 'ania';
 /** Where the values come from, as the screens write it: "HUAWEI Health · Demo data". */
 export const ENGINE_SOURCE: string = healthSourceLabel(HealthStatus.DEMO);
+/** Where the values come from when Health Sim sent them: "Health Sim · Simulated data". */
+export const HEALTH_SIM_LABEL: string = 'Health Sim · Simulated data';
 
 const BAR_DAYS: number = 7;
 const MINUTES_PER_HOUR: number = 60;
@@ -199,6 +202,20 @@ function periodText(periodIso: string): string {
   return `${shortDate(periodIso.substring(0, cut))} – ${shortDate(periodIso.substring(cut + 2))}`;
 }
 
+// The wear month as read on screen. When "Close the day" has scored days after the month, the last scored
+// day is added: "4 Sep – 3 Oct · score to 5 Oct". The claim keeps the wear month (periodIso).
+export const SCORE_TO: string = ' · score to ';
+
+function periodLine(periodIso: string, history: HesDay[]): string {
+  const text = periodText(periodIso);
+  const cut = periodIso.indexOf('..');
+  if (cut < 0 || history.length === 0) {
+    return text;
+  }
+  const last: string = history[history.length - 1].date;
+  return last > periodIso.substring(cut + 2) ? `${text}${SCORE_TO}${shortDate(last)}` : text;
+}
+
 class RawText {
   raw: string = '';
   unit: string = '';
@@ -306,7 +323,7 @@ function findComponent(result: HesResult, id: HesComponentId): HesComponentResul
   return null;
 }
 
-function rowOf(c: HesComponentResult, history: HesDay[], scored: boolean): ComponentRow {
+function rowOf(c: HesComponentResult, history: HesDay[], scored: boolean, source: string): ComponentRow {
   const minCount = c.core ? c.minCount : 0;
   if (!c.available || c.rawValue < 0 || c.score < 0) {
     // Not enough data: no value, no score, no weight and no bar. The counts say how far it is.
@@ -336,16 +353,16 @@ function rowOf(c: HesComponentResult, history: HesDay[], scored: boolean): Compo
     validCount: c.validCount,
     minCount: minCount,
     bars7: barsOf(hesDefinition(c.id), history),
-    source: ENGINE_SOURCE
+    source: source
   };
 }
 
-function rowsOf(result: HesResult, history: HesDay[], scored: boolean): ComponentRow[] {
+function rowsOf(result: HesResult, history: HesDay[], scored: boolean, source: string): ComponentRow[] {
   const out: ComponentRow[] = [];
   for (let i = 0; i < ROW_ORDER.length; i++) {
     const c = findComponent(result, ROW_ORDER[i]);
     if (c !== null) {
-      out.push(rowOf(c, history, scored));
+      out.push(rowOf(c, history, scored, source));
     }
   }
   return out;
@@ -405,7 +422,7 @@ function wearMonthOf(id: string): WearMonthResult {
 }
 
 function build(id: string, result: HesResult, history: HesDay[], month: WearMonthResult, liveHr: number,
-  liveSteps: number): PersonaReport {
+  liveSteps: number, source: string = ENGINE_SOURCE): PersonaReport {
   const scored: boolean = result.status === HesStatus.OK && result.score >= 0;
   const eligible: boolean = scored && month.eligible;
   const live: LiveNow = {
@@ -416,7 +433,7 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
   return {
     id: id,
     name: HesPersonas.displayName(id),
-    period: periodText(month.period),
+    period: periodLine(month.period, history),
     periodIso: month.period,
     hes: scored ? result.score : HES_NONE,
     tier: result.tier,
@@ -426,7 +443,7 @@ function build(id: string, result: HesResult, history: HesDay[], month: WearMont
     benefit: benefitLevel(eligible, result.tier, scored),
     benefitReason: benefitReason(eligible, result.tier, scored, month.flagged, month.suspiciousBreaks),
     pointsToNext: scored ? pointsToNextTier(result.score) : POINTS_UNKNOWN,
-    components: rowsOf(result, history, scored),
+    components: rowsOf(result, history, scored, source),
     wear: wearOf(month),
     live: live,
     whatIf: counterfactual === null ? '' : counterfactual.sentence
@@ -652,6 +669,29 @@ export function engineReports(): PersonaReport[] {
   return cache;
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// Reports from a history that came from Health Sim
+// ---------------------------------------------------------------------------------------------------------
+
+/**
+ * A demo session that starts from the days Health Sim sent for this person. Closing a day continues the
+ * persona's own seeded series. An unknown id gives the default persona's session.
+ */
+export function engineSessionFrom(person: HealthSimPerson): HesSession {
+  return HesPersonas.sessionFrom(knownId(person.id), person.days);
+}
+
+/** The wear month of the days Health Sim sent, under the default thresholds, with no sick days. */
+export function wearMonthFrom(person: HealthSimPerson): WearMonthResult {
+  return buildWearMonth(person.wear, DEFAULT_THRESHOLDS, []);
+}
+
+/** The report of a person whose data came from Health Sim, as the session stands now. */
+export function engineReportFromPerson(person: HealthSimPerson, session: HesSession): PersonaReport {
+  return build(knownId(person.id), session.result(), session.history(), wearMonthFrom(person),
+    session.liveHeartRate(), session.liveSteps(), HEALTH_SIM_LABEL);
+}
+
 /** The report of one persona. An unknown id gives the default persona; it never throws. */
 export function engineReport(id: string): PersonaReport {
   const all = engineReports();
@@ -814,6 +854,16 @@ export function dayDetailOf(day: WearDayResult, n: number, th: Thresholds): DayD
  */
 export function engineDayDetails(id: string): DayDetail[] {
   const month = wearMonthOf(knownId(id));
+  const out: DayDetail[] = [];
+  for (let i = 0; i < month.days.length; i++) {
+    out.push(dayDetailOf(month.days[i], i + 1, DEFAULT_THRESHOLDS));
+  }
+  return out;
+}
+
+/** The 30 days of the wear month Health Sim sent for this person, oldest first. */
+export function engineDayDetailsFrom(person: HealthSimPerson): DayDetail[] {
+  const month = wearMonthFrom(person);
   const out: DayDetail[] = [];
   for (let i = 0; i < month.days.length; i++) {
     out.push(dayDetailOf(month.days[i], i + 1, DEFAULT_THRESHOLDS));

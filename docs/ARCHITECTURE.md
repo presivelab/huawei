@@ -9,6 +9,38 @@ WATCH 5 → HUAWEI Health (phone) → [Health Service Kit + user authorization]
 FairWear watch app → live heart rate + wear state (not part of HES)
 ```
 
+On the emulators HUAWEI Health is not available to the app, so its place is taken by **Health Sim**
+(`healthsim/`, bundle `com.fairwear.healthsim`): our own simulator app with the same six people. It is not
+HUAWEI Health and does not look like it; every screen says "SIMULATED DATA".
+
+```
+Phone:  FairWear ── startAbilityForResult(AuthAbility, fwScopes) ──▶ Health Sim: its own consent screen
+        FairWear ◀── resultCode 0 + parameters['fwhs1'] (histories and wear months, JSON) ── "Allow"
+        FairWear: its own consent (GDPR Art. 9) → strict decode → HES-Lite and wear rules → report
+        Health Sim card "FairWear" ── startAbility ──▶ FairWear (opens it the way an add-on is opened)
+
+Watch:  FairWear watch ── startAbilityForResult(WatchExportAbility) ──▶ Health Sim watch
+        FairWear watch ◀── resultCode 0 + parameters['fwhsw1'] (the script of the demo day, JSON)
+        FairWear watch: strict decode → the demo feed plays that script → recorder → signed day packet
+```
+
+- The platform capability used here is **Ability Kit**: one app starts an ability of another and gets a
+  result back (`UIAbilityContext.startAbilityForResult`, `terminateSelfWithResult`). It is the same call
+  a real integration with a host app would use; no permission is needed for it.
+- What crosses: on the phone, completed days of the six people and their wear months, only the data types
+  the user allowed in Health Sim (a type that was not allowed arrives as "no value"); on the watch, the
+  script of one demo day. Nothing else is shared between the two apps: no shared files, no network.
+- Both texts are decoded strictly (`common/src/main/ets/health/HealthSimPayload.ets`,
+  `common/src/main/ets/watchlink/DemoFeed.ets`): a wrong version, an unknown person, a wrong row length, a
+  value that is not a number or a text over the size limit gives nothing, never an exception.
+- **Fallback.** When Health Sim is not installed, refuses or sends something that does not decode, FairWear
+  works as before: the built-in demo histories with the source line "HUAWEI Health · Demo data" on the
+  phone, and the built-in day script on the watch ("Health Sim not on this watch · built-in script").
+- The report built from Health Sim data equals the built-in one for all six people
+  (`common/src/test/HealthSimPayload.test.ets`); the source line then reads "Health Sim · Simulated data".
+- Health Sim carries unchanged copies of the shared logic it needs (`healthsim/*/src/main/ets/fw/`); a Node
+  test keeps them identical to `common` (`common/src/test/HealthSimCopies.test.ets`).
+
 FairWear is an add-on for HUAWEI Health users: with their permission it reads what HUAWEI Health already
 measures, scores it on the phone, and shares only a signed tier.
 
@@ -17,8 +49,8 @@ measures, scores it on the phone, and shares only a signed tier.
 | Module   | Device                    | What is in it                                                                                                                                                                                                                                                               |
 | -------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `common` | none (HAR, no UI imports) | Model types, tier claim codec and verifier (`claim/`), the score (`hes/`), wear month and selective non-wear rule (`wear/`, `rules/`), the report view models (`report/`), Watch Link logic (`watchlink/`), the health source layer (`health/`), live wear state (`live/`). |
-| `entry`  | phone                     | The add-on screens, the HUAWEI Health adapter stub, device signing (`platform/`).                                                                                                                                                                                           |
-| `watch`  | wearable                  | Live heart rate, steps today and wear state.                                                                                                                                                                                                                                |
+| `entry`  | phone                     | The add-on flow (welcome, two-step consent, Settings), the tabs Report / Evidence / Share, Why this tier, the partner view (demo), "What left this phone", the Watch link cards and tour, the home-screen card and shortcuts, the HUAWEI Health adapter stub. |
+| `watch`  | wearable                  | Live heart rate, steps today and wear state; the Watch Link recorder (288 slots a day), day signing with the watch key, the slot-ring dial, the demo clock and demo feed, the Wear Engine send path (not run). |
 
 ## Health source layer (`common/src/main/ets/health/`)
 
@@ -37,7 +69,7 @@ measures, scores it on the phone, and shares only a signed tier.
 
 | Part                                                                  | State                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| HUAWEI Health connection                                              | Stub. Access to sensitive data through Health Service Kit needs Huawei's approval for the app; it was not granted during the hackathon.                                                                                                                                                                                                                                                                              |
+| HUAWEI Health connection                                              | Stub for the real kit: access to sensitive data through Health Service Kit needs Huawei's approval for the app; it was not granted during the hackathon. On the emulators Health Sim, our own simulator app, stands in for HUAWEI Health and hands FairWear the data after its own consent (Data flow above); without it, built-in demo data.                                                                                                                                                                                                                                                                              |
 | HUAWEI Health authorization screen                                    | Not shown. A DEMO placeholder stands in its place; FairWear does not copy Huawei's screen.                                                                                                                                                                                                                                                                                                                           |
 | Consent logic, status transitions, per-data-type switches             | Real, covered by tests (`common/src/test/Health.test.ets`).                                                                                                                                                                                                                                                                                                                                                          |
 | Demo history in HUAWEI Health record format (`SyntheticHealthSource`) | Not built. The demo personas are generated as completed days for the score (`hes/HesPersonas.ets`) and do not pass through the health source layer, whose demo source is empty.                                                                                                                                                                                                                                      |
@@ -53,7 +85,7 @@ measures, scores it on the phone, and shares only a signed tier.
 | ------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `entry` | none                               | The add-on screens need no permission in this build; the HUAWEI Health adapter is a stub.         |
 | `watch` | `ohos.permission.READ_HEALTH_DATA` | "FairWear shows your live heart rate on the watch and uses it to tell whether the watch is worn." |
-| `watch` | `ohos.permission.ACTIVITY_MOTION`  | "FairWear shows the steps counted today on the watch."                                            |
+| `watch` | `ohos.permission.ACTIVITY_MOTION`  | "FairWear shows the steps counted today on the watch and adds them to the day summary it records." |
 
 ## One entry point
 
@@ -80,13 +112,14 @@ Everything that opens FairWear uses that same ability and one optional parameter
 | ------------------------------ | -------------------------------------------------- | ---------------------------------- |
 | Home-screen card (2x2)         | tap, `postCardAction` with `fwTarget: 'dashboard'` | start page                         |
 | Icon shortcut "Data source"    | `shortcuts_config.json`, `fwTarget: 'source'`      | Settings with the data-source card |
+| Icon shortcut "How Watch Link works" | `shortcuts_config.json`, `fwTarget: 'tour'`  | the Watch Link tour                |
 | A host app or the command line | `Want` parameter `fwTarget`                        | the named screen                   |
 
 `EntryAbility` passes the want to `routeFromWant` (`entry/src/main/ets/nav/EntryRouter.ets`) in `onCreate`
 and `onNewWant`; the start page opens the screen. The value is untrusted input. `resolveFwTargetFromWant`
-(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `evidence`, `share` and `source`; a missing value, an
+(`common/src/main/ets/nav/EntryTarget.ets`) accepts `dashboard`, `evidence`, `share`, `source` and `tour`; a missing value, an
 unknown value, a non-string, an oversized string or malformed card parameters open the start page and never
-throw (11 tests in `common/src/test/EntryTarget.test.ets`). After consent the start page is three tabs:
+throw (12 tests in `common/src/test/EntryTarget.test.ets`). After consent the start page is three tabs:
 `dashboard` selects Report, `evidence` Evidence and `share` Share (`fwTargetTab`); `source` opens Settings
 above the Report tab. There is no shortcut for the Share tab yet.
 
@@ -96,7 +129,10 @@ a nonce, signs the seven-key claim with `ProofSigner` and writes the exact token
 (`share/ledger.json` in the app sandbox) before the QR code is drawn. A report without a score gets no code
 and no ledger entry. The partner view takes the token inside the app (the emulator has no camera) and shows
 the verifier's own result: the status, the check the run stopped at, the claim only when its signature
-verified. What each screen shows is decided in `common/src/main/ets/claim/ShareFlow.ets` (9 tests in
+verified. "Use the code from this phone" replaces a code that was already checked or whose nonce is about to
+expire, so a rehearsal never leaves the partner holding a dead code. "What left this phone" (route `ledger`,
+linked from the Share tab) lists the ledger newest first with each token's exact text and size. What each
+screen shows is decided in `common/src/main/ets/claim/ShareFlow.ets` (9 tests in
 `common/src/test/ShareFlow.test.ets`).
 
 Checked on the Phone emulator (API 24): cold start and a second start of the running app with
@@ -112,9 +148,10 @@ placed cards with `formProvider.updateForm` (`entry/src/main/ets/platform/CardSt
 session changes.
 
 Checked on the Phone emulator: the card is offered under the icon's "Widgets" menu, can be added to the
-home screen, and changes from "HUAWEI Health · not connected" to "HUAWEI Health · DEMO" after consent
-(`docs/screenshots/ta1-home-card-phone.jpeg`, `ta1-home-card-after-consent-phone.jpeg`).
-Coverage and "Score ready" stay "—" until the scoring module is part of the build.
+home screen, and changes from "HUAWEI Health · Not connected" to "HUAWEI Health · Demo data" after consent
+(`docs/screenshots/ta1-home-card-phone.jpeg`, `ta1-home-card-after-consent-phone.jpeg`, taken before the
+scoring engine was in the build). Coverage and "Score ready" now come from the report of the selected persona
+(`Report.test.ets`, `CardDigest.test.ets`); the card with the engine digest was not photographed.
 The card and Preferences need no permission.
 
 ## Watch Link
@@ -126,7 +163,7 @@ LiveSensors (HR, steps, wear, charging)                       Receivers
   → SlotRecorder (288 × 5-min slots/day, files)                 └─ inbox/ scan (emulator relay)
   → DayBuilder (measurements, no verdicts)                    → DayPacketVerifier (format → key → sig → chain → date)
   → DayPacket signed with the WATCH key, hash-chained         → ChainLedger (seq/prev, gaps, duplicates)
-  → outbox/ ─┬─ WearEngineTransport (paired devices only)     → WatchDayFacts → rules / HES (not wired in this branch)
+  → outbox/ ─┬─ WearEngineTransport (paired devices only)     → WatchDayFacts → shown, not scored (by decision)
              └─ files for the dev relay (emulator)            → Watch link card, Days from the watch
                          tools/watch-phone-relay.mjs (hdc) ────┘   ACK → back to the watch → the watch deletes the packet
 ```
@@ -138,11 +175,10 @@ LiveSensors (HR, steps, wear, charging)                       Receivers
   `DeviceSigVerifier`, `DeviceHasher`) and the signing helpers moved from `entry` (`ProofSigner`,
   `CryptoUtil`, `Bytes`). The claim key of the phone is unchanged; the watch has its own key alias.
 - `watch/src/main/ets/watchlink/`: `WatchLinkRuntime` (key, files, sensor feed), `SlotRing` (the dial ring),
-  `WearEngineTransport`.
+  `WearEngineTransport` (send path only: the receiver for ACKs is not started and the outbox is not resent;
+  on emulators the relay carries both directions).
 - `entry/src/main/ets/watchlink/`: `WatchLinkService`, `WearEngineReceiver`; `view/WatchLinkCard.ets`.
 - What leaves the watch: one signed summary per day, under 3800 bytes; no per-sample heart rate.
   What leaves the phone: unchanged, only the signed tier claim.
-- The watch permission text for steps is now "FairWear shows the steps counted today on the watch and adds
-  them to the day summary it records."
 
 Packet format, signing string, verify order, limitations and deviations: `docs/WATCH_LINK.md`.

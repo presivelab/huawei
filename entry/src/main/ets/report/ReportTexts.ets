@@ -166,6 +166,7 @@ export function dayStateNote(state: string): string {
 
 // --- "Why this tier" ---
 
+export const WHY_NO_SCORE_LABEL: string = 'Why no score yet';
 export const WHY_STRONGEST: string = 'Strongest';
 export const WHY_IMPROVE: string = 'To improve';
 export const WHY_MISSING: string = 'Missing data';
@@ -210,9 +211,10 @@ export function whyRowDetail(row: ComponentRow): string {
   return `${row.raw} ${row.unit} · weight ${weightText(row)}`;
 }
 
-// "14 days" under a measure that already has enough data.
+// "14 days" or "1 night" under a measure that already has data.
 export function countLine(row: ComponentRow): string {
-  return `${row.validCount} ${countUnit(row.id)}`;
+  const unit = countUnit(row.id);
+  return `${row.validCount} ${row.validCount === 1 ? unit.substring(0, unit.length - 1) : unit}`;
 }
 
 // --- Report tab: the live card and the demo controls ---
@@ -220,7 +222,7 @@ export function countLine(row: ComponentRow): string {
 export const LIVE_TITLE: string = 'Live';
 export const LIVE_CHIP: string = 'Demo values';
 export const LIVE_NOTE: string =
-  'Live readings are shown, never scored. Your score uses completed days only.';
+  'Shown, not scored. Close the day turns today\'s steps into a completed day; the heart rate is never stored.';
 export const NO_READING: string = '—';
 export const DEMO_TITLE: string = 'Demo controls';
 export const DEMO_HR_LABEL: string = 'Heart rate';
@@ -230,6 +232,8 @@ export const DEMO_RESET: string = 'Reset demo';
 export const DEMO_NOTE: string =
   'Close the day adds today as a completed day and recalculates the score. Reset returns this persona ' +
     'to its starting month.';
+export const DEMO_DAY_CLOSED: string = 'Day closed';
+export const DEMO_RESET_DONE: string = 'Demo reset';
 export const PERSONA_SHEET_NOTE_ENGINE: string = 'Scripted demo personas, scored by the same rules';
 
 // The note under the persona sheet title: fixed preview values, or scripted days scored by the rules.

@@ -172,7 +172,7 @@ export const CHECK_LABELS: string[] = [
   'Format',
   'Known key',
   'Signature over the exact claim',
-  'Nonce issued by this partner',
+  'Nonce issued by this partner, not expired',
   'Not used before'
 ];
 

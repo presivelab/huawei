@@ -12,7 +12,8 @@ import {
   verdictLine,
   VerifyResult
 } from 'common';
-import { ShareService } from '../share/ShareService';
+import { selectedReport } from '../report/ServiceLocator';
+import { ShareCode, ShareService } from '../share/ShareService';
 import {
   ATTEMPT_AGAIN,
   ATTEMPT_FIRST,
@@ -84,17 +85,30 @@ export struct PartnerPage {
     });
   }
 
+  // Takes the code for the persona on screen. A code that was already checked, or whose nonce is about to
+  // expire (10 min), is replaced by a new one first, so a rehearsal or a long pause never leaves the partner
+  // holding a dead code. The Share tab shows the same new code (KEY_SHARE_REVISION).
   private useCode(): void {
-    const code = ShareService.shared().current();
-    if (code === null) {
-      this.missing = true;
+    if (this.busy) {
       return;
     }
-    this.missing = false;
-    this.held = code.token;
-    this.againLine = '';
-    this.tamperLine = '';
-    this.run(code.token, ATTEMPT_FIRST, (): void => {
+    const have: ShareCode | null = ShareService.shared().current();
+    this.busy = true;
+    ShareService.shared().codeFor(selectedReport(), have !== null && have.used).then((code: ShareCode | null) => {
+      this.busy = false;
+      if (code === null) {
+        this.missing = true;
+        return;
+      }
+      this.missing = false;
+      this.held = code.token;
+      this.againLine = '';
+      this.tamperLine = '';
+      this.run(code.token, ATTEMPT_FIRST, (): void => {
+      });
+    }).catch(() => {
+      this.busy = false;
+      this.missing = true;
     });
   }
 

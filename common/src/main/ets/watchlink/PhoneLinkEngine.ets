@@ -14,6 +14,7 @@ import { ChainLedger } from './ChainLedger';
 import { AckPacketCodec, DayPacketCodec, PAIR_ACK_SEQ, PairPacketCodec } from './DayPacketCodec';
 import { DayPacketVerifier, PairVerifier, VerifyOutcome } from './DayPacketVerifier';
 import { asObject, parseJsonObject, readArray, readInt, readString } from './JsonRead';
+import { SettleGate } from './SettleGate';
 import {
   flippedSlot,
   NOTE_COUNTED_ONCE,
@@ -209,6 +210,8 @@ export class PhoneLinkEngine {
   private log: SyncLogEntry[] = [];
   private lastTransport: string = TRANSPORT_RELAY;
   private busy: boolean = false;
+  // inbox/ files that may still be on their way: left for one more look before they are answered.
+  private inboxGate: SettleGate = new SettleGate();
 
   constructor(store: TextStore, verifier: SigVerifier, hasher: Hasher, clock: Clock, allowDemoClock: boolean = true) {
     this.store = store;
@@ -248,16 +251,23 @@ export class PhoneLinkEngine {
       if (hasPair) {
         const path = `${INBOX_DIR}/${PAIR_NAME}`;
         const text = this.store.read(path);
-        this.store.remove(path);
-        if (text !== null) {
-          report.processed++;
-          report.pairRequested = await this.receivePair(text, TRANSPORT_RELAY);
+        // A file the relay is still writing is left for the next look (see SettleGate).
+        if (this.inboxGate.ready(PAIR_NAME, text)) {
+          this.store.remove(path);
+          if (text !== null) {
+            report.processed++;
+            report.pairRequested = await this.receivePair(text, TRANSPORT_RELAY);
+          }
         }
       }
       seqs.sort((a: number, b: number) => a - b);
       for (let i = 0; i < seqs.length; i++) {
-        const path = `${INBOX_DIR}/${seqs[i]}${JSON_SUFFIX}`;
+        const name = `${seqs[i]}${JSON_SUFFIX}`;
+        const path = `${INBOX_DIR}/${name}`;
         const text = this.store.read(path);
+        if (!this.inboxGate.ready(name, text)) {
+          continue;
+        }
         this.store.remove(path);
         if (text === null) {
           continue;
@@ -344,6 +354,12 @@ export class PhoneLinkEngine {
     for (let i = 0; i < names.length; i++) {
       this.store.remove(`${LINK_DAYS_DIR}/${names[i]}`);
     }
+    // Old ACKs must not reach a watch that pairs again: it would see "paired" before Confirm.
+    const acks = this.store.list(PHONE_ACKS_DIR);
+    for (let i = 0; i < acks.length; i++) {
+      this.store.remove(`${PHONE_ACKS_DIR}/${acks[i]}`);
+    }
+    this.inboxGate.clear();
     this.log = [];
     this.saveLog();
   }
