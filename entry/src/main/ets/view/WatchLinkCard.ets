@@ -108,6 +108,8 @@ function stripItems(daysNewestFirst: WatchDayFacts[]): DayStripItem[] {
 export struct WatchLinkCard {
   @Consume('fwNav') nav: NavPathStack;
   @StorageProp(KEY_LINK_REVISION) revision: number = 0;
+  // "Forget watch" asks for a second tap: forgetting on one side only breaks the chain (docs/WATCH_LINK.md).
+  @State forgetArmed: boolean = false;
   private daysRevision: number = -1;
   private daysCache: WatchDayFacts[] = [];
 
@@ -230,16 +232,24 @@ export struct WatchLinkCard {
             WatchLinkService.shared().syncNow();
           })
         if (this.state(this.revision).paired) {
-          Button('Forget watch')
+          Button(this.forgetArmed ? 'Tap again to forget' : 'Forget watch')
             .buttonStyle(ButtonStyleMode.NORMAL)
             .layoutWeight(1)
             .id('fw_link_forget')
             .onClick(() => {
+              if (!this.forgetArmed) {
+                this.forgetArmed = true;
+                return;
+              }
+              this.forgetArmed = false;
               WatchLinkService.shared().forget();
             })
         }
       }
       .width('100%')
+      if (this.forgetArmed) {
+        Text('Then reset the watch data on the watch and pair again.').attributeModifier(CAPTION)
+      }
 
       Text(LINK_EXPLAINED).attributeModifier(CAPTION)
 

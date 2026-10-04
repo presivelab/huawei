@@ -1,5 +1,23 @@
-import { ALL_HEALTH_SCOPES, EmptyHealthSource, HEALTH_MISSING, HealthConnection, HealthScope, HealthSource, HealthStatus } from 'common';
+import { common } from '@kit.AbilityKit';
+import {
+  ALL_HEALTH_SCOPES,
+  EmptyHealthSource,
+  HEALTH_MISSING,
+  HealthConnection,
+  HealthScope,
+  HealthSimPayload,
+  HealthSource,
+  HealthStatus,
+  withScopes
+} from 'common';
+import {
+  HEALTH_SIM_ERROR_TEXT,
+  HealthSimAnswer,
+  HealthSimAnswerKind,
+  HealthSimClient
+} from '../platform/HealthSimClient';
 import { HuaweiHealthSource } from '../platform/HuaweiHealthSource';
+import { clearHealthSim, useHealthSim } from '../report/ServiceLocator';
 
 // AppStorage keys the screens bind to. AddonSession.publish() is the only writer.
 export const KEY_STATUS: string = 'fwSourceStatus';       // HealthStatus value
@@ -20,6 +38,13 @@ export class AddonSession {
   private connection: HealthConnection;
   private wasConnected: boolean = false;
   private revision: number = 0;
+  // The data Health Sim sent for this connection attempt, held between the two consent steps. Null on the
+  // built-in demo path.
+  private pendingHealthSim: HealthSimPayload | null = null;
+  // Why the built-in demo placeholder is shown instead of Health Sim's consent screen; empty when it is not.
+  private fallbackNote: string = '';
+  // Number of the latest request to Health Sim; an answer to an older or abandoned request is ignored.
+  private askSeq: number = 0;
 
   private constructor() {
     // The adapter for HUAWEI Health is a stub in this build (UNAVAILABLE), so the connection runs on the
@@ -46,8 +71,52 @@ export class AddonSession {
     return this.connection;
   }
 
-  // Step 1 of consent. In this build the answer comes from the DEMO placeholder, not from HUAWEI Health.
+  /*
+   * Step 1 of consent, asked of Health Sim: the separate app that stands in for HUAWEI Health on the
+   * emulators shows its own consent screen. Returns the kind of its answer (HealthSimAnswerKind):
+   *   OK             step 1 is granted and the data waits for step 2;
+   *   REFUSED        step 1 is refused;
+   *   NOT_INSTALLED, ERROR   nothing is recorded: the caller shows the built-in demo placeholder;
+   *   STALE          the request was abandoned meanwhile (abandonHealthSim): nothing is recorded.
+   * Never rejects. It may never resolve: when the user cancels the system's own question about opening
+   * another app, the system reports nothing back, so the caller must offer a way out while it waits.
+   */
+  async askHealthSim(context: common.UIAbilityContext): Promise<string> {
+    this.askSeq += 1;
+    const seq: number = this.askSeq;
+    const answer: HealthSimAnswer = await HealthSimClient.request(context, ALL_HEALTH_SCOPES);
+    if (seq !== this.askSeq) {
+      return HealthSimAnswerKind.STALE;
+    }
+    this.fallbackNote = '';
+    if (answer.kind === HealthSimAnswerKind.OK && answer.payload !== null) {
+      this.recordPlatformConsent(true);
+      this.pendingHealthSim = answer.payload;
+    } else if (answer.kind === HealthSimAnswerKind.REFUSED) {
+      this.recordPlatformConsent(false);
+    } else {
+      this.pendingHealthSim = null;
+      this.fallbackNote = answer.text;
+    }
+    return answer.kind;
+  }
+
+  // Gives up the request that is waiting for Health Sim: a late answer to it is ignored and the built-in
+  // demo placeholder says why it is shown.
+  abandonHealthSim(): void {
+    this.askSeq += 1;
+    this.pendingHealthSim = null;
+    this.fallbackNote = HEALTH_SIM_ERROR_TEXT;
+  }
+
+  // One sentence for the placeholder: why Health Sim was not used. Empty when it was not asked.
+  healthSimNote(): string {
+    return this.fallbackNote;
+  }
+
+  // Step 1 of consent from the built-in demo placeholder (no Health Sim): the demo operator's answer.
   recordPlatformConsent(granted: boolean): void {
+    this.pendingHealthSim = null;
     this.connection.recordPlatformConsent(granted);
     this.publish();
   }
@@ -57,13 +126,25 @@ export class AddonSession {
     const ok: boolean = this.connection.confirmDataConsent(scopes);
     if (ok) {
       this.wasConnected = true;
+      // The reports change their source before the screens hear about the new status: Health Sim's data
+      // with the switched-off types removed, or the built-in demo histories when Health Sim was not used.
+      const payload: HealthSimPayload | null = this.pendingHealthSim;
+      if (payload !== null) {
+        useHealthSim(withScopes(payload, scopes));
+      } else {
+        clearHealthSim();
+      }
+      this.pendingHealthSim = null;
     }
     this.publish();
     return ok;
   }
 
+  // Withdraws both consents and forgets the data Health Sim sent. Connecting again asks Health Sim again.
   disconnect(): void {
     this.connection.disconnect();
+    this.pendingHealthSim = null;
+    clearHealthSim();
     this.publish();
   }
 

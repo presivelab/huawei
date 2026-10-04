@@ -1,6 +1,348 @@
 FairWear test results
 =====================
 
+2026-10-04 06:32 CEDT  branch feature/engine-reports  (round 3, G2: Health Sim merged; both projects built; walked on both emulators)
+----------------------------------------------------
+H0: feature/watch-link-tour (eb6daf8, a relayed file still being written is left for the next look) merged
+  as 2985efc: common 368/368, watch 6/6.
+Base: feature/healthsim-base (bec6913) merged as 8284546 after the watch button (b491bf5). It compiled as
+  merged: assembleHap entry and watch BUILD SUCCESSFUL, no ArkTS fix needed in ServiceLocator.ets or in the
+  watch button. Then 85f3931 (Report source pill), 6971e00 (documents), 0f17cae (watch button label).
+G2 merges into feature/engine-reports, each with --no-ff:
+  feature/healthsim-phone   0e3ccfa -> 02a0de2   no conflict
+  feature/healthsim-connect 10ae04d -> e2ef860   no conflict
+  feature/healthsim-watch   53231f4 -> da5ef1a   docs/test-results.txt, both sides kept
+After each merge: tools/run-logic-tests.sh common 380/380, watch 6/6, HealthSimCopies.test.ets 2/2 (Node
+  only: the copies under healthsim/*/src/main/ets/fw are identical to common).
+Builds at da5ef1a: FairWear assembleHap entry and watch BUILD SUCCESSFUL; Health Sim (cd healthsim, ohpm
+  install --all) assembleHap entry and watch BUILD SUCCESSFUL.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Emulators (phone 127.0.0.1:5557, wearable 127.0.0.1:5555, API 24), HAPs of both projects installed from this
+tree with install -r, taps with uitest, texts from the layout dump, light mode.
+Phone, Health Sim path (FairWear entry from e2ef860; da5ef1a adds no phone code): PASS.
+  Connect HUAWEI Health -> the system asks "Allow FairWear to open Health Sim?" -> Allow -> Health Sim:
+  banner "SIMULATED DATA · stands in for HUAWEI Health", "FairWear asks for access", seven data types,
+  "Don't allow" / "Allow" -> Allow -> FairWear "Health data consent" (step 2 of 2) -> tick, Agree and continue
+  -> Report: Ania 92, A, Coverage 100%, Confidence High, Full benefit, source pill "Health Sim · Simulated
+  data". Sandbox: haps/entry/files/healthsim/fwhs1.json, 29,643 bytes.
+  Share: "Tier A · Eligible: yes", 305 of 512 characters, HUKS key. Partner view: Use the code from this phone
+  -> "Signature valid", "Tier A · Eligible: yes · 4 Sep – 3 Oct", "Full benefit".
+  Health Sim: Apps -> card "FairWear · Signed tier for your partner" -> Open FairWear -> FairWear opens on the
+  Report tab with the Health Sim source pill.
+  Shots: a1-report-ania-healthsim-light, a1-healthsim-fairwear-card-light.
+Watch (FairWear watch and Health Sim watch from da5ef1a): PASS.
+  Without Health Sim on the watch (06:12, before its module existed): Get today from Health Sim -> "Health Sim
+  not on this watch · built-in script" (shot a1-watch-health-sim-missing-light).
+  With Health Sim installed: after a restart of the FairWear watch app, with no tap on the button, Demo clock
+  and Demo feed on -> the dial reads "FEED · Health Sim · 00:51": the script stored in the sandbox is used
+  again (shot a1-watch-feed-health-sim-light). Get today from Health Sim -> "Today from Health Sim · used by
+  the demo feed".
+  A whole day on the Health Sim script, sealed, relayed and verified on the phone: run by the watch session
+  on this code before the merge (its entry below: day #6, one break 725-900, DEMO_X300_FEED, "All 6 days
+  verified"); not repeated on the merged build.
+Not run on the merged build: refusal in Health Sim and the fallback without Health Sim on the phone (run by
+  the connect session, its entry below), a data type switched off, Disconnect and connect again, dark mode,
+  uninstalling Health Sim, --tamper and --drop.
+State left: phone connected through Health Sim, persona Ania, Report tab; watch paired, Synced, demo clock
+  off, the Health Sim script stored; Health Sim installed on both emulators.
+
+2026-10-04 06:22 CEDT  branch feature/healthsim-connect  (round 3, agent 4: FairWear asks Health Sim for the data on the phone, C1 and C2)
+----------------------------------------------------
+Base: feature/engine-reports 2985efc, then feature/healthsim-base bec6913 and feature/engine-reports 0f17cae merged in.
+Commits: b7a7945 (C1 client), 0eb6263 (C2 consent flow), 51bbe09 (way out while Health Sim does not answer).
+Node run (tools/run-logic-tests.sh): common 380/380, watch 6/6. No test added (the new code is the platform
+  call and the screens; decode and withScopes are tested in the base). No existing assertion was changed.
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL. tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors
+  (2 warnings), common 0 issues; none in a changed file. tools/check-wording.sh: 0 hits.
+Phone emulator (127.0.0.1:5557, API 24), unsigned debug HAPs, taps by element id, texts from the uitest layout
+dump, FairWear log lines "healthsim request" / "healthsim answer" (counters and text length only), light mode.
+With Health Sim installed (agent 2, com.fairwear.healthsim; 06:14-06:21):
+  Connect HUAWEI Health -> Health Sim screen "FairWear asks for access" (banner "SIMULATED DATA · stands in
+    for HUAWEI Health", seven data types, Don't allow / Allow). The explicit start by bundle and ability name
+    works: log "path=ability"; error 16000018 did not occur, so the deep-link path of the client was not used.
+  Allow -> log "kind=OK chars=29643 code=0", decodeHealthSimPayload accepted the text -> FairWear consent
+    (step 2 of 2) -> Agree and continue -> Report: Ania 92 · A, Coverage 100%, pill "Health Sim · Simulated
+    data"; Settings > Data source: "Health Sim · Simulated data", "Reads the simulated data Health Sim handed
+    over after your consent. Health Sim stands in for HUAWEI Health on this emulator.", "Data types allowed:
+    7 of 7"; healthsim/fwhs1.json in the app sandbox, 29 643 bytes.
+  Don't allow -> log "kind=REFUSED code=1" -> "HUAWEI Health · Not connected" and the notice "HUAWEI Health
+    was not connected".
+  Disconnect -> "HUAWEI Health disconnected", fwhs1.json removed; Reconnect asks Health Sim again.
+  HRV switched off in FairWear's consent -> Ania 93 · A, Coverage 90% (HRV is missing evidence, not zero).
+  From the second jump on the system itself asks "Allow FairWear to open Health Sim?" (Cancel / Allow) before
+    Health Sim appears. Allow -> as above. Cancel -> the system reports nothing back to FairWear (no log line):
+    the page stays on "Asking Health Sim for access…" with "Ask Health Sim again" and "Continue with built-in
+    demo data"; the second one shows the demo placeholder with "Health Sim did not answer: built-in demo data".
+Without Health Sim: not tested by uninstalling it (the emulator is shared). Tested with a one-off HAP whose
+  bundle name and link point at an app that does not exist (two constants changed, not committed):
+  Connect -> log "kind=NOT_INSTALLED code=16000001" -> the demo placeholder as before, with the line "Health Sim
+    is not installed: built-in demo data" -> Simulate consent -> FairWear consent -> Report: Ania 92 · A,
+    Coverage 100%, pill "HUAWEI Health · Demo data"; no fwhs1.json.
+Shots: docs/screenshots/final/a4-connect-healthsim-consent-light.jpeg (Health Sim build 0e3ccfa),
+  a4-report-healthsim-source-light.jpeg, a4-connect-healthsim-missing-light.jpeg.
+Not run: dark mode of the changed page; the deep-link path (needs a system that refuses the explicit start);
+  an unreadable answer from Health Sim on the device (decode is covered by the Node tests of the base);
+  "Ask Health Sim again"; the persona sheet for the other five people on Health Sim data; app restart with
+  fwhs1.json present.
+2026-10-04 06:27 CEDT  branch feature/healthsim-watch  (Health Sim round, agent 3, D2: the Health Sim watch module)
+----------------------------------------------------
+Base: feature/watch-link-tour 4b5568a + feature/engine-reports 0f17cae (the base with DemoFeed's script API and
+  the FairWear watch button are from there). New here: healthsim/watch (module, two abilities, one page, one
+  pure helper) and the module list in healthsim/build-profile.json5. No FairWear code file changed.
+Node run (tools/run-logic-tests.sh): common 380/380, watch 6/6 (HealthSimCopies included: the copy
+  healthsim/watch/src/main/ets/fw/watchlink/DemoFeed.ets is the one from the base, untouched).
+ArkTS compile: Health Sim `hvigorw assembleHap --mode module -p module=watch@default` BUILD SUCCESSFUL, no
+  warning; FairWear watch BUILD SUCCESSFUL. Wording check 0 hits, enum-in-UI check 0 hits.
+  No Node test covers healthsim/watch/src/main/ets/model/DayScript.ets (what the screen prints); it was checked
+  on the emulator only.
+Wearable emulator 127.0.0.1:5555 (06:16-06:26), FairWear watch HAP from this branch:
+  Without Health Sim on the watch: Demo clock x300, "Get today from Health Sim" -> "Health Sim not on this
+    watch · built-in script" (a3-watch-no-healthsim).
+  Health Sim watch HAP installed (install -r, 96 KB; `bm dump -a` lists com.fairwear.healthsim): the same button
+    -> log "Export requested", "Day script handed over", FairWear: "Today from Health Sim · used by the demo
+    feed", healthsim/fwhsw1.json in the FairWear sandbox; Demo feed on -> dial "FEED · Health Sim · hh:mm"
+    (a3-watch-feed-healthsim).
+  A whole day on that script, sealed by the watch as #6, 2026-10-09: clock DEMO_X300_FEED, one break
+    startMin 725, endMin 900 (12:05-15:00), 173 heart-rate slots, resting 56 bpm and 12,153 steps in the 24 h
+    before. Relay: "#5 ACCEPTED", "#6 ACCEPTED"; phone "All 6 days verified", Fri 9 Oct worn 14 h 30 min,
+    charging 6 h 35 min, off wrist 2 h 55 min, 12,135 steps, "Off wrist 12:05-15:00"
+    (a3-phone-healthsim-day-light). #5 (Thu 8 Oct) is the day that was open before: it holds the minutes
+    recorded on the demo clock with the emulator's heart rate 0 during earlier checks (off wrist 8 h 25 min).
+  Health Sim watch screen: "SIMULATED DATA", "Health Sim", "Today's script", the 24-hour ring, "Worn 14 h 30 min",
+    "Charging 6 h 30 min", "Off wrist 12:00-15:00", "Shared with FairWear when it asks" (a3-healthsim-watch).
+Not done: Health Sim was not uninstalled again to repeat the missing path afterwards (it was run before the
+  install); the stored script after a restart of the FairWear watch app was not checked; dark and light do not
+  apply (the watch screen has one look).
+
+2026-10-04 06:12 CEDT  branch feature/watch-link-tour  (T6.3: a3 screenshots light and dark; inbox race fix eb6daf8 on the emulators)
+----------------------------------------------------
+Base: feature/engine-reports 124ec58 + eb6daf8 (SettleGate: a file still being written is left for the next look).
+Node run (tools/run-logic-tests.sh): common 368/368 (was 364/364; four new flow tests), watch 6/6.
+ArkTS compile: assembleHap watch and entry BUILD SUCCESSFUL. Lint 0 errors (entry 7 warnings, watch 2, common 0).
+Wording check 0 hits, enum-in-UI check 0 hits.
+Emulators (wearable 127.0.0.1:5555, phone 127.0.0.1:5557), both HAPs built at eb6daf8, taps with uitest:
+  Inbox race: the same pairing request sent 13 times and the same day packet sent 12 times with
+    `hdc file send` into inbox/: no "Invalid format" in the sync log ("Pairing request received" each time;
+    "Accepted" once, then "Duplicate day" 11 times). Before the fix agent 1 saw it 3 times in about 12 sends.
+  Clean run 05:56-06:11 (reset, Forget watch twice, pair, demo clock x300 + feed, Close day once, then three
+    days sealed by the watch): #1 2026-10-04 the closed first day, not observed 24 h; #2 worn 14 h 40 min,
+    charging 6 h 35 min, off wrist 2 h 45 min, 12,178 steps, break 12:10-14:55, 77 heart-rate slots before;
+    #3 worn 14 h 40 min, charging 6 h 30 min, off wrist 2 h 50 min, 12,157 steps, break 12:10-15:00, 171 slots;
+    #4 worn 14 h 40 min, charging 6 h 30 min, off wrist 2 h 50 min, 12,122 steps, break 12:05-14:55, 172 slots.
+    The brief's check "startMin 730, endMin 895" holds for #2; #3 and #4 are one slot off at one end, inside
+    the range WatchLinkFeed.test.ets allows.
+  --tamper on #3 (run before, 05:42) -> "#3 REJECTED (Invalid signature)", then "#3 ACCEPTED";
+  --drop 3 -> "#4 ACCEPTED (Accepted · Missing 1 day(s))", "3 of 4 days verified", "1 day never reached this
+    phone"; then "#3 ACCEPTED", "All 4 days verified", watch "Synced ✓".
+  Tour in light and in dark mode: timeline of the newest day, the three checks ("Invalid signature · Not taken
+    in", "Duplicate day · Acknowledged again, counted once", "Accepted · Missing 1 day(s)" then "Accepted ·
+    Fills the gap"), "Your stored days were not changed".
+  Screenshots in docs/screenshots/final/: a3-watch-dial-feed, a3-watch-close-day, and for the phone in light and
+    dark: a3-phone-pair, a3-phone-day-imported, a3-phone-invalid-signature, a3-phone-missing-day, a3-tour-steps,
+    a3-tour-cheat. Dark mode switched with the Dark card in Settings > Display & brightness, light again at the end.
+  State left on the emulators at 06:11: paired (fd7c02b2), "All 4 days verified", light mode, demo clock off.
+Seen, not caused by FairWear: twice (05:26:27 and 05:49:55) the watch log shows FairWear sent to the background,
+  the power key, the app list and a tap on the Health Demo icon (com.fairwear.healthdemo); who did it is not
+  known. FairWear records only while it is open, so the day running at that moment had "Not observed" time;
+  the run was started again each time. Every day shown in an a3 shot was recorded whole (the day-imported,
+  invalid-signature and tour shots show days #2 and #3 of the 05:32 run, sealed before the second pause; the
+  missing-day shots show the 05:56 run).
+Not done: a real watch at the mentors' table (optional item 5 of the brief).
+
+2026-10-04 05:15 CEDT  branch feature/engine-reports  (fix/audit merged: audit fixes compiled and walked on the emulators)
+----------------------------------------------------
+Merge: git merge fix/audit into 9d414b7 -> c119ad7, no conflict. Then 4ce179b (relay, see Watch Link below).
+tools/run-logic-tests.sh common   364/364 passed
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry), assembleHap (watch): BUILD SUCCESSFUL at c119ad7; no source change was
+  needed to compile. tools/deploy.sh entry and watch: built, installed and started on both emulators.
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+Emulators: phone 127.0.0.1:5557 and wearable 127.0.0.1:5555 (API 24), unsigned debug HAPs, taps with uitest,
+texts read from the layout dump, light mode.
+
+Share row: PASS. Run by the Share session on a trial merge of the same tree (9d414b7 + fix/audit), HUKS key.
+  Marek: "Tier B · Eligible: no", 307 of 512. Partner view: Use the code -> Signature valid; Verify the same
+  code again -> Already used; back, Open partner view, Use the code again -> a new code and Signature valid
+  (ledger 17 -> 18), not Already used. "What left this phone": newest first, time, destination, claim line,
+  the full token, "305 bytes" / "307 bytes". "Make a new code" with a double tap: one new ledger entry
+  (18 -> 19). Ola: no code, partner button disabled.
+  Not checked: "Try again" after a signing failure, a code older than 10 minutes, the ledger in dark mode.
+  Shots: a1-ledger-light, a1-partner-new-code-light (taken by that session).
+
+Report row: PASS.
+  Ewa, Close the day: toast "Day closed · HES 64 · Tier B" (shot a1-report-ewa-closed-day-light); the period
+  line changes from "4 Sep – 3 Oct · last 30 days" to "4 Sep – 3 Oct · score to 4 Oct"; 59 "1 point to B"
+  becomes 64 "16 points to A"; the tiles change: Steps 5,142 -> 5,377 /day, Active minutes 59 -> 63 min/week,
+  Sleep 5 h 58 min -> 6 h 28 min, Sleep regularity ±94 -> ±86 min (Resting HR 76 bpm and Recovery 22 bpm stay).
+  Reset demo: toast "Demo reset · HES 59 · Tier C"; the period line, the score and every tile are back.
+
+Watch Link row: PASS after one change to the relay (4ce179b); one defect found that is not fixed.
+  Phone, "Forget watch": the first tap changes the button to "Tap again to forget" and shows "Then reset the
+  watch data on the watch and pair again."; the days stay until the second tap. PASS.
+  Watch, "Close day (demo)" with a double tap (uitest doubleClick): one day in the outbox, the second tap is
+  answered "Nothing recorded yet". PASS. Two separate taps about a second apart close two days, as before.
+  node tools/watch-phone-relay.mjs --dry-run with hdc not on PATH: prints the commands, exit 0. PASS.
+  Second relay run after a watch reset and Forget watch, as merged (c119ad7): FAIL. The relay printed
+  "#0 ACCEPTED (Paired)" BEFORE Confirm on the phone: it delivered its own kept copy of the previous
+  pairing's ACK (_relay/phone/acks/0.json), and the run after Confirm said "no new ACK".
+  After 4ce179b (the kept copy is dropped when a new pairing request or an unseen packet is pushed): reset,
+  Forget twice, Pair phone, relay -> "no new ACK"; Confirm, relay -> "#0 ACCEPTED (Paired)"; Close day,
+  relay -> "#1 ACCEPTED (Accepted)", watch "Synced", "Phone: #1: Accepted". PASS.
+  Defect, not fixed: the phone reads its inbox every 2 s and can read a file hdc is still writing; it then
+  answers "REJECTED (Invalid format)" for a packet that is fine. Seen 3 times in about 12 sends (day #1 once,
+  pair.json twice). The same day packet sent again was accepted. Workaround and the reason it is not fixed
+  in the relay: docs/WATCH_LINK.md, Known limitations; docs/DEMO_SCRIPT.md, Plan B.
+
+Docs row: docs/DEMO_SCRIPT.md part A read against the screens; no label had to be changed.
+  Walked on this build: Welcome, Connect, Simulate consent, Agree and continue; Report for Ania, Marek, Kasia;
+  Evidence › Calendar for Marek ("Flagged", the flag rule, Thu 17 Sep with the reason, Appeal this day ->
+  "Appeal sent"); "Why this tier" for Tomek ("HES 79 · 1 point to A", Strongest / To improve); Ewa with Close
+  the day and Reset demo; pairing with "Pair watch fd7c02b2?" and Confirm; Settings with "Disconnect HUAWEI
+  Health". Share, the partner view and the ledger: by the Share session, above.
+  Not walked on this build: switching HRV off on the consent screen, the heart-rate slider, "Technical details"
+  on Share, the three checks of "How Watch Link works", the home-screen card, the relay with --tamper and
+  --drop (no new feed day was sealed yet when this was written), Disconnect itself.
+State left on the emulators: watch reset and paired again with the phone (key fd7c02b2), demo clock ×300 and
+  demo feed on since about 05:12, day #1 (closed at once, as the script asks) verified on the phone; the five
+  feed days of the earlier run are gone from both sides. The watch seals a day every 4 min 48 s.
+
+2026-10-04 04:46 CEDT  branch feature/engine-reports  (G3: the last build of both HAPs)
+----------------------------------------------------
+Tree: d6d3307 = the G2 merge (1ec3f81) + the G2 record + the three G3 records of the other sessions
+  (ef36a9a watch, 9a20ff1 share, 8d2b174 screens). No file under common/, entry/, watch/ or tools/ changed
+  since the G2 merge: the three sessions found nothing to fix on the merged build.
+tools/run-logic-tests.sh common   362/362 passed
+tools/run-logic-tests.sh watch    6/6 passed
+hvigorw clean, then assembleHap (entry) and assembleHap (watch): BUILD SUCCESSFUL, unsigned debug HAPs
+  entry/build/default/outputs/default/entry-default-unsigned.hap   1,887,355 bytes  sha256 981b77fc65beda0a…
+  watch/build/default/outputs/default/watch-default-unsigned.hap     959,369 bytes  sha256 9663114c95644cf9…
+tools/lint.sh: entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues.
+tools/check-wording.sh: 0 hits (14 wordings, 4 status names).
+On the emulators at G3, by the sessions that own the screens (their entries follow): the watch -> phone flow
+  with a fifth demo-feed day; Share and the partner view for six personas in light and dark; Report headline,
+  "Why this tier", the Evidence calendar and the 17 September sheet for six personas in light and dark.
+Not run at G3: Close the day and reset again, --tamper and --drop of the relay again, the software-key
+  fallback, a screen reader, the large system font, the HAPs of this clean build on the emulators (the
+  installed ones were built from e991ad1, the same sources).
+
+2026-10-04 04:28 CEDT  branch feature/watch-link-tour  (G3, agent 3: watch -> phone once more on the merged build)
+----------------------------------------------------
+Base: feature/engine-reports e991ad1 (fast-forward). No code file changed: this record and one screenshot.
+Node run (tools/run-logic-tests.sh): common 362/362, watch 6/6.
+Both HAPs built at e991ad1 in this worktree (assembleHap watch and entry BUILD SUCCESSFUL) and installed with
+  install -r on the wearable and the phone emulator; the app data of the G2 run was kept.
+  Phone, Evidence > Watch days: "All 4 days verified" before the run, the four days of the G2 run unchanged.
+  Watch: demo clock x300 with the demo feed; the day sealed by itself as #5, 2026-10-08, DEMO_X300_FEED,
+    one break 12:10-15:00 with 171 heart-rate slots, resting 56 bpm and 12,161 steps in the 24 h before.
+  Relay: "#5 ACCEPTED (Accepted)"; phone "All 5 days verified", Thu 8 Oct: worn 14 h 40 min, charging
+    5 h 55 min, off wrist 3 h 10 min, not observed 15 min, 12,142 steps, "Off wrist 12:10-15:00", demo-feed
+    label (docs/screenshots/watchlink-19-phone-g3-five-days.jpeg); watch "Synced ✓".
+    Off wrist is 20 min longer than on the other days: between the two runs the watch recorded 20 min on the
+    real-speed clock, where the emulator's heart rate is 0. It is under the break minimum and is not a break.
+  Tour on the merged build: the timeline and the three checks ("Invalid signature · Not taken in",
+    "Duplicate day · Acknowledged again, counted once", "Accepted · Missing 1 day(s)" then "Accepted · Fills
+    the gap", 3 ms each, "Your stored days were not changed"); afterwards still "All 4 days verified".
+Not done: --tamper and --drop were not repeated at G3 (run at G2, see the entry of 04:05 below).
+Seen: after the install the foreground app on the wearable emulator was com.fairwear.healthdemo (the paused
+  prototype, running there since about 02:00), not FairWear; why is not known. FairWear records only while
+  it is open, so it was started again with `aa start` before the run. Check the dial before a live demo.
+2026-10-04 04:35 CEDT  branch feature/share-partner  (G3, agent 4: Share and the partner view on the merged build, six personas, light and dark)
+----------------------------------------------------
+Base: feature/engine-reports e991ad1 (fast-forward; no source change on this branch since).
+Node run (tools/run-logic-tests.sh): common 362/362. ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL.
+Phone emulator (127.0.0.1:5557, API 24), unsigned debug HAP of e991ad1, HUKS key, taps by element id and texts
+from the uitest layout dump, 04:27-04:34. The same walk in light and in dark mode, the same texts in both:
+  persona  Share                                    partner: "Use the code from this phone"
+  Ania     Tier A · Eligible: yes   305 of 512      Signature valid · Full benefit
+  Marek    Tier B · Eligible: no    306 of 512      Signature valid · No benefit this month · The code does not say why.
+           + "Eligible: no · 3 suspicious breaks. The reason stays on this phone."
+  Kasia    Tier B · Eligible: yes   306 of 512      Signature valid · Partial benefit
+  Tomek    Tier B · Eligible: yes   306 of 512      Signature valid · Partial benefit
+  Ewa      Tier C · Eligible: yes   304 of 512      Signature valid · No benefit this month
+  Ola      Tier: not available, "Not enough data yet", no code, the partner button is disabled
+  For each of the five personas with a code: "Verify the same code again" -> "Already used · stopped at: not
+  used before"; "Change tier to A and verify" ("to B" for Ania) -> "Invalid signature · stopped at: signature".
+  Dark mode: the QR code stays black on a white field with a white margin; texts and symbols readable.
+  Dark mode is switched by tapping the Dark card (the picture) in Settings > Display & brightness; a tap on
+  the word "Dark" under it does nothing. Switched back to Light afterwards ("Dark mode: Off").
+  Shots: docs/screenshots/final/a4-share-{ania,marek,kasia,tomek,ewa,ola}-{light,dark}.jpeg,
+  a4-partner-{ania,marek}-{valid,cheat}-{light,dark}.jpeg.
+No fix was needed. Not run: the software-key fallback, a code older than its 10 minutes, large system font,
+  the ledger file after an app restart, a scan of the QR code by a second device.
+Not built: the screen "What left this phone" (LedgerPage.ets is still the placeholder and no screen opens it);
+  the ledger itself is written by ShareService (share/ledger.json).
+
+2026-10-04 04:12 CEDT  branch feature/engine-reports  (G2: the four branches of the night merged)
+----------------------------------------------------
+Merged into feature/engine-reports (d50a231), in this order, each with --no-ff:
+  feature/phone-screens   9a03064 -> 5630173   no conflict
+  feature/watch-link-tour 359d7cb -> 9e282ce   no conflict (documents and screenshots only)
+  feature/share-partner   8e95ba4 -> 1ec3f81   conflicts in common/Index.ets and docs/test-results.txt (both
+                                               sides kept), AGENTS.md, README.md, docs/ARCHITECTURE.md (the
+                                               engine-reports text kept, the Share sentences written in)
+After each merge: tools/run-logic-tests.sh common and watch, assembleHap entry and watch.
+  after phone-screens:    common 353/353, watch 6/6, both builds BUILD SUCCESSFUL
+  after watch-link-tour:  common 353/353, watch 6/6, both builds BUILD SUCCESSFUL
+  after share-partner:    common 362/362, watch 6/6, both builds BUILD SUCCESSFUL
+At 1ec3f81: tools/lint.sh entry 0 errors (7 warnings), watch 0 errors (2 warnings), common 0 issues;
+  tools/check-wording.sh 0 hits (14 wordings, 4 status names).
+Phone emulator (127.0.0.1:5557, API 24), the merged unsigned debug HAP installed with install -r, consent and
+the persona sheet with uitest clicks, texts read from the layout dump, light mode:
+  Report tab, six personas: the same values as at G1; Ewa now reads "1 point to B". No text with "preview".
+  Evidence tab (Ola): Calendar | Watch days, "8 of 30 Days compliant", "8 of 30 Nights worn", "0 Suspicious
+  breaks". Share tab (Ola): "Tier: not available", "No code yet. Without a score nothing is signed and nothing
+  leaves this phone."
+  Shots re-taken on the merged build: docs/screenshots/final/a1-report-{ania,marek,kasia,tomek,ewa,ola}-light.jpeg.
+Checked by the other sessions on the engine build before the merge, see their entries in this file: Close the
+  day, reset, the live readings, the day sheet and the appeal (feature/phone-screens, at the end of the file);
+  Share and the partner view (feature/share-partner); the watch -> phone run (feature/watch-link-tour).
+Not run on the merged build: those paths again (Close the day, the day sheet, a signed code and the partner
+  view, the relay from the watch), dark mode, the watch HAP on the wearable emulator. They are the G3 pass.
+Not built: the screen "What left this phone" (the ledger is written to share/ledger.json; LedgerPage is a
+  placeholder and no screen links to it), export and deletion of the data.
+
+2026-10-04 04:05 CEDT  branch feature/watch-link-tour  (tour on the common base; watch -> phone run with the demo feed and its 3 h break)
+----------------------------------------------------
+Base: feature/engine-reports 7213345 (fast-forward: 75fe748 -> b9ce4b2 -> 7213345, no conflict). No code file
+  was changed on this branch after the fast-forward: screenshots and documents only.
+Node run (tools/run-logic-tests.sh): common 336/336, watch 6/6 (same as the base).
+ArkTS compile: hvigorw assembleHap watch and entry BUILD SUCCESSFUL at the branch head.
+Lint (tools/lint.sh): 0 errors; entry 7 warnings, watch 2, common 0.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+Emulators (wearable 127.0.0.1:5555, phone 127.0.0.1:5557, API 24), unsigned debug HAPs, taps with uitest, values
+  read from the layout dump and from the packets in the watch outbox. Watch HAP built at b9ce4b2; phone HAP at
+  b9ce4b2 for pairing and at 7213345 from the tamper step on (the phone emulator was shared with three other
+  sessions, each installing its own build in its turn).
+  Fresh start: Forget watch, Reset watch data, Pair phone, relay, "Pair watch fd7c02b2?", Confirm, relay,
+    "#0 ACCEPTED (Paired)".
+  Watch, demo clock x300 with the demo feed: four days sealed by the watch itself at midnight of recorder time,
+    one every 4 min 48 s, all DEMO_X300_FEED, one break each:
+      #1 Sun 4 Oct  worn 10 h 25 min, charging 1 h 5 min, off wrist 2 h 45 min, not observed 9 h 45 min
+                    (the recorder started at 09:45), 7,626 steps, break 12:10-14:55, 27 heart-rate slots before
+      #2 Mon 5 Oct  worn 14 h 30 min, charging 6 h 35 min, off wrist 2 h 55 min, 12,068 steps, break 12:05-15:00,
+                    171 heart-rate slots, resting 56 bpm and 12,089 steps in the 24 h before
+      #3 Tue 6 Oct  worn 14 h 40 min, charging 6 h 30 min, off wrist 2 h 50 min, 12,138 steps, break 12:10-15:00
+      #4 Wed 7 Oct  worn 14 h 35 min, charging 6 h 30 min, off wrist 2 h 55 min, 12,119 steps, break 12:05-15:00
+    The scripted break is 12:00-15:00; the recorded one is 2 h 45 min to 2 h 55 min (the wear rule waits for the
+    last heart rate to go stale), inside the range WatchLinkFeed.test.ets allows.
+  Relay: #1 ACCEPTED; --tamper on #2 -> "#2 REJECTED (Invalid signature)", sync log "#2 · Invalid signature",
+    then "#2 ACCEPTED"; --drop 3 -> "#4 ACCEPTED (Accepted · Missing 1 day(s))", "3 of 4 days verified",
+    "1 day never reached this phone"; then "#3 ACCEPTED", "All 4 days verified", watch "Synced ✓".
+  Tour (How Watch Link works): slot timeline of Wed 7 Oct with the demo-feed label; code panel of step 1; the
+    three checks on the received days: "Invalid signature · Not taken in", "Duplicate day · Acknowledged again,
+    counted once", "Accepted · Missing 1 day(s)" then "Accepted · Fills the gap", 2 ms each, "Your stored days
+    were not changed"; afterwards still "All 4 days verified" and days 1.json to 4.json in the sandbox.
+  Screenshots: docs/screenshots/watchlink-01 ... -05, -07 ... -18 (06 unchanged) and tour-01 ... tour-04. They
+    replace the earlier set, where every day read "Worn 0 h 00 min" because the emulator's heart rate is 0.
+Not done / not verified:
+  - the tour in dark mode, with no day received, and the code panels of steps 2 to 6;
+  - the screenshots in docs/screenshots/design/ (UI kit gate) still show the earlier days with "Worn 0 min";
+  - Wear Engine on paired devices and a real heart rate (unchanged);
+  - found, not fixed: Forget watch leaves acks/<seq>.json on the phone and the relay carries them to a watch
+    that was reset (docs/WATCH_LINK.md, "Known limitations"); removed by hand before this run. On the watch's
+    second page the title and the "Phone: #N" line sit at the edge of the round screen when the feed is on.
 2026-10-04 03:46 CEDT  branch feature/share-partner  (Share: signed claim and QR code; partner view: verification, use again, tamper tier)
 ----------------------------------------------------
 Base: feature/phone-screens b9ce4b2; feature/engine-reports 7213345 merged in afterwards (1925b77).
@@ -491,3 +833,102 @@ Wearable emulator (127.0.0.1:5555), unsigned debug HAP installed with tools/depl
 Not run: a non-zero heart rate on the emulator (worn, the 60 s limit), the charging state, a watch with a
   wear-detection sensor. These are covered by the Node tests only.
 Not run: the entry HAP on the phone emulator (built only; no entry source file changed).
+
+==== Agent 2 SCREENS: Evidence calendar with appeal (T3), Why this tier and demo controls (T4), branch feature/phone-screens, 2026-10-04 ====
+Base: b9ce4b2, then feature/engine-reports 7213345 merged in (G1); one conflict in common/Index.ets, both sides kept.
+tools/run-logic-tests.sh common   353/353 passed (336 after the merge + 17 new: EvidenceCalendar.test.ets 10, WhySections.test.ets 7)
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL. The watch module was not rebuilt (no watch file changed).
+tools/lint.sh                     entry 0 errors, 7 warnings (the same 7 as before, none in a file of this step);
+                                  watch 0 errors, 2 warnings; common 0 defects
+tools/check-wording.sh            0 hits (14 wordings, 4 status names)
+Phone emulator (127.0.0.1:5557, light mode unless said), unsigned debug HAP, reports from the scoring engine:
+  T3 Evidence > Calendar
+    Marek: "26 of 30 Days compliant", "30 of 30 Nights worn", "3 Suspicious breaks", chip "Flagged", the line
+      "Selective non-wear: flagged → no benefit this month" and the flag rule sentence. Calendar: 13, 17 and
+      24 September red (suspicious break), 8 September amber (short): 4 red days, 3 of them suspicious.
+    Marek, 17 September: sheet "Thu 17 Sep", day bar, 16 h 41 min worn, 1 h 15 min charging, night worn, break
+      "Off the wrist 13:05 · 5 h 35 min · Suspicious" and the reason from the report service. "Appeal this day"
+      becomes "Appeal sent" (disabled), the sheet shows the chip "Appeal sent" and the calendar day gets a check
+      mark. The score and the day did not change.
+    Kasia: 26 of 30 days compliant, 1 suspicious break, no "Flagged" chip and no flag line.
+    Ola: 8 of 30 days compliant, 0 suspicious breaks, 4 to 9 September grey ("No data", 6 days); 6 September
+      opens with "No record from the watch for this day." and no appeal button. The summary changed when the
+      persona was switched while the tab was open.
+  T3 Evidence > Watch days: the Watch link card ("All 4 days verified"), "Days from the watch" and
+    "Verification details" as before; switching back to Calendar works.
+  T4 Why this tier
+    Tomek: "HES 79 · 1 point to A", Coverage 90%, Confidence High, Partial benefit. Strongest: sleep timing
+      regularity 96, VO₂max 89, daily steps 84. To improve: heart-rate recovery 56, sleep duration 68, active
+      minutes 70. The what-if sentence from the report. "How it's calculated" opens.
+    Ola (opened with "Why no score yet" on the Report tab): "No score yet", Coverage 43%. Measured so far:
+      daily steps, active minutes and resting heart rate 24 days each (enough), heart-rate recovery 1 day.
+      Needed for a score: sleep duration 8 of 14 nights, sleep timing regularity 8 of 14 nights.
+      Missing data: VO₂max, HRV.
+  T4 Report > Live and Demo controls
+    Ania: Live shows "— bpm now", "— steps today" with the chip "Demo values" at the start. Heart-rate slider
+      to 153 bpm and steps to 5,750 (taps on the slider tracks; 150 exactly was not hit): the Live card and the
+      slider labels follow, the score stays 92 / tier A / coverage 100%.
+    Ania, Close the day: the score stays 92 (her closed day does not move a rounded number), steps go back to
+      "—". Reset demo: "—" for both readings, A / 92.
+    Ewa, Close the day: C / 59 "1 point to B", no benefit -> B / 64 "16 points to A", partial benefit.
+      Reset demo: back to C / 59. The period and the 30 day cells do not change (docs/HES.md decision 31).
+  Dark mode (system Settings > Display & brightness, switched back to light afterwards): Evidence and
+    "Why this tier" for Ola. With its default colours the system SegmentButton kept a light selected segment
+    with a white label in dark mode; the colours are now set from system resources.
+  Screenshots in docs/screenshots/final/: a2-evidence-marek-light, a2-evidence-marek-day-appeal-light,
+    a2-evidence-ola-dark, a2-why-tomek-light, a2-why-ola-dark, a2-report-live-ania-light.
+Not run: a screen reader (the accessibility texts are set, nobody listened to them); the large system font;
+  dark mode for Marek, Tomek and Ania; Evidence and Why for Ania and Ewa as screenshots (opened for Ania only
+  in passing); an appeal surviving an app restart (appeals live in AppStorage and are gone after a restart).
+
+==== Agent 2 SCREENS, G3 walk on the merged build (feature/engine-reports e991ad1 fast-forwarded into feature/phone-screens), 2026-10-04 ====
+tools/run-logic-tests.sh common   362/362 passed
+tools/run-logic-tests.sh watch    6/6 passed
+ArkTS compile: assembleHap (entry): BUILD SUCCESSFUL. No source file changed in this step.
+Phone emulator (127.0.0.1:5557), the merged HAP, six personas, light mode and then dark mode (system
+Settings > Display & brightness, switched back to light at the end). For every persona: the Report headline,
+"Why this tier", Evidence > Calendar and the sheet of 17 September. Same values in both modes:
+  Ania   A / 92, coverage 100%, full benefit; Why "HES 92"; 30 of 30 days, 0 suspicious breaks; 17 Sep compliant
+  Marek  B / 75, "5 points to A", no benefit; 26 of 30 days, 3 suspicious breaks, "Flagged" and the flag line;
+         17 Sep suspicious break with the reason and "Appeal this day"
+  Kasia  B / 73, "7 points to A", partial benefit; Why with the what-if sentence and "Missing data";
+         26 of 30 days, 1 suspicious break, no flag
+  Tomek  B / 79, "1 point to A", partial benefit; 29 of 30 days, 0 suspicious breaks
+  Ewa    C / 59, "1 point to B", no benefit; 27 of 30 days, 0 suspicious breaks
+  Ola    no score; Why with "Measured so far", "Needed for a score" (8 of 14 nights twice), "Missing data";
+         8 of 30 days; 17 Sep short ("Worn 16 h 35 min of 20 h ...; night not worn ...") with "Appeal this day"
+Looked at in dark mode as pictures: Marek's day sheet, Kasia's "Why this tier", Ania's Live card and demo
+controls. No defect found; nothing was changed.
+Not run in this walk: the appeal tap, the sliders, Close the day and Reset demo (checked before G2 on
+7213345, see the section above); a screen reader; the large system font.
+
+==== Agent 2: Health Sim, phone module (branch feature/healthsim-phone), 2026-10-04 ====
+Base: feature/engine-reports 2985efc + healthsim/ from feature/health-sim-audit, then feature/healthsim-base
+  merged in (add/add conflicts in six Health Sim files: my versions kept; the old generator files the base
+  brings back were removed again).
+Removed: the old generator and its client (healthsim/entry/src/main/ets/healthsim/*), the old views, the
+  scenario store, the Chinese strings and healthsim/tools/logic-tests. No "Wei" and no Hs* type is left.
+tools/run-logic-tests.sh common   380/380 passed; watch 6/6 passed; HealthSimCopies.test.ets (Node only) 2/2 passed
+Health Sim: ohpm install, assembleHap (entry): BUILD SUCCESSFUL, no ArkTS warning in the new files.
+tools/check-wording.sh            0 hits (it does not scan healthsim/; the texts were written to the same rules)
+Phone emulator (127.0.0.1:5557), unsigned debug HAP of com.fairwear.healthsim:
+  Start: banner "SIMULATED DATA · stands in for HUAWEI Health", title "Health Sim", six people.
+  Today: Ania Sat 3 Oct 7,954 steps, 58 bpm, sleep 8 h 2 min, 31 activity minutes, watch worn 22 h 47 min;
+    Marek 10,851 steps, 65 bpm, 8 h 40 min, 8 min; Ola 4,740 steps, 73 bpm, 7 h 10 min, 8 min, 22 h 49 min.
+  History: 30 rows, newest first; Ola shows "—" for sleep on the nights without a record (2 Oct, 1 Oct,
+    19 Sep ...); the list changes when another person is chosen while the tab is open.
+  Apps > "Open FairWear": the system asks "Allow Health Sim to open FairWear?"; after Allow FairWear is in
+    front on the Report tab (Ania, "Strong overall profile").
+  Consent, opened with `aa start -a AuthAbility` (no fwScopes, so all seven types are listed, all on):
+    "FairWear asks for access", the stands-in sentence, seven switches, "Don't allow" closes the screen.
+  The real round trip was run by agent 4 against this HAP (06:14-06:17): Allow gives result code 0 and a
+    payload of 29,643 characters that FairWear decodes; "Don't allow" gives result code 1.
+  Dark mode: History for Ola (system Settings > Display & brightness, switched back to light).
+  Screenshots in docs/screenshots/final/: a2-healthsim-today-light, a2-healthsim-consent-light,
+    a2-healthsim-history-dark.
+Changed after the first look: the banner used the system warning colour, which is red on this device; it is
+  now the text colour as background (neutral). The person picker wraps so all six people are visible.
+Not run: a switch turned off and then Allow from this session (agent 4 checked a type off on FairWear's own
+  consent, not on this screen); the FairWear-not-installed sentence (FairWear is never uninstalled here);
+  the healthsim://authorize link; a screen reader; the large system font.

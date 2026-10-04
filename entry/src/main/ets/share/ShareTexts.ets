@@ -9,8 +9,18 @@ export const TECH_KEY_ID: string = 'Key ID';
 export const TECH_NONCE: string = 'One-time number';
 export const TECH_ISSUED: string = 'Signed at';
 export const NOT_IN_CODE: string =
-  'Not in this code: your score, coverage, flags, sick days or any health data. Valid once, for this ' +
-    'request only.';
+  'Not in this code: your score, coverage, flags, sick days or any readings. The partner can use it once.';
+export const TRY_AGAIN_LABEL: string = 'Try again';
+export const LEDGER_LINK: string = 'What left this phone';
+export const LEDGER_TITLE: string = 'What left this phone';
+export const LEDGER_NOTE: string =
+  'Every code this phone has shown, newest first, with its exact text. The app has no network permission: ' +
+    'a code leaves the phone only when someone scans it.';
+export const LEDGER_EMPTY: string = 'No code has been shown yet.';
+
+export function ledgerBytesLine(bytes: number): string {
+  return `${bytes} bytes`;
+}
 export const TIER_FROM_PREVIEW: string = 'Tier from preview data';
 export const CODE_USED: string = 'Used once · no longer valid';
 export const NEW_CODE_LABEL: string = 'Make a new code';

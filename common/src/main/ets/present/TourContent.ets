@@ -132,7 +132,8 @@ export const TOUR_STEPS: TourStep[] = [
     ],
     '',
     [],
-    'Not run end to end: needs a paired watch and the Wear Engine service approved for the app.'),
+    'Not run end to end: needs a paired watch and the Wear Engine service approved for the app. Only the ' +
+      'send path is wired; ACKs back to the watch still go over the relay.'),
   new TourStep(5, 'This phone checks every day',
     'A fixed order: format, version, the paired watch key, the signature (Crypto Architecture Kit, on this ' +
       'phone), the chain, the date. Only then is a day taken in.',
@@ -208,7 +209,7 @@ export const REAL_ROWS: ReviewRow[] = [
   new ReviewRow('Recorder, signed days, chain, checks', 'Real code, run on both emulators and in the logic tests.'),
   new ReviewRow('Watch key', 'HUKS on the wearable emulator; a software key is labelled when HUKS fails.'),
   new ReviewRow('Heart rate and steps', 'The emulator sends 0 bpm, so a scripted demo feed runs; its days say so.'),
-  new ReviewRow('Watch to phone', 'Dev relay over hdc on the emulators; Wear Engine code is in place, not run.'),
+  new ReviewRow('Watch to phone', 'Dev relay over hdc on the emulators; the Wear Engine send path is in place (no ACK return), not run.'),
   new ReviewRow('Recording time', 'Only while the watch app is open; time in the background is not observed.'),
   new ReviewRow('Score', 'Days from the watch are shown, not scored.')
 ];

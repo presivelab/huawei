@@ -587,6 +587,9 @@ export default function engineReportsTest() {
       // The wear month and the period stay as they are.
       expect(r.wear).assertDeepEquals(engineReport('tomek').wear);
       expect(r.periodIso).assertEqual(engineReport('tomek').periodIso);
+      // The period line names the last scored day once a closed day lies after the wear month.
+      expect(engineReport('tomek').period).assertEqual('4 Sep – 3 Oct');
+      expect(r.period).assertEqual('4 Sep – 3 Oct · score to 4 Oct');
       // The counterfactual is the one of the new result.
       const change = engineWhatIf(closed);
       expect(r.whatIf).assertEqual(change === null ? '' : change.sentence);

@@ -4,6 +4,7 @@
 # Usage (Git Bash): tools/check-wording.sh     exit 0 = 0 hits, exit 1 = at least one hit (printed).
 #
 # This file lists the wordings, so it lives in tools/, which is not searched.
+# docs/prompts/ is not searched either: the team's briefs there quote these wordings in their "never say" lists.
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -34,6 +35,7 @@ for p in "${PATTERNS[@]}"; do
   OUT="$(grep -rIniE \
     --exclude-dir=build --exclude-dir=oh_modules --exclude-dir=node_modules \
     --exclude-dir=.preview --exclude-dir=.hvigor --exclude-dir=.test \
+    --exclude-dir=prompts \
     -e "$p" "${TARGETS[@]}" || true)"
   if [ -n "$OUT" ]; then
     echo "$OUT"

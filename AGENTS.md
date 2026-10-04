@@ -92,11 +92,12 @@ two disagree.
   `fwTarget`, device signing with HUKS and a software fallback.
 - Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
   over `hdc`.
-- Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`); the Report
-  screen is built; "Why this tier" and the ledger are placeholders with routes.
+- Phone after consent: tabs Report, Evidence, Share (`entry/src/main/ets/view/MainTabs.ets`). Built: the
+  Report screen with the Live card and the demo controls, "Why this tier", the Evidence calendar with the
+  day sheet and "Appeal this day", and "What left this phone" (`view/LedgerPage.ets`, linked from Share).
 - Share and the partner view (`entry/src/main/ets/view/ShareView.ets`, `PartnerPage.ets`): the claim signed
   with the device key as a system `QRCode`, and the demo partner (`PartnerVerifier`) checking it, with
-  "Verify the same code again" and "Change tier and verify". Pure logic: `common/src/main/ets/claim/ShareFlow.ets`.
+  "Verify the same code again" and "Change tier to A and verify" (B when the claim already says A). Pure logic: `common/src/main/ets/claim/ShareFlow.ets`.
   The one owner of the code, the partner and the ledger is `entry/src/main/ets/share/ShareService.ets`
   (`ledgerEntries()` is what the ledger screen reads; the file is `share/ledger.json` in the app sandbox).
   Without a score no code is signed; a score without eligibility is shared as "Eligible: no" and the reason
@@ -109,23 +110,29 @@ two disagree.
 - Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
   from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
   `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
+- Health Sim (`healthsim/`, its own DevEco project, bundle `com.fairwear.healthsim`): our simulator app that
+  stands in for HUAWEI Health on the emulators, with the same six people and the banner "SIMULATED DATA". On
+  the phone, **Connect HUAWEI Health** asks it for data with `startAbilityForResult`
+  (`entry/src/main/ets/platform/HealthSimClient.ets`): Health Sim's own consent first, then FairWear's. On the
+  watch, **Get today from Health Sim** fetches the script of the demo day. Without Health Sim FairWear uses its
+  built-in demo data and says so. `common/src/test/HealthSimCopies.test.ets` keeps the copies under
+  `healthsim/*/src/main/ets/fw/` identical to `common`. Build and install: `healthsim/README.md`.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
   `tools/shot.sh`. Results: `docs/test-results.txt`.
 
 **What is NOT in the repository yet**
 
-- The screens Share, the partner view, "Why this tier", the Evidence calendar and the ledger are in the tree,
-  merged on 2026-10-04 from feature branches that were still in progress; they have not been checked together
-  on the emulator. Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place
-  that chooses where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per
-  persona), with `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and
-  `selectedDayDetails()`. The fixed preview (`PreviewReportService`) is still in the code and not in use.
+- Export and deletion of the data.
+- Screens get the report through `entry/src/main/ets/report/ServiceLocator.ets`, the one place that chooses
+  where reports come from. In use: the engine (`EngineReportService`, one `HesSession` per persona), with
+  `closeSelectedDay()`, `resetSelected()`, `setSelectedLive(hr, steps)` and `selectedDayDetails()`. The fixed
+  preview (`PreviewReportService`) is still in the code and not in use.
 - The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
-  histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
+  histories (from Health Sim when it is connected, otherwise the built-in ones). The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
   this repository; check `docs/HES.md` and the code.
 
 **Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
-brief; a copy goes to `docs/prompts/` with the other prompts)
+brief; its copy is `docs/prompts/00-FAIRWEAR_PLAN.md`, next to the other briefs, indexed in `docs/prompts/README.md`)
 
 - The claim keeps its seven keys. Code that arrives with HES-Lite is adapted to the repository.
 - One wear rule on the watch: `WearStateMachine`. A reading of 0 bpm or less is no reading.

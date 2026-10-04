@@ -119,9 +119,15 @@ export struct EvidenceView {
   @StorageProp(KEY_REPORT_REVISION) @Watch('reload') reportRevision: number = 0;
   @StorageLink(KEY_APPEALS) appeals: string[] = [];
   @State report: PersonaReport = selectedReport();
+  // The colours are set from system resources: with the defaults the selected segment stays light in dark
+  // mode and its label cannot be read.
   @State segmentOptions: SegmentButtonOptions = SegmentButtonOptions.tab({
     buttons: [{ text: EVIDENCE_SEGMENT_CALENDAR }, { text: EVIDENCE_SEGMENT_WATCH }] as
-    ItemRestriction<SegmentButtonTextItem>
+    ItemRestriction<SegmentButtonTextItem>,
+    backgroundColor: $r('sys.color.comp_background_tertiary'),
+    selectedBackgroundColor: $r('sys.color.comp_background_emphasize'),
+    fontColor: $r('sys.color.font_secondary'),
+    selectedFontColor: $r('sys.color.font_on_primary')
   });
   @State segment: number[] = [SEGMENT_CALENDAR];
   @State day: EvidenceDay = noEvidenceDay();

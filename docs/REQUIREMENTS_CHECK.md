@@ -1,32 +1,46 @@
 # Hackathon requirements: working check
 
-Working notes behind the README table "Hackathon requirements → where to verify".
+Working notes behind the README section "For the jury" (judging criteria → where to see them).
 Source of the requirements: `hackathon_challenge.md` and `FAQ.md` in `onirodeveloper/hackyeah2026-challenge`.
 Every row names its evidence. A row without evidence is marked open.
 
-Checked on 2026-10-04. The table below was written on `feature/entry-routing` (base `main`). On
-`feature/home-card`, which contains `feature/health-addon`, these rows change: B2 is met for the add-on
-screens, the watch live screen, the home-screen card and the shortcut (`docs/screenshots/`); B13 "unknown
-`fwTarget`" is also checked on the Phone emulator; B14 lint is 0 errors and 5 warnings of one performance
-rule (`docs/test-results.txt`); B4, B5, B8 and B9 have a first version in `README.md`, `docs/ARCHITECTURE.md`
-and `docs/DEMO_SCRIPT.md`. The watch permissions are in `docs/ARCHITECTURE.md`.
+State on 2026-10-04 06:32, branch `feature/engine-reports` at the Health Sim merge (`da5ef1a`; the commits after
+it change documents only), from `docs/test-results.txt`: logic tests `common` 380/380, `watch` 6/6 and
+`HealthSimCopies.test.ets` 2/2; `assembleHap` for `entry` and `watch` of FairWear and of Health Sim BUILD
+SUCCESSFUL; lint 0 errors (7 warnings in `entry`, 2 in `watch`, all one performance rule, 0 issues in
+`common`); wording check 0 hits. The logic tests were also re-run independently on a copy of the tree
+(Linux, Node 22, TypeScript 5.4.5, `tools/logic-tests/runner.js`): 380/380 and 6/6. B2 is met for every
+product screen: the Health Sim connect path, Report, "Why this tier", Evidence, Share, the partner view and
+"What left this phone" on the Phone emulator; the dial, the recorder and "Get today from Health Sim" on the
+Wearable emulator (`docs/screenshots/final/`, `docs/screenshots/`). Earlier versions of this file, written on
+`feature/entry-routing` and `feature/home-card`, are in the git history. The table below is the current state.
 
 ## Status
 
 | Point | Requirement                                 | Status                          | Evidence                                                                                                               |
 | ----- | ------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | B1    | API 20 or later, API 20 declared as minimum | met                             | `build-profile.json5`, see "API levels" below                                                                          |
-| B2    | Runs on an emulator, not only the Previewer | partly                          | empty `entry` and `watch` ran on the Phone and Wearable emulators: `docs/screenshots/k0-*.jpeg`. Product screens: open |
+| B2    | Runs on an emulator, not only the Previewer | met                             | product screens on the Phone emulator, recorder and dial on the Wearable emulator: `docs/screenshots/final/`, `docs/screenshots/watchlink-*`, `docs/test-results.txt` |
 | B6    | Public-safe repository                      | open, owner decision            | no signing material, no secrets in any branch; commit metadata carries a private e-mail address, see "History scan"    |
 | B11   | AI features in the product                  | none, in code and in documents  | see "AI features"                                                                                                      |
-| B13   | Unknown `fwTarget` handled                  | met for the logic               | `common/src/main/ets/nav/EntryTarget.ets`, 5 tests in `common/src/test/EntryTarget.test.ets`                           |
-| B13   | Software key instead of HUKS                | code path exists, not exercised | `entry/src/main/ets/platform/ProofSigner.ets`; on the Phone emulator HUKS succeeded, so the fallback never ran         |
+| B13   | Unknown `fwTarget` handled                  | met                             | `common/src/main/ets/nav/EntryTarget.ets`, 12 tests in `common/src/test/EntryTarget.test.ets`; checked on the Phone emulator |
+| B13   | Software key instead of HUKS                | code path exists, not exercised | `common/src/main/ets/platform/ProofSigner.ets`; on both emulators HUKS succeeded, so the fallback never ran            |
 | B14   | Permissions justified, none unused          | met today                       | see "Permissions"                                                                                                      |
 | B14   | No secrets, no risky dependencies           | met                             | "History scan"; dependencies are `@ohos/hypium` and `@ohos/hamock`, dev only                                           |
-| B14   | Lint                                        | met                             | `docs/test-results.txt`, DevEco CLI 1.3.4: 0 issues in `entry`, `watch`, `common`                                      |
+| B14   | Lint                                        | met                             | `docs/test-results.txt`, DevEco CLI 1.3.4: 0 errors; warnings of one performance rule only                              |
 | B18   | History shows progress                      | met so far                      | `git log`: no squash, one commit per step                                                                              |
 
-Not started on this branch: B3, B4, B5, B7, B8, B9, B10, B12, B15, B16, B17.
+Deliverables (challenge statement, "Required Deliverables"):
+
+| Deliverable | State | Evidence |
+| --- | --- | --- |
+| Public source code repository | open, owner decision (the repository is private for now) | before it is shown: drop the working branches (`materials`, `merge/all-into-main`, `feature/health-sim-audit`, session-report commits), decide on the commit e-mail addresses |
+| Setup, build, installation and launch instructions | met | `README.md`, "How to install" (versions, emulators, commands) |
+| Working `.hap` | built, unsigned debug | `entry/build/default/outputs/default/entry-default-unsigned.hap`, same path under `watch/`; a signed build needs the owner's Huawei account (FAQ) |
+| Brief recorded demonstration | open | script: `docs/DEMO_SCRIPT.md` |
+| Architecture and implementation description | met | `docs/ARCHITECTURE.md`, `docs/HES.md`, `docs/WATCH_LINK.md` |
+| `AI_WORKFLOW.md` | met | `AI_WORKFLOW.md` |
+| AI integration documentation | not applicable | no AI feature in the product (B11) |
 
 ## API levels (B1)
 
@@ -37,7 +51,7 @@ Root `build-profile.json5`, product `default`:
 | `runtimeOS`            | `HarmonyOS`  |
 | `compatibleSdkVersion` | `6.0.0(20)`  |
 | `targetSdkVersion`     | `6.1.1(24)`  |
-| `compileSdkVersion`    | not declared |
+| `compileSdkVersion`    | not declared: the build uses the SDK bundled with DevEco Studio 6.1.1.280, HarmonyOS 6.1.1 (API 24) |
 
 The module files (`entry/`, `watch/`, `common/build-profile.json5`) declare no SDK versions.
 The build was compiled with DevEco Studio 6.1.1.280 and its bundled SDK, HarmonyOS 6.1.1 (API 24).
@@ -85,8 +99,8 @@ that document records; it is not part of the product.
 | -------------------------------------------- | ---------------------------------- | --------------------------------------------------------- | ------------------------------ |
 | `entry`                                      | none                               | signing with HUKS and CryptoFramework needs no permission | `entry/src/main/ets/platform/` |
 | `watch` (on `main`)                          | none                               | template page only                                        |                                |
-| `watch` (on `feature/health-addon`, planned) | `ohos.permission.READ_HEALTH_DATA` | live heart rate on the watch face                         | to be filled in after merge    |
-| `watch` (on `feature/health-addon`, planned) | `ohos.permission.ACTIVITY_MOTION`  | today's step count on the watch face                      | to be filled in after merge    |
+| `watch`                                      | `ohos.permission.READ_HEALTH_DATA` | live heart rate on the watch face, wear state            | `watch/src/main/ets/sensors/LiveSensors.ets` |
+| `watch`                                      | `ohos.permission.ACTIVITY_MOTION`  | today's step count on the watch face, day summary         | `watch/src/main/ets/sensors/LiveSensors.ets` |
 
 Not requested and not to be copied from sample code: `INTERNET`, `GET_NETWORK_INFO`, `VIBRATE`, `GYROSCOPE`.
 
@@ -94,5 +108,5 @@ Not requested and not to be copied from sample code: `INTERNET`, `GET_NETWORK_IN
 
 | Input                         | Rule                                                                                                                                              | Evidence               |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `want.parameters['fwTarget']` | only `dashboard`, `evidence`, `share`, `source`; anything else, any non-string and any value over 32 characters opens the dashboard; never throws | `EntryTarget.test.ets` |
+| `want.parameters['fwTarget']` | only `dashboard`, `evidence`, `share`, `source`, `tour`; anything else, any non-string and any value over 32 characters opens the dashboard; never throws | `EntryTarget.test.ets` |
 | Tier claim JSON               | strict decode: exactly seven keys, fixed value types; an extra key, a missing key or malformed JSON is rejected                                   | `Claim.test.ets`       |

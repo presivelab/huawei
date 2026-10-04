@@ -1,10 +1,19 @@
 import { describe, it, expect } from '@ohos/hypium';
 import {
+  BUILT_IN_SCRIPT,
   CLOCK_FEED_SUFFIX,
+  decodeWatchScript,
   demoFeedAt,
   demoFeedSteps,
+  encodeWatchScript,
   feedClockLabel,
-  MINUTES_PER_DAY
+  FEED_SOURCE_BUILT_IN,
+  FEED_SOURCE_HEALTH_SIM,
+  feedScriptSource,
+  FeedStretch,
+  HEALTH_SIM_WATCH_PARAM,
+  MINUTES_PER_DAY,
+  setFeedScript
 } from '../main/ets/watchlink/DemoFeed';
 import { isValidHeartRate } from '../main/ets/watchlink/WatchLinkTypes';
 
@@ -77,6 +86,62 @@ export default function demoFeedTest() {
       expect(CLOCK_FEED_SUFFIX).assertEqual('_FEED');
       expect(feedClockLabel('DEMO_X300')).assertEqual('DEMO_X300_FEED');
       expect(feedClockLabel('DEMO_X300_FEED')).assertEqual('DEMO_X300_FEED');
+    });
+  });
+
+  describe('DemoFeed script from Health Sim', () => {
+    it('the built-in script round-trips through the text Health Sim sends', 0, () => {
+      expect(HEALTH_SIM_WATCH_PARAM).assertEqual('fwhsw1');
+      const decoded = decodeWatchScript(encodeWatchScript(BUILT_IN_SCRIPT));
+      expect(decoded !== null).assertTrue();
+      expect(decoded).assertDeepEquals(BUILT_IN_SCRIPT);
+    });
+
+    it('a script that does not cover the day exactly, or is malformed, gives null', 0, () => {
+      const good = encodeWatchScript(BUILT_IN_SCRIPT);
+      expect(decodeWatchScript('') === null).assertTrue();
+      expect(decodeWatchScript('{') === null).assertTrue();
+      expect(decodeWatchScript(good.replace('"v":1', '"v":2')) === null).assertTrue();
+      // A gap (the first stretch ends a minute early), an overlap, a day that ends before 24:00.
+      expect(decodeWatchScript(good.replace('[0,330,', '[0,329,')) === null).assertTrue();
+      expect(decodeWatchScript(good.replace('[0,330,', '[0,331,')) === null).assertTrue();
+      expect(decodeWatchScript(good.replace(',1440,', ',1439,')) === null).assertTrue();
+      // A row one field short, a text where a number belongs, a heart rate out of range.
+      expect(decodeWatchScript(good.replace('[0,330,0,0,0,1]', '[0,330,0,0,0]')) === null).assertTrue();
+      expect(decodeWatchScript(good.replace('[0,330,0,0,0,1]', '[0,330,"0",0,0,1]')) === null).assertTrue();
+      expect(decodeWatchScript(good.replace('[0,330,0,0,0,1]', '[0,330,999,0,0,1]')) === null).assertTrue();
+    });
+
+    it('a script in use drives the feed; null brings back the built-in one', 0, () => {
+      const allDayWalk: FeedStretch[] = [new FeedStretch(0, MINUTES_PER_DAY, 90, 0, 100, false)];
+      try {
+        expect(feedScriptSource()).assertEqual(FEED_SOURCE_BUILT_IN);
+        setFeedScript(allDayWalk);
+        expect(feedScriptSource()).assertEqual(FEED_SOURCE_HEALTH_SIM);
+        expect(demoFeedAt(at(2, 0)).hr).assertEqual(90);
+        expect(demoFeedAt(at(2, 0)).charging).assertFalse();
+        expect(demoFeedSteps(at(13, 0), 1)).assertEqual(100);
+      } finally {
+        setFeedScript(null);
+      }
+      expect(feedScriptSource()).assertEqual(FEED_SOURCE_BUILT_IN);
+      expect(demoFeedAt(at(2, 0)).charging).assertTrue();
+      expect(demoFeedAt(at(13, 0)).hr).assertEqual(0);
+    });
+
+    it('Health Sim sends the same day as the built-in script, so the demo day is unchanged', 0, () => {
+      const fromSim = decodeWatchScript(encodeWatchScript(BUILT_IN_SCRIPT));
+      try {
+        setFeedScript(fromSim);
+        for (let m = 0; m < MINUTES_PER_DAY; m += 7) {
+          setFeedScript(null);
+          const builtIn = demoFeedAt(m);
+          setFeedScript(fromSim);
+          expect(demoFeedAt(m)).assertDeepEquals(builtIn);
+        }
+      } finally {
+        setFeedScript(null);
+      }
     });
   });
 }
