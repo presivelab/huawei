@@ -256,6 +256,11 @@ function writeState(state) {
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
 }
 
+// Removes the relay's own copy of an ACK (_relay/phone/acks). The phone's file is not touched.
+function dropKeptAck(name) {
+  fs.rmSync(path.join(relayDir, "phone", "acks", name), { force: true });
+}
+
 function hashOf(file) {
   return createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
@@ -387,8 +392,10 @@ function pushToPhone(phoneTarget, state) {
     if (state.pushed["pair.json"]?.hash !== hash) {
       if (send(phoneTarget, pairLocal, `${FILES}/inbox`, "pair.json")) {
         state.pushed["pair.json"] = { hash, at: now };
-        // A new pairing gets a new answer, even when its ACK text is the same as last time.
+        // A new pairing gets a new answer, even when its ACK text is the same as last time. The answer
+        // kept from the previous pairing is dropped: the watch must not hear "Paired" before Confirm.
         delete state.acked["0.json"];
+        dropKeptAck("0.json");
         pushed++;
       }
     }
@@ -422,8 +429,9 @@ function pushToPhone(phoneTarget, state) {
     if (send(phoneTarget, local, `${FILES}/inbox`, name)) {
       if (before?.hash !== hash) {
         // A packet the phone has not seen gets its ACK delivered, even when the ACK text repeats an older
-        // run (rehearsal, then the real demo).
+        // run (rehearsal, then the real demo). The answer kept for the older packet is dropped.
         delete state.acked[name];
+        dropKeptAck(name);
       }
       state.pushed[name] = { hash, at: now };
       pushed++;
