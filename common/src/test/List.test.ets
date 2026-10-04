@@ -11,6 +11,7 @@ import hesTest from './Hes.test';
 import hesPersonasTest from './HesPersonas.test';
 import hesSessionTest from './HesSession.test';
 import wearMonthTest from './WearMonth.test';
+import reportTest from './Report.test';
 
 export default function testsuite() {
   claimTest();
@@ -26,4 +27,5 @@ export default function testsuite() {
   hesPersonasTest();
   hesSessionTest();
   wearMonthTest();
+  reportTest();
 }

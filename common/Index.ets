@@ -345,3 +345,45 @@ export {
   WearPersonas,
   WEAR_MONTH_DAYS
 } from './src/main/ets/wear/WearPersonas';
+// The monthly report on the phone: view models, the benefit rule and the fixed preview of the six personas.
+export {
+  BAR_NO_DATA,
+  BenefitLevel,
+  ComponentId,
+  ComponentRow,
+  DayCell,
+  DayState,
+  hasScore,
+  HES_NONE,
+  LiveNow,
+  PersonaRef,
+  PersonaReport,
+  POINTS_UNKNOWN,
+  ReportConfidence,
+  ReportTier,
+  WearSummary
+} from './src/main/ets/report/ReportModels';
+export {
+  BENEFIT_FULL_LABEL,
+  BENEFIT_NONE_LABEL,
+  BENEFIT_PARTIAL_LABEL,
+  benefitLabel,
+  benefitLevel,
+  benefitReason
+} from './src/main/ets/report/Benefit';
+export {
+  PREVIEW_DEFAULT_ID,
+  PREVIEW_PERIOD,
+  PREVIEW_PERIOD_ISO,
+  PREVIEW_SOURCE,
+  previewPersonas,
+  previewReport,
+  previewReports
+} from './src/main/ets/report/PreviewReports';
+export {
+  FW_TAB_EVIDENCE,
+  FW_TAB_REPORT,
+  FW_TAB_SHARE,
+  fwTargetOpensSettings,
+  fwTargetTab
+} from './src/main/ets/nav/EntryTarget';
