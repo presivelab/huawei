@@ -134,6 +134,42 @@ Personas and wear month:
     a night with no sleep record is a night not worn. The 24 h before each break (heart-rate readings, resting
     heart rate difference, steps ratio) is scripted per persona, not derived from the history.
 
+## The report on the phone
+
+`common/src/main/ets/report/EngineReports.ets` builds the phone's view model (`PersonaReport`, the shape the
+fixed preview fills) from the engine. Tests: `common/src/test/EngineReports.test.ets` (26).
+
+| Function                      | Returns                                                                                             |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| `enginePersonas()`            | the six ids and names, in the order of the preview                                                  |
+| `engineReport(id)`            | the report of a persona's starting history, no live values; an unknown id gives the default persona |
+| `engineReports()`             | the six reports, built once                                                                         |
+| `engineSession(id)`           | a `HesSession` of the persona: `setLive`, `closeDay`, `reset`                                       |
+| `engineReportOf(id, session)` | the report as the session stands now; live values only in `live`                                    |
+| `engineWhatIf(result)`        | the counterfactual of an engine result (component, values, new score and tier, sentence) or null    |
+| `nextTierOf(tier)`            | the tier `pointsToNext` counts to: A for B, B for C, empty otherwise                                |
+
+25. **Eligible** is the wear month's verdict (compliance passes and no flag) and a score. Benefit and its reason
+    come from `Benefit.ets`.
+26. **Missing stays missing**: no score is `-1`, points to the next tier are `-1` without a score, a day
+    without data has the bar `-1`, a live value that was not set is `-1`. A component that is not available
+    has no value, score, weight or bar; it carries its valid count, and its minimum when the score needs it.
+27. **Weights have one decimal** (16.7), so equal weights read the same; for the six personas they add up to
+    between 99.8 and 100.2. Without a score every weight is 0.
+28. **VO₂max and HRV are shown as percentiles**, which is what the persona history holds.
+29. **A seven-day bar** is that day's reading on the component's curve. Sleep timing regularity has no value
+    for one night; its bar is that night's distance from the person's average bedtime and wake time, on the
+    same curve.
+30. **The counterfactual** moves one Core component along its own curve, point by point towards the top of the
+    curve, recalculates the score and keeps the first point that reaches the next tier. Of the components
+    that can do it, the one with the smallest change relative to today's value is taken. The resting heart
+    rate is taken only when none of steps, active minutes, sleep duration and sleep timing is enough. There
+    is no sentence without a score, in tier A, or when no single Core change is enough.
+31. **The wear month does not move when a day is closed.** Closing a day changes the score, the components
+    and the bars; the period and the 30 day cells stay those of 4 September to 3 October.
+32. **A day cell's worn share is 0 to 100.** A day the watch did not observe has the state `UNKNOWN` and the
+    share 0, because the model has no "missing" for that number: a screen reads the state before the share.
+
 ## What this is not
 
 HES-Lite is a transparent prototype that summarises longitudinal wearable evidence. It is not a diagnosis and

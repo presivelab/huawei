@@ -1,6 +1,39 @@
 FairWear test results
 =====================
 
+2026-10-04 03:22 CEDT  branch feature/engine-reports  (the phone report built from the engine: EngineReports)
+----------------------------------------------------
+Base: 8b29c77 (feature/hes-lite) + merge of 6f9be82 (report view models, benefit rule, fixed preview) = 7501cfb.
+Pure logic in common, no UI, no emulator run. Description and decisions: docs/HES.md, "The report on the phone".
+Node run (tools/run-logic-tests.sh): common 308/308, watch 6/6.
+  Before the merge 265/265; after the merge 282/282 (Report 13, EntryTarget 4 new); after this work 308/308.
+  New: EngineReports 26 (fixed results 6, components 6, wear month 3, live values and the session 5,
+  the counterfactual 6). One file alone: EngineReports.test.ets 26/26, Report.test.ets 13/13.
+Engine report against the fixed table and against the preview (score, tier, coverage, confidence, benefit,
+eligible): equal for all six personas.
+  Ania A/92, 100%, High, full benefit, eligible.  Marek B/75, 85%, High, no benefit, not eligible (flag).
+  Kasia B/73, 70%, Medium, partial benefit, eligible.  Tomek B/79, 90%, High, partial benefit, 1 point to A.
+  Ewa C/59, 75%, Medium, no benefit, eligible, 1 point to B.  Ola no score, 43%, no benefit, not eligible.
+Wear in the report: Marek 26/30, 3 suspicious breaks, flagged, 4 red days; Kasia 26/30, 1 suspicious, no flag;
+  Ania 30/30, Tomek 29/30, Ewa 27/30, Ola 8/30 with 6 unknown days. 30 day cells each.
+Live: setLive(200, 99999) changes only `live` in the report of all six personas.
+Counterfactual (one Core component to a point of its curve, recalculated by the engine):
+  Marek  250 active minutes a week instead of 117 -> 80, tier A.
+  Kasia  bed and wake times within ±30 min instead of ±88 min -> 81, tier A.
+  Tomek  6 h 30 min of sleep a night instead of 6 h 6 min -> 81, tier A.
+  Ewa    bed and wake times within ±90 min instead of ±94 min -> 60, tier B.
+  Ania (tier A) and Ola (no score): none.
+ArkTS compile: hvigorw assembleHar (common) BUILD SUCCESSFUL; assembleHap entry and watch BUILD SUCCESSFUL.
+  Compiler warnings in common: 22, all in src/main/ets/platform (unchanged), none in report/, hes/ or wear/.
+Lint (tools/lint.sh): 0 errors; entry 9 warnings (was 9), watch 2 (was 2), common 0.
+Wording check: 14 patterns 0 hits; enum-in-UI check 0 hits.
+Not done / not verified:
+  - nothing was run on an emulator or a device; the hypium run of List.test.ets on a device was not made;
+  - no screen uses the engine report yet: the phone's service locator is on feature/phone-screens;
+  - the engine report differs from the preview in every illustrative field (component values, bars, day cells,
+    live values, units of VO2max and HRV, one-decimal weights); the list is in the hand-over report;
+  - the wear month does not move when a day is closed in a session.
+
 2026-10-04 03:07 CEDT  branch feature/hes-lite  (HES-Lite v1.0 rebuilt from the specification, personas, wear month)
 ----------------------------------------------------
 Base: 45f67f8. Pure logic in common, no UI, no emulator run. Description and decisions: docs/HES.md.

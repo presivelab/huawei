@@ -93,16 +93,25 @@ two disagree.
 - Watch Link: on-wrist recorder, signed day packets, chain verification on the phone, a development relay
   over `hdc`.
 - Claim: `TierClaim` with exactly seven keys (`v`, `period`, `tier`, `eligible`, `nonce`, `issuedAt`, `kid`).
+- Scoring: HES-Lite v1.0 (`common/src/main/ets/hes/`), the six personas and the wear month
+  (`common/src/main/ets/wear/`). The module was rebuilt from the written specification on the branch line
+  `feature/hes-lite` → `feature/engine-reports`; the package `fairwear-ui` never arrived. Description and
+  decisions: `docs/HES.md`.
+- Report: the view models, the benefit rule, the fixed preview of the six personas and the same report built
+  from the engine (`common/src/main/ets/report/`: `ReportModels`, `Benefit`, `PreviewReports`,
+  `EngineReports`). The claim verifier is `common/src/main/ets/claim/PartnerVerifier.ets`.
 - Tools: `tools/deploy.sh`, `tools/lint.sh`, `tools/run-logic-tests.sh`, `tools/check-wording.sh`,
   `tools/shot.sh`. Results: `docs/test-results.txt`.
 
-**What is NOT in the repository**
+**What is NOT in the repository yet**
 
-- The scoring module HES-Lite (`common/src/main/ets/hes/`), the personas, the screens "Why this tier",
-  Share and the partner view, and the claim verifier. They exist only after `_incoming/fairwear-ui/` has
-  been unpacked and integrated. Until then the phone shows "No score yet".
-- Do not assume them. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the
-  state of this repository.
+- The phone does not show the engine. The report screens and the service locator are written on
+  `feature/phone-screens` against the fixed preview (`PreviewReports`); the phone shows preview data until
+  the service locator is switched to `engineReport` / `engineReportOf`. On a branch without those screens
+  the phone still shows "No score yet".
+- The scoring module does not read HUAWEI Health and is not fed by the watch: it runs on the persona
+  histories. The document "Final report: HES-Lite v1.0 in FairWear" describes a target, not the state of
+  this repository; check `docs/HES.md` and the code.
 
 **Decisions in force** (the team keeps one plan, "FairWear: the single plan", which replaces every earlier
 brief; a copy goes to `docs/prompts/` with the other prompts)
