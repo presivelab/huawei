@@ -18,6 +18,7 @@
 import { HES_PERSONA_END_DATE, HesPersonas } from '../hes/HesPersonas';
 import { copyHesDay, HesDay, HES_MISSING } from '../hes/HesTypes';
 import { asObject, parseJsonObject, readArray, readInt, readString } from '../watchlink/JsonRead';
+import { dayNumberOfDate } from '../watchlink/WatchLinkTypes';
 import { WearBreak, WearDayRecord } from '../wear/WearMonth';
 import { WearPersonas } from '../wear/WearPersonas';
 import { HealthScope } from './HealthConnection';
@@ -211,7 +212,27 @@ function readWearDay(v: Object): WearDayRecord | null {
   };
 }
 
-function readPerson(v: Object): HealthSimPerson | null {
+// The score's windows count list entries, not dates (HES.md decision 10), so a history has to be one entry
+// per calendar day: real dates, oldest first, no day skipped or repeated, the last one on the end date.
+// Otherwise a history with every other day missing would put 56 days into a "28-day" window.
+function isDailyRun(dates: string[], end: string): boolean {
+  if (dates.length === 0) {
+    return true;
+  }
+  const endDay = dayNumberOfDate(end);
+  if (endDay < 0) {
+    return false;
+  }
+  const first = endDay - dates.length + 1;
+  for (let i = 0; i < dates.length; i++) {
+    if (dayNumberOfDate(dates[i]) !== first + i) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function readPerson(v: Object, end: string): HealthSimPerson | null {
   const o = asObject(v);
   if (o === null) {
     return null;
@@ -241,6 +262,17 @@ function readPerson(v: Object): HealthSimPerson | null {
     }
     p.wear.push(w);
   }
+  const dayDates: string[] = [];
+  for (let i = 0; i < p.days.length; i++) {
+    dayDates.push(p.days[i].date);
+  }
+  const wearDates: string[] = [];
+  for (let i = 0; i < p.wear.length; i++) {
+    wearDates.push(p.wear[i].date);
+  }
+  if (!isDailyRun(dayDates, end) || !isDailyRun(wearDates, end)) {
+    return null;
+  }
   return p;
 }
 
@@ -265,7 +297,7 @@ export function decodeHealthSimPayload(text: string): HealthSimPayload | null {
   out.source = source;
   out.end = end;
   for (let i = 0; i < people.length; i++) {
-    const p = readPerson(people[i]);
+    const p = readPerson(people[i], end);
     if (p === null) {
       return null;
     }

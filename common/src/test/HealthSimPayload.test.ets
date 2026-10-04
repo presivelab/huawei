@@ -12,7 +12,7 @@ import {
   withScopes
 } from '../main/ets/health/HealthSimPayload';
 import { HesPersonas } from '../main/ets/hes/HesPersonas';
-import { HES_MISSING } from '../main/ets/hes/HesTypes';
+import { copyHesDay, HesDay, HES_MISSING } from '../main/ets/hes/HesTypes';
 import { WearPersonas } from '../main/ets/wear/WearPersonas';
 import {
   engineDayDetails,
@@ -130,6 +130,34 @@ export default function healthSimPayloadTest() {
       const builtIn = engineSession('ewa');
       expect(fromSim.closeDay()).assertDeepEquals(builtIn.closeDay());
       expect(fromSim.reset()).assertDeepEquals(builtIn.reset());
+    });
+
+    it('a history has to be one entry per calendar day, oldest first, ending on the end date', 0, () => {
+      const make = (edit: (days: HesDay[]) => HesDay[]): string => {
+        const payload = healthSimPayloadFromPersonas();
+        payload.people[0].days = edit(payload.people[0].days);
+        return encodeHealthSimPayload(payload);
+      };
+      expect(decodeHealthSimPayload(make((d: HesDay[]): HesDay[] => d)) !== null).assertTrue();
+      // Every other day removed: the same number of entries would cover twice the days.
+      expect(decodeHealthSimPayload(make((d: HesDay[]): HesDay[] =>
+        d.filter((x: HesDay, i: number): boolean => i % 2 === 1))) === null).assertTrue();
+      // One day twice, the order turned round, the last day not on the end date, a date that does not exist.
+      expect(decodeHealthSimPayload(make((d: HesDay[]): HesDay[] => d.concat([d[d.length - 1]]))) === null)
+        .assertTrue();
+      expect(decodeHealthSimPayload(make((d: HesDay[]): HesDay[] => d.slice().reverse())) === null).assertTrue();
+      expect(decodeHealthSimPayload(make((d: HesDay[]): HesDay[] => d.slice(0, d.length - 1))) === null)
+        .assertTrue();
+      expect(decodeHealthSimPayload(make((d: HesDay[]): HesDay[] => {
+        const copy = d.slice();
+        copy[0] = copyHesDay(copy[0]);
+        copy[0].date = '2026-02-30';
+        return copy;
+      })) === null).assertTrue();
+      // The same rule for the wear month.
+      const wearGap = healthSimPayloadFromPersonas();
+      wearGap.people[1].wear = wearGap.people[1].wear.slice(1, 10).concat(wearGap.people[1].wear.slice(11));
+      expect(decodeHealthSimPayload(encodeHealthSimPayload(wearGap)) === null).assertTrue();
     });
 
     it('anything that is not a valid version-1 text gives null and never throws', 0, () => {
