@@ -19,7 +19,10 @@ export struct RingStat {
   @Prop unit: string = '';
   @Prop ringColor: ResourceColor = $r('sys.color.confirm');
   diameter: number = 80;
+  // `shown` is what the animation runs to. `settled` is where the last animation ended: a rebuild (for
+  // example a switch between light and dark mode) recreates the ring from it instead of from empty.
   @State private shown: number = 0;
+  @State private settled: number = 0;
 
   onTarget(): void {
     this.shown = this.value;
@@ -27,12 +30,18 @@ export struct RingStat {
 
   build() {
     Stack() {
-      Progress({ value: 0, total: this.total > 0 ? this.total : 1, type: ProgressType.Ring })
+      Progress({ value: this.settled, total: this.total > 0 ? this.total : 1, type: ProgressType.Ring })
         .style({ strokeWidth: RING_STROKE, enableSmoothEffect: false, shadow: false })
         .color(this.ringColor)
         .backgroundColor($r('sys.color.comp_background_tertiary'))
         .ringValue(this.shown)
-        .animation({ duration: RING_FILL_MS, curve: Curve.EaseOut })
+        .animation({
+          duration: RING_FILL_MS,
+          curve: Curve.EaseOut,
+          onFinish: () => {
+            this.settled = this.shown;
+          }
+        })
         .width(this.diameter)
         .height(this.diameter)
       ValueWithUnit({ value: this.valueText, unit: this.unit, level: VALUE_MEDIUM })
