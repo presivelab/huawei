@@ -25,7 +25,7 @@ import {
   previewPersonas,
   previewReport,
   previewReports
-} from '../main/ets/report/PreviewReports';
+} from './fixtures/PreviewReports';
 import { dayStateLabel, metricSpoken, scoreSpoken, wearSpoken } from '../main/ets/report/ReportSpeech';
 import { periodDayIso, periodDaySpoken } from '../main/ets/report/ReportDates';
 import { validateTierClaimJson } from '../main/ets/claim/ClaimValidation';

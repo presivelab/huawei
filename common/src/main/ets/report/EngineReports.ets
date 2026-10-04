@@ -36,9 +36,22 @@ import { HealthStatus } from '../health/HealthRecords';
 import { dayWithScopes, HealthSimPerson } from '../health/HealthSimPayload';
 import { healthSourceLabel } from '../health/HealthStatusLabel';
 import { componentScore, equivalentMvpa } from '../hes/HesComponents';
-import { hesDefinition, HES_DAYS_PER_WEEK, HES_TIER_A_MIN, HES_TIER_B_MIN } from '../hes/HesCurves';
+import {
+  hesDefinition,
+  HES_DAYS_PER_WEEK,
+  HES_MINUTES_PER_DAY,
+  HES_TIER_A_MIN,
+  HES_TIER_B_MIN
+} from '../hes/HesCurves';
 import { composeHes, computeHes } from '../hes/HesEngine';
-import { hesMean, hesRound, sleepRelativeMinutes, sleepTimingSd } from '../hes/HesMath';
+import {
+  hesClockDistance,
+  hesMean,
+  hesRound,
+  hesUnwrapClock,
+  sleepRelativeMinutes,
+  sleepTimingSd
+} from '../hes/HesMath';
 import { generatePersonaDay, generatePersonaHistory, HesPersonas, HesPersonaSpec } from '../hes/HesPersonas';
 import { HesDaySource, HesSession } from '../hes/HesSession';
 import { isValidFor, validDays } from '../hes/HesSufficiency';
@@ -261,7 +274,9 @@ function meanClock(nights: HesDay[], bedtime: boolean): number {
   for (let i = 0; i < nights.length; i++) {
     values.push(sleepRelativeMinutes(bedtime ? nights[i].sleepStartMin : nights[i].sleepEndMin));
   }
-  return hesMean(values);
+  // The same unbroken run as the score's timing SD; the mean goes back onto the 24-hour circle.
+  const mean = hesMean(hesUnwrapClock(values));
+  return mean < 0 ? mean : mean % HES_MINUTES_PER_DAY;
 }
 
 // The reading of one day in the unit of the component's curve. Call only for a day that is valid for it.
@@ -276,8 +291,8 @@ function dayValue(id: HesComponentId, day: HesDay, meanBedtime: number, meanWake
     case HesComponentId.SLEEP_DURATION:
       return day.sleepMinutes / MINUTES_PER_HOUR;
     case HesComponentId.SLEEP_REGULARITY:
-      return sleepTimingSd(Math.abs(sleepRelativeMinutes(day.sleepStartMin) - meanBedtime),
-        Math.abs(sleepRelativeMinutes(day.sleepEndMin) - meanWake));
+      return sleepTimingSd(hesClockDistance(sleepRelativeMinutes(day.sleepStartMin), meanBedtime),
+        hesClockDistance(sleepRelativeMinutes(day.sleepEndMin), meanWake));
     case HesComponentId.CRF:
       return day.vo2maxPercentile;
     case HesComponentId.HRV:

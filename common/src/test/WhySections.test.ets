@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@ohos/hypium';
 import { ComponentId, ComponentRow, PersonaReport } from '../main/ets/report/ReportModels';
-import { previewReport, previewReports } from '../main/ets/report/PreviewReports';
+import { previewReport, previewReports } from './fixtures/PreviewReports';
 import { engineReports } from '../main/ets/report/EngineReports';
 import { scoreEvidence, weightText, whySections } from '../main/ets/report/WhySections';
 

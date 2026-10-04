@@ -1,20 +1,9 @@
 // Public surface of the common HAR. Pure logic only: no UI imports.
 export {
-  Epoch,
-  SleepRecord,
-  DaySummary,
-  Gap,
   Thresholds,
-  ComplianceResult,
-  Factor,
-  ScoreResult,
-  MonthlyReport,
-  WhatIfSuggestion,
-  UserSettings,
   LedgerEntry,
   TierClaim,
-  SignedClaim,
-  LiveSample
+  SignedClaim
 } from './src/main/ets/model/types';
 export { DEFAULT_THRESHOLDS } from './src/main/ets/model/defaults';
 export {
@@ -421,15 +410,6 @@ export {
   benefitLevel,
   benefitReason
 } from './src/main/ets/report/Benefit';
-export {
-  PREVIEW_DEFAULT_ID,
-  PREVIEW_PERIOD,
-  PREVIEW_PERIOD_ISO,
-  PREVIEW_SOURCE,
-  previewPersonas,
-  previewReport,
-  previewReports
-} from './src/main/ets/report/PreviewReports';
 export {
   FW_TAB_EVIDENCE,
   FW_TAB_REPORT,

@@ -1,9 +1,8 @@
 /*
  * View models of the monthly report on the phone. Plain data, no logic and no platform imports.
  *
- * The screens read these and nothing else. Today they are filled by the fixed preview (PreviewReports);
- * when the scoring engine is part of the build, its results are mapped onto the same shapes, so the
- * screens do not change.
+ * The screens read these and nothing else. They are filled from the scoring engine (EngineReports.ets).
+ * The hand-written preview of the six personas is a test fixture now (common/src/test/fixtures).
  */
 
 /** `PersonaReport.hes` and `ComponentRow.score` when there is no value. Never shown as a number. */

@@ -39,6 +39,8 @@ export class DeviceKey {
 export class ProofSigner {
   static readonly ALIAS: string = 'fairwear_claim_ecc_p256_v1';
   static readonly WATCH_DAY_ALIAS: string = 'fairwear.watch.day.v1';
+  // The phone's Watch Link key: signs the ACKs the watch pins at pairing. Separate from the claim key.
+  static readonly PHONE_LINK_ALIAS: string = 'fairwear.phone.link.v1';
   private static instances: Map<string, ProofSigner> = new Map<string, ProofSigner>();
 
   private alias: string;

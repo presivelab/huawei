@@ -5,7 +5,8 @@
 //
 // Files (relative to the app's files directory):
 //   inbox/pair.json, inbox/<seq>.json   delivered by a transport, removed once processed
-//   acks/<seq>.json                     ACKs for the watch (seq 0 answers the pairing request)
+//   acks/<seq>.json                     ACKs for the watch (seq 0 answers the pairing request), each signed
+//                                       with the phone's Watch Link key and tied to the packet it answers
 //   watchlink/ledger.json               the pinned watch and its chain
 //   watchlink/pending-pair.json         a valid pairing request waiting for the user
 //   watchlink/days/<seq>.json           accepted day packets
@@ -13,6 +14,7 @@
 import { ChainLedger } from './ChainLedger';
 import { AckPacketCodec, DayPacketCodec, PAIR_ACK_SEQ, PairPacketCodec } from './DayPacketCodec';
 import { DayPacketVerifier, PairVerifier, VerifyOutcome } from './DayPacketVerifier';
+import { PacketSealer } from './PacketSealer';
 import { asObject, parseJsonObject, readArray, readInt, readString } from './JsonRead';
 import { SettleGate } from './SettleGate';
 import {
@@ -30,7 +32,8 @@ import {
   ReceivedPacketInfo,
   utf8Length
 } from './LinkProbe';
-import { Clock, Hasher, SigVerifier, TextStore } from './WatchLinkPorts';
+import { Clock, Hasher, Signer, SigVerifier, TextStore } from './WatchLinkPorts';
+import { daySigningString, pairSigningString } from './WatchLinkSigning';
 import {
   AckStatus,
   BreakContext,
@@ -204,6 +207,7 @@ export class PhoneLinkEngine {
   private verifier: SigVerifier;
   private hasher: Hasher;
   private clock: Clock;
+  private signer: Signer;
   private dayVerifier: DayPacketVerifier;
   private ledger: ChainLedger | null = null;
   private pendingPair: PairPacket | null = null;
@@ -213,11 +217,15 @@ export class PhoneLinkEngine {
   // inbox/ files that may still be on their way: left for one more look before they are answered.
   private inboxGate: SettleGate = new SettleGate();
 
-  constructor(store: TextStore, verifier: SigVerifier, hasher: Hasher, clock: Clock, allowDemoClock: boolean = true) {
+  // `signer` is the phone's Watch Link key: every ACK is signed with it, and the watch pins it at pairing.
+  // allowDemoClock: see DayPacketVerifier. Off by default; the demo build turns it on explicitly.
+  constructor(store: TextStore, verifier: SigVerifier, hasher: Hasher, clock: Clock, signer: Signer,
+    allowDemoClock: boolean = false) {
     this.store = store;
     this.verifier = verifier;
     this.hasher = hasher;
     this.clock = clock;
+    this.signer = signer;
     this.dayVerifier = new DayPacketVerifier(verifier, hasher, clock, allowDemoClock);
   }
 
@@ -253,10 +261,14 @@ export class PhoneLinkEngine {
         const text = this.store.read(path);
         // A file the relay is still writing is left for the next look (see SettleGate).
         if (this.inboxGate.ready(PAIR_NAME, text)) {
-          this.store.remove(path);
-          if (text !== null) {
-            report.processed++;
-            report.pairRequested = await this.receivePair(text, TRANSPORT_RELAY);
+          // Removed only after the answer is written: the relay fetches acks/ once inbox/ is empty.
+          try {
+            if (text !== null) {
+              report.processed++;
+              report.pairRequested = await this.receivePair(text, TRANSPORT_RELAY);
+            }
+          } finally {
+            this.store.remove(path);
           }
         }
       }
@@ -268,12 +280,18 @@ export class PhoneLinkEngine {
         if (!this.inboxGate.ready(name, text)) {
           continue;
         }
-        this.store.remove(path);
         if (text === null) {
+          this.store.remove(path);
           continue;
         }
         report.processed++;
-        const out = await this.receiveDay(text, seqs[i], TRANSPORT_RELAY);
+        // As above: the file goes only once the ACK is on disk (or the attempt failed).
+        let out: VerifyOutcome = new VerifyOutcome();
+        try {
+          out = await this.receiveDay(text, seqs[i], TRANSPORT_RELAY);
+        } finally {
+          this.store.remove(path);
+        }
         if (out.status === 'REJECTED') {
           report.rejected++;
         } else if (out.status === 'ACCEPTED') {
@@ -302,20 +320,22 @@ export class PhoneLinkEngine {
     this.lastTransport = transport;
     const out = await PairVerifier.verify(json, this.verifier, this.hasher);
     const p = out.packet;
+    const ref = p === null ? '' : await this.hasher.sha256B64url(pairSigningString(p));
+    const watchKid = p === null ? '' : p.kid;
     if (!out.ok || p === null) {
       this.addLog(PAIR_ACK_SEQ, out.message, 'Pairing request');
-      this.writeAck(PAIR_ACK_SEQ, 'REJECTED', out.message);
+      await this.writeAck(PAIR_ACK_SEQ, 'REJECTED', out.message, watchKid, ref);
       return false;
     }
     const pinned = this.ledger;
     if (pinned !== null) {
       if (pinned.kid === p.kid && pinned.pubB64 === p.pub) {
         // The same watch asks again (its ACK was lost): answer again, change nothing.
-        this.writeAck(PAIR_ACK_SEQ, 'ACCEPTED', MSG_PAIRED);
+        await this.writeAck(PAIR_ACK_SEQ, 'ACCEPTED', MSG_PAIRED, watchKid, ref);
         return false;
       }
       this.addLog(PAIR_ACK_SEQ, MSG_OTHER_WATCH, `Forget ${pinned.kid} first`);
-      this.writeAck(PAIR_ACK_SEQ, 'REJECTED', MSG_OTHER_WATCH);
+      await this.writeAck(PAIR_ACK_SEQ, 'REJECTED', MSG_OTHER_WATCH, watchKid, ref);
       return false;
     }
     this.pendingPair = p;
@@ -324,8 +344,9 @@ export class PhoneLinkEngine {
     return true;
   }
 
-  // The user confirmed the code shown on both screens: pin the watch key.
-  confirmPair(): boolean {
+  // The user confirmed the code shown on both screens: pin the watch key. The ACK carries the phone key,
+  // which the watch pins in turn.
+  async confirmPair(): Promise<boolean> {
     const p = this.pendingPair;
     if (p === null) {
       return false;
@@ -335,8 +356,14 @@ export class PhoneLinkEngine {
     this.pendingPair = null;
     this.store.remove(PENDING_PAIR_FILE);
     this.addLog(PAIR_ACK_SEQ, MSG_PAIRED, p.kid);
-    this.writeAck(PAIR_ACK_SEQ, 'ACCEPTED', MSG_PAIRED);
+    const ref = await this.hasher.sha256B64url(pairSigningString(p));
+    await this.writeAck(PAIR_ACK_SEQ, 'ACCEPTED', MSG_PAIRED, p.kid, ref);
     return true;
+  }
+
+  // Key id of the phone's Watch Link key (the watch shows it once paired).
+  phoneKid(): string {
+    return this.signer.kid();
   }
 
   declinePair(): void {
@@ -368,16 +395,29 @@ export class PhoneLinkEngine {
   // `fileSeq` is the seq from the file name, used for the ACK when the content does not decode.
   async receiveDay(json: string, fileSeq: number, transport: string): Promise<VerifyOutcome> {
     this.lastTransport = transport;
-    const out = await this.dayVerifier.verify(json, this.ledger);
+    const ledger = this.ledger;
+    // Verified without committing: the day file is written first, then the chain records the day. If the
+    // write fails, the chain is unchanged and no ACK is written, so the watch keeps the packet and sends it
+    // again (never "Duplicate day" for a day the phone does not have).
+    const out = await this.dayVerifier.verify(json, ledger, false);
     const p = out.packet;
     const seq = p === null ? fileSeq : p.seq;
-    if (out.status === 'ACCEPTED' && p !== null) {
+    if (out.status === 'ACCEPTED' && p !== null && ledger !== null) {
       this.store.writeAtomic(`${LINK_DAYS_DIR}/${p.seq}${JSON_SUFFIX}`, DayPacketCodec.toJson(p));
-      this.saveLedger();
+      // The same packet may have arrived over the other transport while this one was awaited: it is then
+      // already in the chain, and is not counted twice.
+      const again = ledger.check(p.seq, p.prev, out.hash).kind;
+      if (again === 'NEXT' || again === 'GAP' || again === 'FILL') {
+        ledger.commit(p.seq, p.prev, out.hash, p.date);
+        this.saveLedger();
+      }
     }
     this.addLog(seq, out.message, out.note);
     if (seq > 0) {
-      this.writeAck(seq, out.status, out.note.length > 0 ? `${out.message} · ${out.note}` : out.message);
+      const ref = p === null ? '' : await this.hasher.sha256B64url(daySigningString(p));
+      const watchKid = p !== null ? p.kid : (ledger !== null ? ledger.kid : '');
+      await this.writeAck(seq, out.status, out.note.length > 0 ? `${out.message} · ${out.note}` : out.message,
+        watchKid, ref);
     }
     return out;
   }
@@ -576,9 +616,12 @@ export class PhoneLinkEngine {
     return this.store.read(`${LINK_DAYS_DIR}/${seq}${JSON_SUFFIX}`);
   }
 
-  private writeAck(seq: number, status: AckStatus, reason: string): void {
-    this.store.writeAtomic(`${PHONE_ACKS_DIR}/${seq}${JSON_SUFFIX}`,
-      AckPacketCodec.toJson(AckPacketCodec.make(seq, status, reason)));
+  private async writeAck(seq: number, status: AckStatus, reason: string, watchKid: string, ref: string):
+    Promise<void> {
+    const unsigned = AckPacketCodec.make(seq, status, reason, watchKid, ref, '', '',
+      Math.floor(this.clock.nowMs() / 1000));
+    const ack = await PacketSealer.sealAck(unsigned, this.signer);
+    this.store.writeAtomic(`${PHONE_ACKS_DIR}/${seq}${JSON_SUFFIX}`, AckPacketCodec.toJson(ack));
     // ACK files are picked up by the transport; the app only keeps the newest ones.
     const seqs: number[] = [];
     const names = this.store.list(PHONE_ACKS_DIR);

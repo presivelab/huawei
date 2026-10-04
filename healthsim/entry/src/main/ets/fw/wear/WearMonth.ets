@@ -110,6 +110,11 @@ export function isDayCompliant(record: WearDayRecord, th: Thresholds): boolean {
   if (!record.observed) {
     return false;
   }
+  // A minute count that is not a number never makes a day compliant (NaN < limit would be false).
+  if (!Number.isFinite(record.wornMin) || !Number.isFinite(record.chargingMin) ||
+    !Number.isFinite(record.nightWornMin)) {
+    return false;
+  }
   if (countedWearMinutes(record.wornMin, record.chargingMin, th) < th.minDailyHours * MINUTES_PER_HOUR) {
     return false;
   }

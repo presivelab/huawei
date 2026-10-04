@@ -1,4 +1,6 @@
-import { benefitLevel, benefitReason } from './Benefit';
+// Test fixture: the fixed preview of the six personas, written by hand before the scoring engine existed.
+// The tests use it as an independent expectation for the engine's reports; the app no longer ships it.
+import { benefitLevel, benefitReason } from '../../main/ets/report/Benefit';
 import {
   BAR_NO_DATA,
   ComponentId,
@@ -13,7 +15,7 @@ import {
   ReportConfidence,
   ReportTier,
   WearSummary
-} from './ReportModels';
+} from '../../main/ets/report/ReportModels';
 
 /*
  * Fixed preview reports of the six demo personas.

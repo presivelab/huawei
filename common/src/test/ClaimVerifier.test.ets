@@ -2,7 +2,7 @@
 // signatures from Node. Not part of List.test.ets (the ports come from tools/logic-tests/node-ports.ts).
 // S-19 (setLive does not change the score) is not here: the scoring module is not in this repository.
 import { describe, it, expect } from '@ohos/hypium';
-import { NodeRandom, NodeSigner, NodeSigVerifier } from '@fairwear/node-ports';
+import { NodeHasher, NodeRandom, NodeSigner, NodeSigVerifier } from '@fairwear/node-ports';
 import { SignedClaim } from '../main/ets/model/types';
 import { buildTierClaim, encodeTierClaim, TIER_CLAIM_KEYS } from '../main/ets/claim/TierClaimCodec';
 import { MAX_DER_SIGNATURE_BYTES, MAX_FUTURE_SKEW_MS, TIER_NO_SCORE } from '../main/ets/claim/ClaimValidation';
@@ -418,7 +418,9 @@ export default function claimVerifierTest() {
       }
       const parsed = JSON.parse(signed.claimJson) as Record<string, Object>;
       expect(Object.keys(parsed).length).assertEqual(7);
-      const text = (signed.claimJson + token).toLowerCase();
+      // The decoded fields, not the base64 text: random signature bytes can spell 'hes' or 'hrv' by chance
+      // (this made the test fail now and then).
+      const text = `${signed.claimJson} ${signed.kid} ${signed.keySource}`.toLowerCase();
       const banned = ['hes', 'coverage', 'flag', 'susp', 'reason', 'score', 'heart', 'steps', 'hrv', 'vo2',
         'compliance', 'pseudonym', 'persona'];
       for (let i = 0; i < banned.length; i++) {
@@ -479,6 +481,30 @@ export default function claimVerifierTest() {
       const token = await b.issueAndMint();
       b.verifier.clearKeys();
       expect(await b.status(token)).assertEqual(STATUS_UNKNOWN_KEY);
+    });
+  });
+  describe('PartnerVerifier key registry', () => {
+    it('another key under a kid already enrolled is refused; the first key keeps working', 0, async () => {
+      const b = new Bench();
+      const intruder = new NodeSigner();
+      // Registered under the victim's kid: refused, the registry is unchanged.
+      expect(b.verifier.registerKey(b.signer.kid(), b64urlDecode(intruder.publicKeySpkiB64()), 'HUKS'))
+        .assertFalse();
+      const nonce = await b.verifier.issueNonce();
+      expect(await b.status(await b.mint(b.claimJson(nonce)))).assertEqual(STATUS_VALID);
+      // The same key again is fine.
+      expect(b.verifier.registerKey(b.signer.kid(), b64urlDecode(b.signer.publicKeySpkiB64()), 'SOFTWARE'))
+        .assertTrue();
+    });
+
+    it('enrolment works the kid out from the key, never from the device', 0, async () => {
+      const b = new Bench();
+      const other = new NodeSigner();
+      const kid = await b.verifier.enrolKey(b64urlDecode(other.publicKeySpkiB64()), 'SOFTWARE', new NodeHasher());
+      expect(kid).assertEqual(other.kid());
+      // Enrolling the already registered key again gives its kid back.
+      expect(await b.verifier.enrolKey(b64urlDecode(b.signer.publicKeySpkiB64()), 'SOFTWARE', new NodeHasher()))
+        .assertEqual(b.signer.kid());
     });
   });
 }

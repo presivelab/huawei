@@ -2,6 +2,7 @@ import { describe, it, expect } from '@ohos/hypium';
 import { HesPersonas } from '../main/ets/hes/HesPersonas';
 import { HES_MISSING } from '../main/ets/hes/HesTypes';
 import { DEFAULT_THRESHOLDS } from '../main/ets/model/defaults';
+import { Thresholds } from '../main/ets/model/types';
 import {
   buildWearMonth,
   countedWearMinutes,
@@ -87,6 +88,12 @@ export default function wearMonthTest() {
       // 23 h on the wrist, but only 3 h 59 min of the night: the day does not count.
       expect(isDayCompliant(day(1380, 239, 60, []), TH)).assertFalse();
       expect(isDayCompliant(day(1380, 240, 60, []), TH)).assertTrue();
+      // Minutes that are not numbers never pass, also when the night is not required.
+      const noNight = JSON.parse(JSON.stringify(TH)) as Thresholds;
+      noNight.nightRequired = false;
+      expect(isDayCompliant(day(Number.NaN, 240, 60, []), noNight)).assertFalse();
+      expect(isDayCompliant(day(1380, Number.NaN, 60, []), TH)).assertFalse();
+      expect(isDayCompliant(day(1380, 240, Number.POSITIVE_INFINITY, []), noNight)).assertFalse();
       const result = buildWearMonth([day(1380, 239, 60, []), day(1380, 240, 60, [])], TH, []);
       expect(result.nightsWorn).assertEqual(1);
       expect(result.days[0].nightWorn).assertFalse();

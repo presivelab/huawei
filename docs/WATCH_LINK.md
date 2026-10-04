@@ -85,7 +85,7 @@ Freshness is measured in real time, never in demo time: 60 s with the real clock
 | `iat`              | int         | epoch seconds                                                                                                                                                                  |
 | `sig`              | string      | ECDSA P-256 / SHA-256, ASN.1 DER, base64url                                                                                                                                    |
 
-A break is a maximal run of `O` (never `C`, never `U`) longer than the break minimum from `defaults.ets` (`gapMinMinutes`, 120). It is reported in the packet of the day it **ends**; a break still running at the end of a day is carried into the next packet.
+A break is a maximal run of `O` (never `C`, never `U`) of at least the break minimum from `defaults.ets` (`gapMinMinutes`, 120), the same limit the phone's break rule counts with. It is reported in the packet of the day it **ends**; a break still running at the end of a day is carried into the next packet.
 
 | break field          | notes                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
@@ -123,11 +123,21 @@ Packet hash = base64url(SHA-256(signing string)). The next packet's `prev` is th
 
 The pairing packet (`v`, `type = PAIR`, `kid`, `pub`, `alg = ECDSA_P256_SHA256`, `iat`, `sig`) is self-signed over `FWPAIR1`, `kid`, `pub`, `alg`, `iat`. `kid` is the first 4 bytes of SHA-256 over the public key as 8 hex characters, the same rule as the phone's `kid`.
 
-The ACK packet (phone → watch): `v`, `type = ACK`, `seq`, `status` (`ACCEPTED`, `DUPLICATE`, `REJECTED`), `reason`. `seq = 0` answers the pairing request.
+The ACK packet (phone → watch), version 2: `v = 2`, `type = ACK`, `seq`, `status` (`ACCEPTED`, `DUPLICATE`, `REJECTED`), `reason`, `watchKid` (the watch it answers), `ref`, `phoneKid`, `phonePub`, `iat`, `sig`. `seq = 0` answers the pairing request. `ref` is the hash of the signing string of the packet answered (the day packet, or the pairing request), so an answer cannot be moved to another packet with the same seq. `sig` is ECDSA P-256 over `FWACK2`, `phoneKid`, `phonePub`, `watchKid`, `seq`, `status`, `reason`, `ref`, `iat`, one per line; the reason may not contain a line break.
+
+What the watch does with an ACK (`WatchLinkEngine.processAcks`):
+
+- The pairing answer (`seq = 0`, `ACCEPTED`) whose `ref` is the hash of the pairing request the watch just sent pins the phone key (`phoneKid`, `phonePub` in `state.json`) and pairs. The request's hash is then cleared, so a copy of the answer, or an answer someone else signs for the same request later, never pins another key. The watch shows `Pairing: Paired · phone <phoneKid>`.
+- A day answer is used only when it is signed by the pinned phone key and its `ref` is the hash of the packet in the outbox under that seq. `ACCEPTED` and `DUPLICATE` take the packet out of the outbox. `REJECTED` is shown (`#2: Invalid signature`) and the packet stays; `Unknown watch key` about this very packet unpairs (the phone forgot this watch).
+- Anything else changes nothing: an unsigned version-1 ACK, a signature that does not verify (`Answer ignored: invalid signature`), another phone's key (`Answer ignored: another phone`), another watch, or an answer about another packet.
+- A watch state from before signed ACKs has no phone key: the watch counts as not paired and pairs again (`Pair phone`; a phone that still knows the watch answers without `Confirm`). Its chain and outbox stay.
+- Answers are applied in the order the phone wrote them (`iat`; the pairing answer first within one second), whatever order the file list comes in. An `Unknown watch key` written before the pairing answer that pinned the phone never unpairs.
+- The phone removes an `inbox/` file only after its ACK is on disk, so the relay, which fetches `acks/` once `inbox/` is empty, never takes an old answer for the new one.
+- If HUKS is not available for the phone's Watch Link key, the software fallback makes a new key at every app start; the watch then ignores the answers until it is paired again. HUKS worked on both emulators.
 
 ## Keys
 
-The watch signs with its own key, alias `fairwear.watch.day.v1`, separate from the phone's claim key (`fairwear_claim_ecc_p256_v1`, unchanged). Both go through `ProofSigner`: HUKS first, a software key in app memory if HUKS fails. On the wearable emulator the key was created in HUKS.
+The watch signs with its own key, alias `fairwear.watch.day.v1`, separate from the phone's claim key (`fairwear_claim_ecc_p256_v1`, unchanged). The phone signs its ACKs with a third key, `fairwear.phone.link.v1`. All go through `ProofSigner`: HUKS first, a software key in app memory if HUKS fails. On the wearable emulator the watch key was created in HUKS.
 
 ## Verify order on the phone
 
@@ -137,17 +147,19 @@ The watch signs with its own key, alias `fairwear.watch.day.v1`, separate from t
 | 2    | `v` and `type`                | `Unsupported version`                                                                                                                                        |
 | 3    | `kid` is the pinned watch     | `Unknown watch key`                                                                                                                                          |
 | 4    | ECDSA over the signing string | `Invalid signature`                                                                                                                                          |
-| 5    | chain                         | `Duplicate day` (same seq, same hash; acknowledged again) · `Chain conflict` (same seq with another hash, or the next seq whose `prev` is not the last hash) |
-| 6    | date                          | `Date in the future` · `Date out of order`                                                                                                                   |
+| 5    | chain                         | `Duplicate day` (same seq, same hash; acknowledged again) · `Chain conflict` (same seq with another hash, or the next seq whose `prev` is not the last hash) · `Sequence jump over 400` (more than 400 seqs skipped; refused before a missing list is built) |
+| 6    | date                          | `Date in the future` · `Date out of order` (one packet per day: the date has to lie strictly after the previous day's, and a late day strictly between its neighbours) · `Demo clock not accepted` |
 | 7    |                               | `Accepted`, with the note `Missing N day(s)` when the packet skipped sequence numbers                                                                        |
 
 A pairing packet is checked for format, self-signature and the key-id rule, and pinned only after the user confirms the 8-hex code shown on both screens. A second watch cannot replace a pinned one; `Forget watch` comes first.
+
+An accepted day is written to `watchlink/days/<seq>.json` first; only then does the chain record it and the ACK go out. If the write fails, the chain is unchanged and no ACK is written, so the watch keeps the packet and sends it again.
 
 A missing day appears in the days list as `#N · not received` with `No data received from watch (#N)`: zero worn minutes, no breaks.
 
 ## Files
 
-Watch sandbox (`filesDir`, on the emulator `/data/storage/el2/base/files`): `days/<date>.json`, `outbox/<seq>.json`, `pair.json`, `acks/<seq>.json` (incoming), `state.json` (`kid`, `seq`, `lastHash`, `paired`), `clock.json` (recorder-clock offset).
+Watch sandbox (`filesDir`, on the emulator `/data/storage/el2/base/files`): `days/<date>.json`, `outbox/<seq>.json`, `pair.json`, `acks/<seq>.json` (incoming), `state.json` (`kid`, `seq`, `lastHash`, `paired`, `pairRef`, `phoneKid`, `phonePub`), `clock.json` (recorder-clock offset).
 
 Phone sandbox: `inbox/` (incoming, removed once processed), `acks/<seq>.json` (outgoing), `watchlink/ledger.json`, `watchlink/pending-pair.json`, `watchlink/days/<seq>.json`, `watchlink/log.json`.
 
@@ -240,7 +252,7 @@ Seen during the run, not changed: on the watch's second page the title and the `
 7. `pub` is base64url (the encoding of the repo's `Bytes.ets` helpers), not padded base64. `b64urlDecode` accepts both.
 8. The version check runs on `v` and `type` before the other fields are checked, so an unknown version reports `Unsupported version` and not `Invalid format`.
 9. **Late days.** A packet whose seq was recorded as missing is accepted when it links to the neighbours the phone knows. The brief only lists the gap; without this a held-back packet could never be delivered, and the watch keeps it in its outbox until it is acknowledged.
-10. **Demo clock and dates.** Packets recorded on the demo clock carry simulated dates, which can lie in the future. The verifier takes a flag: this demo build accepts them (the future check is skipped, the order check is kept) and they stay labelled by `clock`; with the flag off they are rejected with `Demo clock not accepted`.
+10. **Demo clock and dates.** Packets recorded on the demo clock carry simulated dates, which can lie in the future. The verifier takes a flag, off by default (`Demo clock not accepted`). This demo build turns it on explicitly (`ACCEPT_DEMO_CLOCK_PACKETS` in `entry/src/main/ets/watchlink/WatchLinkService.ets`): the future check is skipped, the order check is kept, and the packets stay labelled by `clock`. A release build sets it to false.
 11. `WearStateMachine.hasSignal()` is added: before any sensor has reported, the recorder is not fed.
 12. A rejected packet stays in the watch's outbox (the copy the phone saw may have been damaged on the way); only `ACCEPTED` and `DUPLICATE` remove it.
 13. The pinned watch and the ledger are stored as files in the phone sandbox (`watchlink/ledger.json`), not in Preferences `watchlink`: one storage port for everything, covered by the tests.

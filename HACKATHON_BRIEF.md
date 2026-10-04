@@ -12,7 +12,7 @@ The first plan (`IMPLEMENTATION.md`, written with Claude on claude.ai) is not in
 
 **Lead challenge theme:** Human-Centric Technology (responsible technology, digital wellbeing).
 
-**Distinctive platform capability:** One capability end to end: the history (Health Sim in the place of HUAWEI Health on the emulators) → the score and the wear rules on the phone → a signed tier. The watch (Sensor Service Kit: heart rate, pedometer, wear detection) adds signed proofs of wear, which are shown and not counted into the score. HUKS (Universal Keystore Kit) is the trust link in that chain, not a separate feature.
+**Distinctive platform capability:** One capability end to end: the history (Health Sim in the place of HUAWEI Health on the emulators) → the score and the wear rules on the phone → a signed tier. The watch (Sensor Service Kit: heart rate, pedometer, wear detection) adds signed, hash-chained proofs of wear, which are shown and not counted into the score. HUKS (Universal Keystore Kit) is the trust link in that chain, not a separate feature: it keeps every signing key on its device. What it does not give the partner yet is proof that a key really is in a device's keystore: HUKS key attestation at enrolment is the next step (README, "What the signatures prove").
 
 ## Target
 

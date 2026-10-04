@@ -4,12 +4,16 @@
 import { asObject, parseJsonObject, readArray, readInt, readIntArray, readString } from './JsonRead';
 import { dayNumberOfDate, GENESIS } from './WatchLinkTypes';
 
-export type ChainKind = 'NEXT' | 'GAP' | 'FILL' | 'DUPLICATE' | 'CONFLICT';
+export type ChainKind = 'NEXT' | 'GAP' | 'FILL' | 'DUPLICATE' | 'CONFLICT' | 'TOO_FAR';
 
 const LEDGER_VERSION: number = 1;
 // Accepted packets remembered for duplicate and conflict checks.
 const MAX_ENTRIES: number = 400;
 const MAX_SEQ: number = 2147483647;
+// The most packets one packet may skip. The watch keeps at most 30 packets, so a real gap is the days the
+// phone did not hear from it; more than this is not a gap but a broken or hostile seq, and is refused
+// before a list of missing days is built for it.
+export const MAX_GAP: number = 400;
 
 export interface ChainEntry {
   seq: number;
@@ -22,7 +26,7 @@ export class ChainCheck {
   kind: ChainKind = 'CONFLICT';
   // For GAP: the sequence numbers skipped by this packet.
   missing: number[] = [];
-  // Dates this packet has to lie between (inclusive); '' when there is no bound on that side.
+  // Dates this packet has to lie strictly between (one packet per day); '' when there is no bound on that side.
   notBefore: string = '';
   notAfter: string = '';
 }
@@ -79,6 +83,10 @@ export class ChainLedger {
         out.kind = prev === this.lastHash ? 'NEXT' : 'CONFLICT';
         return out;
       }
+      if (seq - this.lastSeq - 1 > MAX_GAP) {
+        out.kind = 'TOO_FAR';
+        return out;
+      }
       for (let s = this.lastSeq + 1; s < seq; s++) {
         out.missing.push(s);
       }
@@ -117,7 +125,7 @@ export class ChainLedger {
     return out;
   }
 
-  // Records an accepted packet. Call only after check() said NEXT, GAP or FILL.
+  // Records an accepted packet. Call only after check() said NEXT, GAP or FILL (never TOO_FAR).
   commit(seq: number, prev: string, hash: string, date: string): void {
     const added: ChainEntry = { seq: seq, hash: hash, prev: prev, date: date };
     if (seq > this.lastSeq) {

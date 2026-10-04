@@ -1,11 +1,19 @@
 // Phone side: decides whether a packet from the watch is taken in. Fixed order, fixed messages,
 // in the style of the claim verifier: format, version, key, signature, chain, date.
 // This checks where a packet comes from and that it is intact. It says nothing about the day itself.
-import { ChainLedger } from './ChainLedger';
+import { ChainLedger, MAX_GAP } from './ChainLedger';
 import { DayPacketCodec, PairPacketCodec } from './DayPacketCodec';
 import { Clock, Hasher, SigVerifier } from './WatchLinkPorts';
-import { daySigningString, pairSigningString } from './WatchLinkSigning';
-import { AckStatus, CLOCK_REAL, dateOfDayNumber, DayPacket, localDayNumber, PairPacket } from './WatchLinkTypes';
+import { ackSigningString, daySigningString, pairSigningString } from './WatchLinkSigning';
+import {
+  AckPacket,
+  AckStatus,
+  CLOCK_REAL,
+  dateOfDayNumber,
+  DayPacket,
+  localDayNumber,
+  PairPacket
+} from './WatchLinkTypes';
 
 export const MSG_INVALID_FORMAT: string = 'Invalid format';
 export const MSG_UNSUPPORTED_VERSION: string = 'Unsupported version';
@@ -19,6 +27,7 @@ export const MSG_DEMO_CLOCK: string = 'Demo clock not accepted';
 export const MSG_ACCEPTED: string = 'Accepted';
 export const MSG_KEY_ID_MISMATCH: string = 'Key id mismatch';
 export const MSG_PAIR_VALID: string = 'Pairing request valid';
+export const MSG_SEQ_JUMP: string = `Sequence jump over ${MAX_GAP}`;
 
 export function missingDaysNote(count: number): string {
   return `Missing ${count} day(s)`;
@@ -50,18 +59,19 @@ export class DayPacketVerifier {
   private clock: Clock;
   private allowDemoClock: boolean;
 
-  // allowDemoClock: packets recorded on the watch's demo clock carry simulated dates. A demo build
-  // takes them in (and labels them); with false they are rejected.
-  constructor(verifier: SigVerifier, hasher: Hasher, clock: Clock, allowDemoClock: boolean = true) {
+  // allowDemoClock: packets recorded on the watch's demo clock carry simulated dates, so the "not in the
+  // future" check cannot apply to them. Refused by default; only a demo build passes true (and labels them).
+  constructor(verifier: SigVerifier, hasher: Hasher, clock: Clock, allowDemoClock: boolean = false) {
     this.verifier = verifier;
     this.hasher = hasher;
     this.clock = clock;
     this.allowDemoClock = allowDemoClock;
   }
 
-  // `ledger` is the pinned watch, or null when no watch is paired. An accepted packet is committed
-  // to the ledger; the caller stores the ledger afterwards.
-  async verify(json: string, ledger: ChainLedger | null): Promise<VerifyOutcome> {
+  // `ledger` is the pinned watch, or null when no watch is paired. With `commit` an accepted packet is
+  // committed to the ledger at once; without it the caller commits (PhoneLinkEngine does, after the day
+  // file is written, so a failed write never leaves a day the chain counts but the phone does not have).
+  async verify(json: string, ledger: ChainLedger | null, commit: boolean = true): Promise<VerifyOutcome> {
     const out = new VerifyOutcome();
 
     // 1, 2: format and version
@@ -101,6 +111,10 @@ export class DayPacketVerifier {
       out.message = MSG_CHAIN_CONFLICT;
       return out;
     }
+    if (chain.kind === 'TOO_FAR') {
+      out.message = MSG_SEQ_JUMP;
+      return out;
+    }
 
     // 6: date
     if (p.clock !== CLOCK_REAL) {
@@ -115,14 +129,17 @@ export class DayPacketVerifier {
         return out;
       }
     }
-    if ((chain.notBefore.length > 0 && p.date < chain.notBefore) ||
-      (chain.notAfter.length > 0 && p.date > chain.notAfter)) {
+    // One packet per day: a date equal to a neighbour's is out of order too.
+    if ((chain.notBefore.length > 0 && p.date <= chain.notBefore) ||
+      (chain.notAfter.length > 0 && p.date >= chain.notAfter)) {
       out.message = MSG_DATE_ORDER;
       return out;
     }
 
     // 7: accepted
-    ledger.commit(p.seq, p.prev, hash, p.date);
+    if (commit) {
+      ledger.commit(p.seq, p.prev, hash, p.date);
+    }
     out.status = 'ACCEPTED';
     out.message = MSG_ACCEPTED;
     if (chain.kind === 'GAP') {
@@ -167,5 +184,22 @@ export class PairVerifier {
     out.ok = true;
     out.message = MSG_PAIR_VALID;
     return out;
+  }
+}
+
+export class AckVerifier {
+  // Watch side: true when the ACK is signed by the key it names and that key follows the key-id rule.
+  // Whether that key is the pinned phone, and whether `ref` matches the packet, is checked by the caller.
+  static async verify(ack: AckPacket, verifier: SigVerifier, hasher: Hasher): Promise<boolean> {
+    let derived = '';
+    try {
+      derived = await hasher.keyId(ack.phonePub);
+    } catch (e) {
+      return false;
+    }
+    if (derived !== ack.phoneKid) {
+      return false;
+    }
+    return verifier.verify(ack.phonePub, ackSigningString(ack), ack.sig);
   }
 }

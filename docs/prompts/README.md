@@ -28,6 +28,7 @@ disagree, the repository and `docs/` are right. The decisions still in force are
 | `13-MOCK_TELEFON_ARKUI.md` | Phone screens from the design canvas as working ArkUI on the emulator | 4 Oct 02:27 | complements `00` |
 | `14-FIXY_PO_AUDYCIE.md` | Fixes after the claude.ai audit of 4 Oct 06:40: sections 1–4 the code fixes (consent switches on both paths, the home card label, partner fixes), 5 the documents, 6 build and emulators, 7 git | 4 Oct, morning | sections 1–4 in force; sections 5–7 replaced by `15` |
 | `15-TRZECH_AGENTOW.md` | Round of three parallel sessions: A1 consent and logic (14, sections 1–4), A2 watch face and visits, A3 Health Sim closer to the HUAWEI Health layout, documents and merge | 4 Oct, morning | replaced sections 5–7 of `14` |
+| `14-TEKSTY_UI_DO_ZASOBOW.md` | UI texts of `entry`, `watch` and the card moved into string resources (`$r`), English unchanged; sentences built in `common` left for a second step | 4 Oct 08:10 | prepared by Claude in the review session, not run yet |
 
 Order of use: `00` first (it replaced `1`–`9` and `10`), then `11`–`13`, then `14`, then `15`. `15` replaced
 sections 5–7 of `14` (documents, build and emulators, git) with its own work for the third session; sections 1–4

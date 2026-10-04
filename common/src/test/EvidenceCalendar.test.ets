@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@ohos/hypium';
 import { DEFAULT_THRESHOLDS } from '../main/ets/model/defaults';
 import { DayState, PersonaReport } from '../main/ets/report/ReportModels';
-import { previewReport } from '../main/ets/report/PreviewReports';
+import { previewReport } from './fixtures/PreviewReports';
 import {
   appealKey,
   appealsIn,

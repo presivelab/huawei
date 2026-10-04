@@ -1,6 +1,6 @@
 import { TierClaim } from '../model/types';
 import { b64urlEncode } from '../platform/Bytes';
-import { Clock, SigVerifier } from '../watchlink/WatchLinkPorts';
+import { Clock, Hasher, SigVerifier } from '../watchlink/WatchLinkPorts';
 import { validateSignedClaim } from './ClaimValidation';
 import { decodeSignedClaimToken } from './SignedClaimToken';
 
@@ -96,9 +96,10 @@ export class PartnerVerifier {
   }
 
   /**
-   * Registers a key. Call it when the user agrees to share. The same key under the same kid may be
-   * registered again. A different key under a kid that is already taken is refused and the registered key
-   * stays: a key is never replaced silently. Returns whether the key is now the registered one.
+   * Registers a key under its kid. The same key under the same kid may be registered again (its source label
+   * is updated). A different key under a kid that is already taken is refused and the registered key stays:
+   * a kid is only 32 bits, so a second key with the same kid must never silently replace the first. Returns
+   * whether the key is now the registered one.
    */
   registerKey(kid: string, publicKeyDer: Uint8Array, source: string): boolean {
     const have = this.keys.get(kid);
@@ -107,6 +108,16 @@ export class PartnerVerifier {
     }
     this.keys.set(kid, new PartnerKey(kid, publicKeyDer, source));
     return true;
+  }
+
+  /**
+   * Enrols a key the way a partner should: the kid is worked out from the key itself (first 4 bytes of
+   * SHA-256 over the DER), never taken from the device. Returns the kid, or '' when that kid already
+   * belongs to another key. Call it when the user agrees to share.
+   */
+  async enrolKey(publicKeyDer: Uint8Array, source: string, hasher: Hasher): Promise<string> {
+    const kid = await hasher.keyId(b64urlEncode(publicKeyDer));
+    return this.registerKey(kid, publicKeyDer, source) ? kid : '';
   }
 
   /** Empties the registry; the software key changes on every app start, so it is rebuilt each session. */

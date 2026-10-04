@@ -55,14 +55,15 @@ class Bench {
   phoneStore: FsTextStore;
   clock: StepClock = new StepClock(slotStartMs(dayNumberOfDate(D4), 0, TZ) + 12 * 3600 * 1000);
   signer: NodeSigner = new NodeSigner();
+  phoneSigner: NodeSigner = new NodeSigner();
   watch: WatchLinkEngine;
   phone: PhoneLinkEngine;
 
   constructor() {
     this.watchStore = new FsTextStore(this.watchDir);
     this.phoneStore = new FsTextStore(this.phoneDir);
-    this.watch = new WatchLinkEngine(this.watchStore, this.signer, new NodeHasher(), this.clock, TZ);
-    this.phone = new PhoneLinkEngine(this.phoneStore, new NodeSigVerifier(), new NodeHasher(), this.clock);
+    this.watch = new WatchLinkEngine(this.watchStore, this.signer, new NodeHasher(), this.clock, TZ, new NodeSigVerifier());
+    this.phone = new PhoneLinkEngine(this.phoneStore, new NodeSigVerifier(), new NodeHasher(), this.clock, this.phoneSigner, true);
     this.phone.load();
   }
 
@@ -108,7 +109,7 @@ class Bench {
         this.watchStore.writeAtomic(`acks/${acks[i]}`, text);
       }
     }
-    this.watch.processAcks();
+    await this.watch.processAcks();
   }
 
   dispose(): void {
@@ -153,13 +154,13 @@ export default function watchLinkFlowTest() {
       expect(b.phone.view().pendingPairKid).assertEqual(code);
       expect(b.phone.isPaired()).assertFalse();
       expect(b.watch.view().paired).assertFalse();
-      expect(b.phone.confirmPair()).assertTrue();
+      expect(await b.phone.confirmPair()).assertTrue();
       expect(b.phone.view().pairLine).assertEqual(`Paired · ${code}`);
       await b.relay();
       expect(b.watch.view().paired).assertTrue();
       expect(b.watch.view().statusLine).assertEqual(STATUS_SYNCED);
       // Pinned state survives a restart of the phone app.
-      const reopened = new PhoneLinkEngine(b.phoneStore, new NodeSigVerifier(), new NodeHasher(), b.clock);
+      const reopened = new PhoneLinkEngine(b.phoneStore, new NodeSigVerifier(), new NodeHasher(), b.clock, b.phoneSigner, true);
       reopened.load();
       expect(reopened.view().kid).assertEqual(code);
       b.dispose();
@@ -170,7 +171,7 @@ export default function watchLinkFlowTest() {
       await b.watch.start();
       await b.watch.pair();
       await b.relay();
-      b.phone.confirmPair();
+      await b.phone.confirmPair();
       const intruder = new Bench();
       await intruder.watch.start();
       await intruder.watch.pair();
@@ -190,7 +191,7 @@ export default function watchLinkFlowTest() {
       await b.watch.start();
       await b.watch.pair();
       await b.relay();
-      b.phone.confirmPair();
+      await b.phone.confirmPair();
       await b.relay();
 
       // Demo clock x300: 20 s worn, 40 s without heart rate (about 3 h of recorder time), 10 s worn.
@@ -293,7 +294,7 @@ export default function watchLinkFlowTest() {
       b.watch.setDemoClock(false);
       b.watch.pause();
       const dateBefore = b.watch.view().recorderDate;
-      const restarted = new WatchLinkEngine(b.watchStore, b.signer, new NodeHasher(), b.clock, TZ);
+      const restarted = new WatchLinkEngine(b.watchStore, b.signer, new NodeHasher(), b.clock, TZ, new NodeSigVerifier());
       await restarted.start();
       expect(restarted.view().recorderDate).assertEqual(dateBefore);
       expect(restarted.view().clockLabel).assertEqual('DEMO_OFFSET');
@@ -330,7 +331,7 @@ export default function watchLinkFlowTest() {
       await b.watch.start();
       await b.watch.pair();
       await b.relay();
-      b.phone.confirmPair();
+      await b.phone.confirmPair();
       await b.relay();
       expect(b.phoneStore.list('acks').length > 0).assertTrue();
       b.phone.forget();
@@ -355,7 +356,7 @@ export default function watchLinkFlowTest() {
         await b.watch.start();
         await b.watch.pair();
         await b.relay();
-        b.phone.confirmPair();
+        await b.phone.confirmPair();
         await b.relay();
         b.watch.setDemoClock(true);
         await b.run(12, 70);
@@ -404,7 +405,7 @@ export default function watchLinkFlowTest() {
       await b.watch.start();
       await b.watch.pair();
       await b.relay();
-      b.phone.confirmPair();
+      await b.phone.confirmPair();
       b.phoneStore.writeAtomic('inbox/1.json', '{"v":1,');
       let report = await b.phone.scanInbox();
       expect(report.processed).assertEqual(0);
@@ -423,7 +424,7 @@ export default function watchLinkFlowTest() {
         await b.watch.start();
         await b.watch.pair();
         await b.relay();
-        b.phone.confirmPair();
+        await b.phone.confirmPair();
         await b.relay();
         b.watch.setDemoClock(true);
         await b.run(12, 70);
@@ -438,11 +439,11 @@ export default function watchLinkFlowTest() {
         expect(ack !== null).assertTrue();
         if (ack !== null) {
           b.watchStore.writeAtomic('acks/1.json', ack.substring(0, Math.floor(ack.length / 2)));
-          b.watch.processAcks();
+          await b.watch.processAcks();
           expect(b.watch.pendingCount()).assertEqual(1);
           expect(b.watchStore.list('acks').length).assertEqual(1);
           b.watchStore.writeAtomic('acks/1.json', ack);
-          b.watch.processAcks();
+          await b.watch.processAcks();
           expect(b.watch.pendingCount()).assertEqual(0);
           expect(b.watch.view().statusLine).assertEqual(STATUS_SYNCED);
         }

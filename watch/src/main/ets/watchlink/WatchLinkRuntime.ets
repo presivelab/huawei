@@ -6,6 +6,7 @@ import {
   DayTransport,
   decodeWatchScript,
   DeviceHasher,
+  DeviceSigVerifier,
   deviceTzOffsetMin,
   feedScriptSource,
   FileTextStore,
@@ -273,7 +274,7 @@ export class WatchLinkRuntime {
       this.store = store;
       this.restoreDayScript(store);
       const engine = new WatchLinkEngine(store, signer, new DeviceHasher(), new SystemClock(),
-        deviceTzOffsetMin());
+        deviceTzOffsetMin(), new DeviceSigVerifier());
       const wearEngine = new WearEngineTransport(context);
       this.wearEngine = wearEngine;
       const transports: DayTransport[] = [wearEngine];

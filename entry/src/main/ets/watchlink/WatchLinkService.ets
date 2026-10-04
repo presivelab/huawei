@@ -5,11 +5,13 @@ import {
   DeviceHasher,
   DeviceSigVerifier,
   FileTextStore,
+  KeySigner,
   PhoneLinkEngine,
   PhoneLinkView,
   PROBE_NEEDS_DAY,
   ProbeKind,
   ProbeResult,
+  ProofSigner,
   ReceivedPacketInfo,
   SystemClock,
   TRANSPORT_WEAR_ENGINE,
@@ -20,6 +22,9 @@ import { WearEngineReceiver } from './WearEngineReceiver';
 const DOMAIN = 0x0000;
 const TAG = 'FairWear';
 const INBOX_POLL_MS = 2000;
+// This build is the hackathon demo: day packets recorded on the watch's demo clock (labelled DEMO_X300...)
+// are taken in, so the "not in the future" date check is skipped for them. A release build sets false.
+const ACCEPT_DEMO_CLOCK_PACKETS = true;
 
 // AppStorage key: a counter that changes whenever the Watch Link state changed. Views re-read on it.
 export const KEY_LINK_REVISION: string = 'fwWatchLinkRevision';
@@ -39,6 +44,7 @@ export class WatchLinkService {
   private static instance: WatchLinkService | null = null;
 
   private engine: PhoneLinkEngine | null = null;
+  private starting: boolean = false;
   private receiver: WearEngineReceiver | null = null;
   private revision: number = 0;
   private syncing: boolean = false;
@@ -52,16 +58,29 @@ export class WatchLinkService {
     return WatchLinkService.instance;
   }
 
-  // Call once at app launch.
+  // Call once at app launch. The phone's Watch Link key is created or read first (HUKS, asynchronous); until
+  // then the engine is null and every call below does nothing.
   init(context: common.UIAbilityContext): void {
-    if (this.engine !== null) {
+    if (this.engine !== null || this.starting) {
       return;
     }
+    this.starting = true;
+    // setUp never rejects: every failure is caught and kept in lastError.
+    this.setUp(context).then(() => {
+      this.starting = false;
+      this.publish();
+    });
+  }
+
+  private async setUp(context: common.UIAbilityContext): Promise<void> {
     try {
       const filesDir = context.getApplicationContext().filesDir;
       hilog.info(DOMAIN, TAG, 'watchlink filesDir=%{public}s', filesDir);
+      const signer = await KeySigner.create(ProofSigner.PHONE_LINK_ALIAS);
+      hilog.info(DOMAIN, TAG, 'watchlink phone key kid=%{public}s source=%{public}s', signer.kid(),
+        signer.keySource());
       const engine = new PhoneLinkEngine(new FileTextStore(filesDir), new DeviceSigVerifier(), new DeviceHasher(),
-        new SystemClock());
+        new SystemClock(), signer, ACCEPT_DEMO_CLOCK_PACKETS);
       engine.load();
       this.engine = engine;
       const receiver = new WearEngineReceiver(context);
@@ -69,10 +88,11 @@ export class WatchLinkService {
       receiver.start((text: string) => {
         this.onWearEngineMessage(text);
       });
+      // The app may have come to the foreground while the key was being prepared.
+      this.syncNow();
     } catch (e) {
       this.fail('start', e as BusinessError);
     }
-    this.publish();
   }
 
   // The app is in the foreground: read the inbox now and keep checking it, so a relay run shows up
@@ -121,13 +141,13 @@ export class WatchLinkService {
     if (engine === null) {
       return;
     }
-    try {
-      engine.confirmPair();
+    engine.confirmPair().then(() => {
       this.sendAcks();
-    } catch (e) {
-      this.fail('pair', e as BusinessError);
-    }
-    this.publish();
+      this.publish();
+    }).catch((e: BusinessError) => {
+      this.fail('pair', e);
+      this.publish();
+    });
   }
 
   declinePair(): void {

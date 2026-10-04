@@ -244,7 +244,9 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
   token: whoever holds an unused code can present it once, and the single-use nonce and the expiry limit that. Its
   key id (`kid`) is 8 hex characters, 32 bits, and only selects the key from the partner's registry; the
   signature and the registry decide, not the id. The Watch Link code
-  also answers the paired watch with ACK packets (sequence number, status, reason; no health values).
+  also answers the paired watch with ACK packets (sequence number, status, reason, the hash of the packet
+  answered; no health values), signed with the phone's own Watch Link key, which the watch pins at pairing:
+  a forged or replayed answer cannot take a day out of the watch's outbox or unpair it.
 - **Consent.** The consented data types are stored in the app sandbox (`healthsim/scopes.json`) next to the
   data Health Sim sent, and both are removed on Disconnect. A stored consent that does not read as a list of
   known data types counts as every type being allowed only until the next consent screen; the app never guesses
@@ -254,6 +256,14 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 - **Partner (demo).** The demo partner keeps used codes apart from the codes still waiting, so a code shown twice
   reads "Already used" however many new codes were issued in between. A key id is never taken over: a different
   public key under a registered key id is refused, and no code is made.
+- **What the signatures prove, and what they do not.** The partner checks that a claim is intact, fresh,
+  used once and answers its own nonce, signed by a key it enrolled; it works the key id out from the key and
+  never lets a second key take over a key id. The phone checks the same for each watch day, plus the chain.
+  What they do not prove yet: that the key sits in a real device's keystore. Keys are enrolled without HUKS
+  key attestation, so a key made outside a device could sign any tier; and the score runs on the phone, from
+  data the user controls. Next step: the partner checks a HUKS key attestation at enrolment. Watch days travel
+  signed, not encrypted: on real devices Wear Engine is the channel; the hdc relay of the demo is a
+  development tool.
 - **Watch.** Two permissions, `READ_HEALTH_DATA` (heart rate) and `ACTIVITY_MOTION` (steps), each with a
   stated reason and used only while the app is open. A refused permission shows "unavailable" and the wear
   state "no data", never a made-up value (`docs/screenshots/watch-04-heart-rate-permission-denied.jpeg` shows

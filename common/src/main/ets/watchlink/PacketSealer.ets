@@ -3,8 +3,8 @@
 import { DayPacketCodec, PairPacketCodec } from './DayPacketCodec';
 import { parseJsonObject, readBoolean, readInt, readString } from './JsonRead';
 import { Clock, Hasher, Signer } from './WatchLinkPorts';
-import { daySigningString, pairSigningString } from './WatchLinkSigning';
-import { DayPacket, GENESIS, PACKET_VERSION, PAIR_ALG, PairPacket, TYPE_PAIR } from './WatchLinkTypes';
+import { ackSigningString, daySigningString, pairSigningString } from './WatchLinkSigning';
+import { AckPacket, DayPacket, GENESIS, PACKET_VERSION, PAIR_ALG, PairPacket, TYPE_PAIR } from './WatchLinkTypes';
 
 // state.json on the watch.
 export interface WatchChainState {
@@ -12,6 +12,20 @@ export interface WatchChainState {
   seq: number;        // seq of the last packet put in the outbox; 0 before the first
   lastHash: string;   // hash of that packet; 'GENESIS' before the first
   paired: boolean;
+  pairRef: string;    // hash of the last pairing request sent; '' before the first
+  phoneKid: string;   // the phone key pinned when the pairing was accepted; '' while not paired
+  phonePub: string;
+  pairedIat: number;  // iat of the pairing answer that pinned it: an older "Unknown watch key" never unpairs
+}
+
+export class SealedPair {
+  json: string;
+  hash: string;
+
+  constructor(json: string, hash: string) {
+    this.json = json;
+    this.hash = hash;
+  }
 }
 
 export class SealedDay {
@@ -27,7 +41,16 @@ export class SealedDay {
 }
 
 export function newChainState(kid: string): WatchChainState {
-  const state: WatchChainState = { kid: kid, seq: 0, lastHash: GENESIS, paired: false };
+  const state: WatchChainState = {
+    kid: kid,
+    seq: 0,
+    lastHash: GENESIS,
+    paired: false,
+    pairRef: '',
+    phoneKid: '',
+    phonePub: '',
+    pairedIat: 0
+  };
   return state;
 }
 
@@ -52,7 +75,23 @@ export function chainStateFromJson(text: string | null, kid: string): WatchChain
   if (storedKid === null || seq === null || lastHash === null || paired === null || seq < 0 || storedKid !== kid) {
     return newChainState(kid);
   }
-  const state: WatchChainState = { kid: storedKid, seq: seq, lastHash: lastHash, paired: paired };
+  // Written before ACKs were signed: no phone key is pinned, so the watch counts as not paired and pairs
+  // again. The chain (seq, lastHash) and the outbox stay.
+  const pairRef = readString(o, 'pairRef');
+  const phoneKid = readString(o, 'phoneKid');
+  const phonePub = readString(o, 'phonePub');
+  const pairedIat = readInt(o, 'pairedIat');
+  const hasPhone = phoneKid !== null && phonePub !== null && phoneKid.length > 0 && phonePub.length > 0;
+  const state: WatchChainState = {
+    kid: storedKid,
+    seq: seq,
+    lastHash: lastHash,
+    paired: paired && hasPhone,
+    pairRef: pairRef === null ? '' : pairRef,
+    phoneKid: hasPhone && phoneKid !== null ? phoneKid : '',
+    phonePub: hasPhone && phonePub !== null ? phonePub : '',
+    pairedIat: hasPhone && pairedIat !== null && pairedIat > 0 ? pairedIat : 0
+  };
   return state;
 }
 
@@ -89,6 +128,27 @@ export class PacketSealer {
 
   // The self-signed pairing request: the watch's public key and its key id.
   static async makePair(signer: Signer, clock: Clock): Promise<string> {
+    const p = await PacketSealer.signedPair(signer, clock);
+    return PairPacketCodec.toJson(p);
+  }
+
+  // The pairing request and its hash: the phone's answer has to carry this hash as `ref`.
+  static async sealPair(signer: Signer, hasher: Hasher, clock: Clock): Promise<SealedPair> {
+    const p = await PacketSealer.signedPair(signer, clock);
+    const hash = await hasher.sha256B64url(pairSigningString(p));
+    return new SealedPair(PairPacketCodec.toJson(p), hash);
+  }
+
+  // Phone side: signs an ACK with the phone's Watch Link key. kid and public key come from the signer.
+  static async sealAck(ack: AckPacket, signer: Signer): Promise<AckPacket> {
+    ack.phoneKid = signer.kid();
+    ack.phonePub = signer.publicKeySpkiB64();
+    ack.sig = '';
+    ack.sig = await signer.sign(ackSigningString(ack));
+    return ack;
+  }
+
+  private static async signedPair(signer: Signer, clock: Clock): Promise<PairPacket> {
     const p: PairPacket = {
       v: PACKET_VERSION,
       type: TYPE_PAIR,
@@ -99,6 +159,6 @@ export class PacketSealer {
       sig: ''
     };
     p.sig = await signer.sign(pairSigningString(p));
-    return PairPacketCodec.toJson(p);
+    return p;
   }
 }

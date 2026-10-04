@@ -1,9 +1,8 @@
-import { DayDetail, LiveNow, PersonaRef, PersonaReport, previewPersonas, previewReport } from 'common';
+import { DayDetail, PersonaRef, PersonaReport } from 'common';
 
 /*
- * Where the phone screens get the monthly report from. Two implementations: the scoring engine
- * (EngineReportService, the one in use) and the fixed preview below. ServiceLocator chooses; no screen
- * changes with the choice.
+ * Where the phone screens get the monthly report from: the scoring engine (EngineReportService). The fixed
+ * preview that once stood in for it is now only a test fixture (common/src/test/fixtures/PreviewReports.ets).
  */
 export interface ReportService {
   /** The personas the demo switcher lists. */
@@ -29,60 +28,4 @@ export interface ReportService {
 
   /** True while the values are fixed preview values and not calculated: the screens then say so. */
   isPreview(): boolean;
-}
-
-/** Fixed preview reports from `common` (PreviewReports). Nothing is calculated here. */
-export class PreviewReportService implements ReportService {
-  private live: Map<string, LiveNow> = new Map<string, LiveNow>();
-
-  personas(): PersonaRef[] {
-    return previewPersonas();
-  }
-
-  report(id: string): PersonaReport {
-    const base: PersonaReport = previewReport(id);
-    const live: LiveNow | undefined = this.live.get(base.id);
-    if (live === undefined) {
-      return base;
-    }
-    const copy: PersonaReport = {
-      id: base.id,
-      name: base.name,
-      period: base.period,
-      periodIso: base.periodIso,
-      hes: base.hes,
-      tier: base.tier,
-      coveragePct: base.coveragePct,
-      confidence: base.confidence,
-      eligible: base.eligible,
-      benefit: base.benefit,
-      benefitReason: base.benefitReason,
-      pointsToNext: base.pointsToNext,
-      components: base.components,
-      wear: base.wear,
-      live: live,
-      whatIf: base.whatIf
-    };
-    return copy;
-  }
-
-  liveSet(id: string, hr: number, steps: number): void {
-    const live: LiveNow = { hr: hr, steps: steps };
-    this.live.set(previewReport(id).id, live);
-  }
-
-  // The preview is fixed: there is no day to close and nothing to go back to.
-  closeDay(id: string): void {
-  }
-
-  resetDemo(id: string): void {
-  }
-
-  dayDetails(id: string): DayDetail[] {
-    return [];
-  }
-
-  isPreview(): boolean {
-    return true;
-  }
 }
