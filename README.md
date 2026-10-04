@@ -14,7 +14,7 @@ follow a raised resting heart rate and fewer steps), lets the user see and appea
 partner only a signed, single-use A/B/C tier. Lead challenge theme: Human-Centric Technology (responsible
 technology, digital wellbeing).
 
-**Demo video:** [`docs/demo/fairwear-demo.mp4`](docs/demo/fairwear-demo.mp4) (2 min 17 s, also in the [release](https://github.com/presivelab/huawei/releases/download/hackyeah-2026-final/fairwear-demo.mp4)) · **HAP packages:** [GitHub release hackyeah-2026-final](https://github.com/presivelab/huawei/releases/tag/hackyeah-2026-final) (four HAPs and SHA256SUMS)
+**Demo video:** [`docs/demo/fairwear-demo.mp4`](docs/demo/fairwear-demo.mp4) (1 min 13 s, pauses cut, also in the [release](https://github.com/presivelab/huawei/releases/download/hackyeah-2026-final/fairwear-demo.mp4)) · **HAP packages:** [GitHub release hackyeah-2026-final](https://github.com/presivelab/huawei/releases/tag/hackyeah-2026-final) (four HAPs and SHA256SUMS)
 
 <p>
 <img src="docs/screenshots/final/a1-report-ania-healthsim-light.jpeg" width="190" alt="Report: Ania, 92 · A, full benefit, on Health Sim data">
