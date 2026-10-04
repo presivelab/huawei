@@ -12,107 +12,111 @@ import {
   ReportTier,
   weightText
 } from 'common';
+import { str } from '../ui/Strings';
 
-// UI copy of the report screens. English only.
+// UI copy of the report screens, kept in string resources (base = English).
+// A constant is the resource; a function returns the text.
 
-export const PREVIEW_SUFFIX: string = ' · preview';
-export const PREVIEW_LINE: string = 'Score engine not connected — preview values';
-export const PERIOD_SUFFIX: string = ' · last 30 days';
-export const SCORE_UNIT: string = 'HES';
+export const PREVIEW_LINE: Resource = $r('app.string.report_preview_line');
+export const SCORE_UNIT: Resource = $r('app.string.report_score_unit');
 
-export const WHY_LABEL: string = 'Why this tier';
-export const EVIDENCE_LABEL: string = 'Evidence';
-export const WEAR_TITLE: string = 'Wear this month';
-export const EVIDENCE_TITLE: string = 'Your evidence';
-export const EVIDENCE_NOTE: string = 'completed days · last 28';
-export const DISCLAIMER: string =
-  'HES is deterministic rules, not a medical device. Weights and curves are prototype assumptions, ' +
-    'not clinically tested.';
+export const WHY_LABEL: Resource = $r('app.string.report_why_label');
+export const EVIDENCE_LABEL: Resource = $r('app.string.report_evidence_label');
+export const WEAR_TITLE: Resource = $r('app.string.report_wear_title');
+export const EVIDENCE_TITLE: Resource = $r('app.string.report_evidence_title');
+export const EVIDENCE_NOTE: Resource = $r('app.string.report_evidence_note');
+export const DISCLAIMER: Resource = $r('app.string.report_disclaimer');
 
-export const NO_SCORE_HEADLINE: string = 'No score yet';
-export const NO_SCORE_BODY: string =
-  'We need more completed days before we can score fairly. A low score is never shown instead.';
-export const UNLOCK_TITLE: string = 'What unlocks your score';
-export const UNLOCK_STEPS: string[] = [
-  'Wear the watch at night',
-  'Turn on continuous heart rate monitoring in HUAWEI Health',
-  'Turn on TruSleep in HUAWEI Health'
-];
-export const SHARE_NEEDS_SCORE: string = 'Share is available once you have a score.';
+export const NO_SCORE_HEADLINE: Resource = $r('app.string.report_no_score_headline');
+export const NO_SCORE_BODY: Resource = $r('app.string.report_no_score_body');
+export const UNLOCK_TITLE: Resource = $r('app.string.report_unlock_title');
 
-export const NOT_MEASURED: string = 'Not measured';
-export const NOT_MEASURED_NOTE: string = 'Doesn\'t lower your score';
+// The three steps under "What unlocks your score".
+export function unlockSteps(): string[] {
+  return [
+    str($r('app.string.report_unlock_step_night')),
+    str($r('app.string.report_unlock_step_heart_rate')),
+    str($r('app.string.report_unlock_step_trusleep'))
+  ];
+}
 
-export const PERSONA_SHEET_TITLE: string = 'Demo persona';
-export const PERSONA_SHEET_NOTE: string = 'Fixed preview data, for the demo only';
-export const PERSONA_CHIP_SUFFIX: string = ' · Demo';
+export const SHARE_NEEDS_SCORE: Resource = $r('app.string.report_share_needs_score');
 
-export const SHARE_TAB_TITLE: string = 'Share';
-export const EVIDENCE_TAB_TITLE: string = 'Evidence';
-export const REPORT_TAB_TITLE: string = 'Report';
+export const NOT_MEASURED: Resource = $r('app.string.report_not_measured');
+export const NOT_MEASURED_NOTE: Resource = $r('app.string.report_not_measured_note');
+
+export const PERSONA_SHEET_TITLE: Resource = $r('app.string.persona_sheet_title');
+export const PERSONA_SHEET_NOTE: Resource = $r('app.string.persona_sheet_note');
+
+export const SHARE_TAB_TITLE: Resource = $r('app.string.tab_share_title');
+export const EVIDENCE_TAB_TITLE: Resource = $r('app.string.tab_evidence_title');
+export const REPORT_TAB_TITLE: Resource = $r('app.string.tab_report_title');
 
 // The source line of the report: the brand and the readable status, marked as preview while the values
 // are fixed preview values ("HUAWEI Health · Demo data · preview").
 export function reportSourceLine(status: string, preview: boolean): string {
-  return healthSourceLabel(status) + (preview ? PREVIEW_SUFFIX : '');
+  const label: string = healthSourceLabel(status);
+  return preview ? str($r('app.string.report_source_preview'), label) : label;
 }
 
 // The short name of a score component on a tile.
 export function tileName(id: string): string {
   if (id === ComponentId.STEPS) {
-    return 'Steps';
+    return str($r('app.string.report_tile_steps'));
   }
   if (id === ComponentId.ACTIVE_MINUTES) {
-    return 'Active minutes';
+    return str($r('app.string.report_tile_active_minutes'));
   }
   if (id === ComponentId.RESTING_HR) {
-    return 'Resting HR';
+    return str($r('app.string.report_tile_resting_hr'));
   }
   if (id === ComponentId.SLEEP) {
-    return 'Sleep';
+    return str($r('app.string.report_tile_sleep'));
   }
   if (id === ComponentId.SLEEP_REGULARITY) {
-    return 'Sleep regularity';
+    return str($r('app.string.report_tile_sleep_regularity'));
   }
   if (id === ComponentId.VO2MAX) {
-    return 'VO₂max';
+    return str($r('app.string.report_tile_vo2max'));
   }
   if (id === ComponentId.HRV) {
-    return 'HRV';
+    return str($r('app.string.report_tile_hrv'));
   }
-  return 'Recovery (HRR1)';
+  return str($r('app.string.report_tile_recovery'));
 }
 
 // Evidence for sleep is counted in nights, recovery in workouts (one reading per workout), VO₂max in
 // estimates (one per estimate the watch made), everything else in days.
 export function countUnit(id: string): string {
   if (id === ComponentId.SLEEP || id === ComponentId.SLEEP_REGULARITY) {
-    return 'nights';
+    return str($r('app.string.report_count_unit_nights'));
   }
   if (id === ComponentId.HR_RECOVERY) {
-    return 'workouts';
+    return str($r('app.string.report_count_unit_workouts'));
   }
-  return id === ComponentId.VO2MAX ? 'estimates' : 'days';
+  return id === ComponentId.VO2MAX ? str($r('app.string.report_count_unit_estimates')) :
+  str($r('app.string.report_count_unit_days'));
 }
 
 // The line next to the tier letter: what the tier means, or how far the next one is.
 export function tierHeadline(report: PersonaReport): string {
   if (report.tier === ReportTier.A) {
-    return 'Strong overall profile';
+    return str($r('app.string.report_tier_headline_a'));
   }
   const next = nextTierOf(report.tier);
   if (report.pointsToNext > 0 && next.length > 0) {
     return pointsLine(report.pointsToNext, next);
   }
-  return report.tier === ReportTier.B ? 'Solid overall profile' : 'Tier C this month';
+  return report.tier === ReportTier.B ? str($r('app.string.report_tier_headline_b')) :
+  str($r('app.string.report_tier_headline_c'));
 }
 
 // One line per persona in the demo switcher.
 export function personaSummary(report: PersonaReport): string {
   if (!hasScore(report)) {
-    return `No score yet · coverage ${report.coveragePct}%`;
+    return str($r('app.string.persona_summary_no_score'), report.coveragePct);
   }
-  return `Tier ${report.tier} · HES ${report.hes} · ${benefitLabel(report.benefit)}`;
+  return str($r('app.string.persona_summary_score'), report.tier, report.hes, benefitLabel(report.benefit));
 }
 
 // 5843 -> "5,843".
@@ -128,121 +132,132 @@ export function grouped(n: number): string {
 
 // --- Evidence tab: the calendar of the month and the day sheet ---
 
-export const EVIDENCE_SEGMENT_CALENDAR: string = 'Calendar';
-export const EVIDENCE_SEGMENT_WATCH: string = 'Watch days';
-export const CALENDAR_TITLE: string = 'This month';
-export const DAYS_LABEL: string = 'Days compliant';
-export const NIGHTS_LABEL: string = 'Nights worn';
-export const BREAKS_LABEL: string = 'Suspicious breaks';
-export const FLAG_CHIP: string = 'Flagged';
-export const FLAG_LINE: string = 'Selective non-wear: flagged → no benefit this month';
-export const CALENDAR_HINT: string = 'Tap a day to see what the watch recorded.';
-export const APPEAL_LABEL: string = 'Appeal this day';
-export const APPEAL_SENT: string = 'Appeal sent';
-export const APPEAL_NOTE: string =
-  'An appeal does not change this day or your score. In this demo it stays on this phone.';
-export const APPEAL_MARK_SPOKEN: string = 'appeal sent';
-export const DAY_WORN: string = 'worn';
-export const DAY_CHARGING: string = 'charging';
-export const DAY_NIGHT: string = 'night';
-export const DAY_NIGHT_YES: string = 'Worn';
-export const DAY_NIGHT_NO: string = 'Not worn';
+export const EVIDENCE_SEGMENT_CALENDAR: Resource = $r('app.string.evidence_segment_calendar');
+export const EVIDENCE_SEGMENT_WATCH: Resource = $r('app.string.evidence_segment_watch');
+export const CALENDAR_TITLE: Resource = $r('app.string.evidence_calendar_title');
+export const DAYS_LABEL: Resource = $r('app.string.evidence_days_label');
+export const NIGHTS_LABEL: Resource = $r('app.string.evidence_nights_label');
+export const BREAKS_LABEL: Resource = $r('app.string.evidence_breaks_label');
+export const FLAG_CHIP: Resource = $r('app.string.evidence_flag_chip');
+export const FLAG_LINE: Resource = $r('app.string.evidence_flag_line');
+export const CALENDAR_HINT: Resource = $r('app.string.evidence_calendar_hint');
+export const APPEAL_LABEL: Resource = $r('app.string.evidence_appeal_label');
+export const APPEAL_SENT: Resource = $r('app.string.evidence_appeal_sent');
+export const APPEAL_NOTE: Resource = $r('app.string.evidence_appeal_note');
+export const DAY_WORN: Resource = $r('app.string.evidence_day_worn');
+export const DAY_CHARGING: Resource = $r('app.string.evidence_day_charging');
+export const DAY_NIGHT: Resource = $r('app.string.evidence_day_night');
+export const DAY_NIGHT_YES: Resource = $r('app.string.evidence_day_night_yes');
+export const DAY_NIGHT_NO: Resource = $r('app.string.evidence_day_night_no');
 
 // What a day state means when the day has no recorded details to show.
 export function dayStateNote(state: string): string {
   if (state === DayState.COMPLIANT) {
-    return 'This day counts towards your month.';
+    return str($r('app.string.evidence_day_note_compliant'));
   }
   if (state === DayState.SHORT) {
-    return 'The watch was worn too little for this day to count.';
+    return str($r('app.string.evidence_day_note_short'));
   }
   if (state === DayState.SUSPICIOUS) {
-    return 'A break on this day counts as suspicious.';
+    return str($r('app.string.evidence_day_note_suspicious'));
   }
   if (state === DayState.SICK) {
-    return 'A sick day. It is left out of the month and never sent to your partner.';
+    return str($r('app.string.evidence_day_note_sick'));
   }
-  return 'No watch yet: there is no record from the watch for this day.';
+  return str($r('app.string.evidence_day_note_no_watch'));
 }
 
 // --- "Why this tier" ---
 
-export const WHY_NO_SCORE_LABEL: string = 'Why no score yet';
-export const WHY_STRONGEST: string = 'Strongest';
-export const WHY_IMPROVE: string = 'To improve';
-export const WHY_MISSING: string = 'Missing data';
-export const WHY_MISSING_NOTE: string = 'Missing data never lowers your score. It only lowers coverage.';
-export const WHY_MEASURED: string = 'Measured so far';
-export const WHY_NEEDED: string = 'Needed for a score';
-export const WHY_NOT_MEASURED: string = 'Not measured';
-export const WHY_ENOUGH: string = 'Enough for a score';
-export const WHY_HOW_TITLE: string = 'How it\'s calculated';
-export const WHY_HOW_LINES: string[] = [
-  'Each measure is scored from 0 to 100 on a fixed curve, from completed days only.',
-  'Your score is the weighted average of the measures that have enough data. A missing measure is left ' +
-    'out; it is never counted as zero.',
-  `Tier A starts at ${HES_TIER_A_MIN}, tier B at ${HES_TIER_B_MIN}.`,
-  'Coverage is the share of the full set of measures that has enough data.',
-  'Without one of the core measures there is no score at all, never a low one.'
-];
-export const WHY_ASSUMPTIONS: string =
-  'Weights, curves and minimum counts are prototype product assumptions, not clinically tested.';
+export const WHY_NO_SCORE_LABEL: Resource = $r('app.string.why_no_score_label');
+export const WHY_STRONGEST: Resource = $r('app.string.why_strongest');
+export const WHY_IMPROVE: Resource = $r('app.string.why_improve');
+export const WHY_MISSING: Resource = $r('app.string.why_missing');
+export const WHY_MISSING_NOTE: Resource = $r('app.string.why_missing_note');
+export const WHY_MEASURED: Resource = $r('app.string.why_measured');
+export const WHY_NEEDED: Resource = $r('app.string.why_needed');
+export const WHY_NOT_MEASURED: Resource = $r('app.string.why_not_measured');
+export const WHY_HOW_TITLE: Resource = $r('app.string.why_how_title');
+
+// The five lines of "How it's calculated"; the third names the tier thresholds.
+export function whyHowLines(): string[] {
+  return [
+    str($r('app.string.why_how_line_curve')),
+    str($r('app.string.why_how_line_average')),
+    str($r('app.string.why_how_line_tiers'), HES_TIER_A_MIN, HES_TIER_B_MIN),
+    str($r('app.string.why_how_line_coverage')),
+    str($r('app.string.why_how_line_core'))
+  ];
+}
+
+export const WHY_ASSUMPTIONS: Resource = $r('app.string.why_assumptions');
 
 // "HES 79 · 1 point to A"; at the top tier only the score.
 export function whyHeadline(report: PersonaReport): string {
   const next = nextTierOf(report.tier);
   if (report.pointsToNext > 0 && next.length > 0) {
-    return `HES ${report.hes} · ${pointsLine(report.pointsToNext, next)}`;
+    return str($r('app.string.why_headline_points'), report.hes, pointsLine(report.pointsToNext, next));
   }
-  return `HES ${report.hes}`;
+  return str($r('app.string.why_headline'), report.hes);
 }
 
 // "1 point to A", "5 points to A".
 export function pointsLine(points: number, tier: string): string {
-  return points === 1 ? `1 point to ${tier}` : `${points} points to ${tier}`;
+  return points === 1 ? str($r('app.string.report_points_one'), tier) :
+  str($r('app.string.report_points_many'), points, tier);
 }
 
 // "Coverage 90% · Confidence High · Partial benefit".
 export function whySubline(report: PersonaReport): string {
-  return `Coverage ${report.coveragePct}% · Confidence ${report.confidence} · ${benefitLabel(report.benefit)}`;
+  return str($r('app.string.why_subline'), report.coveragePct, report.confidence, benefitLabel(report.benefit));
 }
 
 // "±24 min · weight 17%".
 export function whyRowDetail(row: ComponentRow): string {
-  return `${row.raw} ${row.unit} · weight ${weightText(row)}`;
+  return str($r('app.string.why_row_detail'), row.raw, row.unit, weightText(row));
 }
 
-// "14 days" or "1 night" under a measure that already has data.
+// "14 days", "1 night", "3 workouts" or "2 estimates" under a measure that already has data.
 export function countLine(row: ComponentRow): string {
-  const unit = countUnit(row.id);
-  return `${row.validCount} ${row.validCount === 1 ? unit.substring(0, unit.length - 1) : unit}`;
+  const one: boolean = row.validCount === 1;
+  if (row.id === ComponentId.SLEEP || row.id === ComponentId.SLEEP_REGULARITY) {
+    return one ? str($r('app.string.report_count_night_one'), row.validCount) :
+    str($r('app.string.report_count_nights_many'), row.validCount);
+  }
+  if (row.id === ComponentId.HR_RECOVERY) {
+    return one ? str($r('app.string.report_count_workout_one'), row.validCount) :
+    str($r('app.string.report_count_workouts_many'), row.validCount);
+  }
+  if (row.id === ComponentId.VO2MAX) {
+    return one ? str($r('app.string.report_count_estimate_one'), row.validCount) :
+    str($r('app.string.report_count_estimates_many'), row.validCount);
+  }
+  return one ? str($r('app.string.report_count_day_one'), row.validCount) :
+  str($r('app.string.report_count_days_many'), row.validCount);
 }
 
 // --- Report tab: the live card and the demo controls ---
 
-export const LIVE_TITLE: string = 'Live';
-export const LIVE_CHIP: string = 'Demo values';
-export const LIVE_NOTE: string =
-  'Shown, not scored. Close the day turns today\'s steps into a completed day; the heart rate is never stored.';
-export const NO_READING: string = '—';
-export const DEMO_TITLE: string = 'Demo controls';
-export const DEMO_HR_LABEL: string = 'Heart rate';
-export const DEMO_STEPS_LABEL: string = 'Steps today';
-export const DEMO_CLOSE_DAY: string = 'Close the day';
-export const DEMO_RESET: string = 'Reset demo';
-export const DEMO_NOTE: string =
-  'Close the day adds today as a completed day and recalculates the score. Reset returns this persona ' +
-    'to its starting month.';
-export const DEMO_DAY_CLOSED: string = 'Day closed';
-export const DEMO_RESET_DONE: string = 'Demo reset';
-export const PERSONA_SHEET_NOTE_ENGINE: string = 'Scripted demo personas, scored by the same rules';
+export const LIVE_TITLE: Resource = $r('app.string.live_title');
+export const LIVE_CHIP: Resource = $r('app.string.live_chip');
+export const LIVE_NOTE: Resource = $r('app.string.live_note');
+export const NO_READING: Resource = $r('app.string.live_no_reading');
+export const DEMO_TITLE: Resource = $r('app.string.demo_controls_title');
+export const DEMO_HR_LABEL: Resource = $r('app.string.demo_controls_hr_label');
+export const DEMO_STEPS_LABEL: Resource = $r('app.string.demo_controls_steps_label');
+export const DEMO_CLOSE_DAY: Resource = $r('app.string.demo_controls_close_day');
+export const DEMO_RESET: Resource = $r('app.string.demo_controls_reset');
+export const DEMO_NOTE: Resource = $r('app.string.demo_controls_note');
+export const DEMO_DAY_CLOSED: Resource = $r('app.string.demo_controls_day_closed');
+export const DEMO_RESET_DONE: Resource = $r('app.string.demo_controls_reset_done');
+export const PERSONA_SHEET_NOTE_ENGINE: Resource = $r('app.string.persona_sheet_note_engine');
 
 // The note under the persona sheet title: fixed preview values, or scripted days scored by the rules.
 export function personaSheetNote(preview: boolean): string {
-  return preview ? PERSONA_SHEET_NOTE : PERSONA_SHEET_NOTE_ENGINE;
+  return str(preview ? PERSONA_SHEET_NOTE : PERSONA_SHEET_NOTE_ENGINE);
 }
 
 // A live reading as text; a reading below zero is "no reading", never a number.
 export function liveText(value: number): string {
-  return value < 0 ? NO_READING : grouped(value);
+  return value < 0 ? str(NO_READING) : grouped(value);
 }

@@ -5,7 +5,7 @@ import { StatusPill } from './StatusPill';
 // A component (not a builder) because it takes its content as a trailing closure.
 @Component
 export struct SectionCard {
-  @Prop title: string = '';
+  @Prop title: ResourceStr = '';
   @Prop status: string = '';
   @Prop statusColor: ResourceColor = $r('sys.color.font_tertiary');
   statusId: string = '';

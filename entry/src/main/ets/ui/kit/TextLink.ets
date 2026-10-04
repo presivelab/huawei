@@ -1,7 +1,8 @@
+import { textOf } from '../Strings';
 import { SYMBOL_FORWARD } from './KitTokens';
 
 export interface TextLinkParams {
-  text: string;
+  text: ResourceStr;
   linkId?: string;        // element id, for UI tests
   onTap: () => void;
 }
@@ -28,7 +29,7 @@ export function TextLink(p: TextLinkParams) {
   .constraintSize({ minHeight: 44 })
   .padding({ left: 4, right: 0 })
   .id(p.linkId ?? '')
-  .accessibilityText(p.text)
+  .accessibilityText(textOf(p.text))
   .onClick(() => {
     p.onTap();
   })

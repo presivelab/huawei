@@ -156,7 +156,7 @@ export struct VisitSharePage {
           }
           Row({ space: 8 }) {
             Text(tokenLengthLine(this.code.token)).attributeModifier(CAPTION)
-            Text('·').attributeModifier(CAPTION)
+            Text($r('app.string.share_page_separator')).attributeModifier(CAPTION)
             SymbolGlyph(SYMBOL_KEY_HELD)
               .fontSize(14)
               .fontColor([COLOR_OK_TEXT])

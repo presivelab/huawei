@@ -11,7 +11,6 @@ import {
   serviceTypeLabel,
   sourceQuote,
   TranscriptSegment,
-  transcriptTimeText,
   Visit,
   VISIT_NEVER_SHARED,
   visitAdherence,
@@ -67,10 +66,9 @@ import {
   REMINDER_LABEL,
   ROUTE_VISIT_SHARE,
   SHARE_VISIT_LABEL,
-  SPEAKER_DOCTOR,
-  SPEAKER_YOU,
   TRANSCRIPT_BANNER,
-  TRANSCRIPT_LABEL
+  TRANSCRIPT_LABEL,
+  transcriptSpeakerLine
 } from '../visits/VisitTexts';
 import { BODY_SECONDARY, CAPTION, CARD_LARGE, HEADING, LABEL } from './Styles';
 
@@ -442,7 +440,7 @@ export struct VisitDetailsPage {
         InfoChip({ text: TRANSCRIPT_BANNER, fill: COLOR_NOTE_TINT, textColor: COLOR_NOTE_TEXT, strong: true })
         ForEach(this.transcript, (segment: TranscriptSegment) => {
           Column({ space: 2 }) {
-            Text(`${segment.speaker === 'DOCTOR' ? SPEAKER_DOCTOR : SPEAKER_YOU} · ${transcriptTimeText(segment.startSec)}`)
+            Text(transcriptSpeakerLine(segment))
               .attributeModifier(CAPTION)
             Text(segment.text)
               .fontSize($r('sys.float.Body_M'))

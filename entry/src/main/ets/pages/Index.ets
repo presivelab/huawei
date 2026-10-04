@@ -40,7 +40,7 @@ import {
   ROUTE_VISITS
 } from '../visits/VisitTexts';
 
-const APP_TITLE: string = 'FairWear';
+const APP_TITLE: Resource = $r('app.string.app_title');
 const TITLE_BAR_HEIGHT: number = 56;
 // The system menu (the settings gear) is drawn over the right end of the title bar: 40 vp and its margins.
 const MENU_SPACE: number = 64;
@@ -87,7 +87,7 @@ struct Index {
     return this.status !== HealthStatus.NOT_AUTHORIZED;
   }
 
-  private titleText(): string {
+  private titleText(): Resource {
     if (!this.connected() || this.tab === FW_TAB_REPORT) {
       return APP_TITLE;
     }
@@ -161,7 +161,7 @@ struct Index {
     .mode(NavigationMode.Stack)
     .menus([
       {
-        value: 'Settings',
+        value: $r('app.string.app_menu_settings'),
         symbolIcon: new SymbolGlyphModifier(SYMBOL_SETTINGS),
         action: () => {
           this.nav.pushPathByName(ROUTE_SETTINGS, null);

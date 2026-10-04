@@ -12,7 +12,7 @@ export struct SettingsPage {
           SourceStatusLine()
           DataSourceCard()
           Column({ space: 8 }) {
-            Text('What FairWear reads').attributeModifier(TITLE)
+            Text($r('app.string.settings_reads_title')).attributeModifier(TITLE)
             Text(READS_SENTENCE).attributeModifier(BODY_SECONDARY)
           }
           .attributeModifier(CARD)
@@ -29,7 +29,7 @@ export struct SettingsPage {
       .align(Alignment.Top)
       .scrollBar(BarState.Off)
     }
-    .title('Settings')
+    .title($r('app.string.settings_title'))
     .backgroundColor($r('sys.color.background_secondary'))
   }
 }

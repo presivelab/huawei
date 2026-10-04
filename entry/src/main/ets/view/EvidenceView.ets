@@ -21,7 +21,6 @@ import {
 import { ROUTE_VERIFICATION, VERIFICATION_HINT, VERIFICATION_LABEL } from '../addon/AddonTexts';
 import {
   APPEAL_LABEL,
-  APPEAL_MARK_SPOKEN,
   APPEAL_NOTE,
   APPEAL_SENT,
   BREAKS_LABEL,
@@ -47,6 +46,7 @@ import {
   reportService,
   selectedReport
 } from '../report/ServiceLocator';
+import { str } from '../ui/Strings';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
   COLOR_FLAG_TEXT,
@@ -99,14 +99,15 @@ function legendStates(report: PersonaReport): string[] {
 }
 
 function breakLine(b: EvidenceBreak): string {
-  return `Off the wrist ${clockText(b.startMin)} · ${minutesText(b.minutes)}`;
+  return str($r('app.string.evidence_view_break_line'), clockText(b.startMin), minutesText(b.minutes));
 }
 
 function breakTag(b: EvidenceBreak): string {
   if (b.suspicious) {
-    return 'Suspicious';
+    return str($r('app.string.evidence_view_break_suspicious'));
   }
-  return b.judged ? 'Not suspicious' : 'Not judged';
+  return b.judged ? str($r('app.string.evidence_view_break_not_suspicious')) :
+    str($r('app.string.evidence_view_break_not_judged'));
 }
 
 // The Evidence tab: the calendar of the month with a sheet per day, and the days received from the watch.
@@ -153,17 +154,25 @@ export struct EvidenceView {
   private summaryStats(): StatItem[] {
     const wear = this.report.wear;
     return [
-      { value: `${wear.compliantDays} of ${wear.totalDays}`, label: DAYS_LABEL, strong: false },
-      { value: `${wear.nightsWorn} of ${wear.totalDays}`, label: NIGHTS_LABEL, strong: false },
-      { value: `${wear.suspicious}`, label: BREAKS_LABEL, strong: wear.suspicious > 0 }
+      {
+        value: str($r('app.string.evidence_view_count_of_total'), wear.compliantDays, wear.totalDays),
+        label: str(DAYS_LABEL),
+        strong: false
+      },
+      {
+        value: str($r('app.string.evidence_view_count_of_total'), wear.nightsWorn, wear.totalDays),
+        label: str(NIGHTS_LABEL),
+        strong: false
+      },
+      { value: wear.suspicious.toString(), label: str(BREAKS_LABEL), strong: wear.suspicious > 0 }
     ];
   }
 
   private dayFactItems(): StatItem[] {
     return [
-      { value: minutesText(this.day.wornMin), label: DAY_WORN, strong: false },
-      { value: minutesText(this.day.chargingMin), label: DAY_CHARGING, strong: false },
-      { value: this.day.nightWorn ? DAY_NIGHT_YES : DAY_NIGHT_NO, label: DAY_NIGHT, strong: false }
+      { value: minutesText(this.day.wornMin), label: str(DAY_WORN), strong: false },
+      { value: minutesText(this.day.chargingMin), label: str(DAY_CHARGING), strong: false },
+      { value: this.day.nightWorn ? str(DAY_NIGHT_YES) : str(DAY_NIGHT_NO), label: str(DAY_NIGHT), strong: false }
     ];
   }
 
@@ -206,7 +215,7 @@ export struct EvidenceView {
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
           .accessibilityGroup(true)
-          .accessibilityText(`${item.label}, ${item.value}`)
+          .accessibilityText(str($r('app.string.evidence_view_stat_spoken'), item.label, item.value))
         }, (item: StatItem) => `${item.label}|${item.value}|${item.strong}`)
       }
       .width('100%')
@@ -347,7 +356,7 @@ export struct EvidenceView {
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
           .accessibilityGroup(true)
-          .accessibilityText(`${item.value} ${item.label}`)
+          .accessibilityText(str($r('app.string.evidence_view_fact_spoken'), item.value, item.label))
         }, (item: StatItem) => `${this.day.date}|${item.label}|${item.value}`)
       }
       .width('100%')
@@ -399,14 +408,15 @@ export struct EvidenceView {
         .width('100%')
         .alignItems(VerticalAlign.Center)
         .accessibilityGroup(true)
-        .accessibilityText(dayStateLabel(this.day.state) +
-          (this.appealed(this.day.date) ? `, ${APPEAL_MARK_SPOKEN}` : ''))
+        .accessibilityText(this.appealed(this.day.date) ?
+          str($r('app.string.evidence_view_day_state_appealed_spoken'), dayStateLabel(this.day.state)) :
+          dayStateLabel(this.day.state))
 
         if (this.day.detailed && this.day.state !== DayState.UNKNOWN) {
           this.dayFacts()
         }
 
-        Text(this.day.detailed && this.day.reason.length > 0 ? `${this.day.reason}.` :
+        Text(this.day.detailed && this.day.reason.length > 0 ? str($r('app.string.evidence_view_day_reason'), this.day.reason) :
           dayStateNote(this.day.state))
           .fontSize($r('sys.float.Body_M'))
           .fontColor($r('sys.color.font_secondary'))

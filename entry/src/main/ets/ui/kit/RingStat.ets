@@ -1,3 +1,4 @@
+import { str, textOf } from '../Strings';
 import { VALUE_MEDIUM, ValueWithUnit } from './ValueWithUnit';
 
 const RING_FILL_MS: number = 500;
@@ -20,7 +21,7 @@ export struct RingStat {
   @Prop @Watch('onTarget') value: number = 0;
   @Prop total: number = 1;
   @Prop valueText: string = '';
-  @Prop unit: string = '';
+  @Prop unit: ResourceStr = '';
   @Prop ringColor: ResourceColor = $r('sys.color.confirm');
   @Prop spoken: string = '';        // what a screen reader says; empty: the value and the unit
   diameter: number = 80;
@@ -81,7 +82,8 @@ export struct RingStat {
     .width(this.diameter)
     .height(this.diameter)
     .accessibilityGroup(true)
-    .accessibilityText(this.spoken.length > 0 ? this.spoken : `${this.valueText} ${this.unit}`)
+    .accessibilityText(this.spoken.length > 0 ? this.spoken :
+    str($r('app.string.kit_ring_spoken'), this.valueText, textOf(this.unit)))
     .onAppear(() => {
       this.shown = this.value;
     })

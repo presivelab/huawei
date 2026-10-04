@@ -20,14 +20,15 @@ import {
   scopeLabel,
   VALUE_SENTENCE
 } from '../addon/AddonTexts';
+import { str } from '../ui/Strings';
 import { SourceStatusLine } from './SourceParts';
 import { BODY_SECONDARY, CAPTION, CARD, TITLE } from './Styles';
 
 // One fact about the data: a system symbol, a short title and one line.
 @Component
 struct FactRow {
-  @Prop title: string = '';
-  @Prop line: string = '';
+  @Prop title: ResourceStr = '';
+  @Prop line: ResourceStr = '';
   symbol: Resource = $r('sys.symbol.eye');
 
   build() {
@@ -68,7 +69,7 @@ export struct WelcomeView {
     for (let i = 0; i < ALL_HEALTH_SCOPES.length; i++) {
       names.push(scopeLabel(ALL_HEALTH_SCOPES[i]));
     }
-    return names.join(' · ');
+    return names.join(str($r('app.string.welcome_scope_separator')));
   }
 
   // Where the data goes: watch, HUAWEI Health history on the phone, a signed tier.

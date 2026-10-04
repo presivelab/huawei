@@ -1,6 +1,7 @@
 import { hasScore, PersonaReport, withoutAppealsOf } from 'common';
 import { closeSelectedDay, resetSelected, selectedPersonaId, selectedReport, setSelectedLive } from '../report/ServiceLocator';
 import { VisitService } from '../visits/VisitService';
+import { str } from '../ui/Strings';
 import { KEY_APPEALS } from './EvidenceDayData';
 
 /*
@@ -32,7 +33,7 @@ export function demoReset(): void {
 export function demoResultLine(action: string): string {
   const r: PersonaReport = selectedReport();
   if (hasScore(r)) {
-    return `${action} · HES ${r.hes} · Tier ${r.tier}`;
+    return str($r('app.string.demo_action_result_scored'), action, r.hes, r.tier);
   }
-  return `${action} · no score yet · evidence ${r.coveragePct}%`;
+  return str($r('app.string.demo_action_result_unscored'), action, r.coveragePct);
 }

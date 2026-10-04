@@ -1,4 +1,4 @@
-import { ReceiptStatus, Visit } from 'common';
+import { ReceiptStatus, TranscriptSegment, transcriptTimeText, Visit } from 'common';
 
 /*
  * Routes and texts of the Visits screens. One place, so the wording can be read and checked as a whole.
@@ -86,6 +86,11 @@ export const REMINDER_TITLE: string = 'FairWear: follow-up visit';
 export const REMINDER_CONTENT: string = 'Your follow-up visit is due today.';
 export const SPEAKER_DOCTOR: string = 'Doctor';
 export const SPEAKER_YOU: string = 'You';
+
+/** "Doctor · 0:42": who speaks and when, above a transcript segment. */
+export function transcriptSpeakerLine(segment: TranscriptSegment): string {
+  return `${segment.speaker === 'DOCTOR' ? SPEAKER_DOCTOR : SPEAKER_YOU} · ${transcriptTimeText(segment.startSec)}`;
+}
 
 // Share.
 export const SHARE_TITLE: string = 'Share visit';

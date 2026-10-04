@@ -1,6 +1,7 @@
 /*
  * FairWear home-screen card, 2x2.
- * Values arrive from EntryFormAbility through LocalStorage. A tap opens the app on the dashboard
+ * Values arrive from EntryFormAbility through LocalStorage; until they do, the card shows the texts of
+ * an unconnected source from the card's string resources. A tap opens the app on the dashboard
  * through the single entry parameter `fwTarget`.
  */
 
@@ -9,13 +10,13 @@ const storage: LocalStorage = new LocalStorage();
 @Entry(storage)
 @Component
 struct FairWearCard {
-  @LocalStorageProp('source') source: string = 'HUAWEI Health · Not connected';
-  @LocalStorageProp('coverage') coverage: string = '—';
-  @LocalStorageProp('result') result: string = '—';
+  @LocalStorageProp('source') source: string = '';
+  @LocalStorageProp('coverage') coverage: string = '';
+  @LocalStorageProp('result') result: string = '';
 
   build() {
     Column() {
-      Text('FairWear')
+      Text($r('app.string.card_title'))
         .fontSize($r('sys.float.Body_M'))
         .fontWeight(FontWeight.Medium)
         .fontColor($r('sys.color.font_primary'))
@@ -23,23 +24,23 @@ struct FairWearCard {
 
       Blank()
 
-      Text(this.coverage)
+      Text(this.coverage.length > 0 ? this.coverage : $r('app.string.card_coverage_none'))
         .fontSize($r('sys.float.Title_L'))
         .fontWeight(FontWeight.Bold)
         .fontColor($r('sys.color.font_primary'))
         .maxLines(1)
-      Text('Coverage')
+      Text($r('app.string.card_coverage_label'))
         .fontSize($r('sys.float.Caption_M'))
         .fontColor($r('sys.color.font_secondary'))
         .maxLines(1)
 
       Blank()
 
-      Text(this.result)
+      Text(this.result.length > 0 ? this.result : $r('app.string.card_result_none'))
         .fontSize($r('sys.float.Body_M'))
         .fontColor($r('sys.color.font_primary'))
         .maxLines(1)
-      Text(this.source)
+      Text(this.source.length > 0 ? this.source : $r('app.string.card_source_none'))
         .fontSize($r('sys.float.Caption_M'))
         .fontColor($r('sys.color.font_secondary'))
         .maxLines(2)

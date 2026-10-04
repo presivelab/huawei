@@ -1,5 +1,5 @@
 export interface InfoChipParams {
-  text: string;
+  text: ResourceStr;
   fill?: ResourceColor;       // background; the neutral chip grey by default
   textColor?: ResourceColor;  // primary text by default
   strong?: boolean;           // medium weight, for a chip that states a condition ("Flagged")

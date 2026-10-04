@@ -13,6 +13,7 @@ import {
   liveText,
   NO_READING
 } from '../report/ReportTexts';
+import { str } from '../ui/Strings';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
   COLOR_HEART,
@@ -79,24 +80,25 @@ export struct DemoLiveCard {
           SymbolGlyph(SYMBOL_HEART)
             .fontSize(20)
             .fontColor([COLOR_HEART])
-          ValueWithUnit({ value: liveText(this.hr), unit: 'bpm now', level: VALUE_TILE })
+          ValueWithUnit({ value: liveText(this.hr), unit: $r('app.string.live_card_hr_unit'), level: VALUE_TILE })
         }
         .alignItems(VerticalAlign.Center)
         .id('fw_live_hr')
         .accessibilityGroup(true)
-        .accessibilityText(this.hr < 0 ? 'Heart rate now, no reading' :
-          `Heart rate now, ${this.hr} beats per minute`)
+        .accessibilityText(this.hr < 0 ? str($r('app.string.live_card_hr_no_reading_spoken')) :
+          str($r('app.string.live_card_hr_spoken'), this.hr.toString()))
 
         Row({ space: 6 }) {
           SymbolGlyph(SYMBOL_STEPS)
             .fontSize(20)
             .fontColor([COLOR_STEPS])
-          ValueWithUnit({ value: liveText(this.steps), unit: 'steps today', level: VALUE_TILE })
+          ValueWithUnit({ value: liveText(this.steps), unit: $r('app.string.live_card_steps_unit'), level: VALUE_TILE })
         }
         .alignItems(VerticalAlign.Center)
         .id('fw_live_steps')
         .accessibilityGroup(true)
-        .accessibilityText(this.steps < 0 ? 'Steps today, no reading' : `${this.steps} steps today`)
+        .accessibilityText(this.steps < 0 ? str($r('app.string.live_card_steps_no_reading_spoken')) :
+          str($r('app.string.live_card_steps_spoken'), this.steps.toString()))
       }
       .width('100%')
 
@@ -118,7 +120,7 @@ export struct DemoLiveCard {
             .fontSize($r('sys.float.Body_M'))
             .fontColor($r('sys.color.font_primary'))
             .layoutWeight(1)
-          Text(this.hrDraft < 0 ? NO_READING : `${this.hrDraft} bpm`)
+          Text(this.hrDraft < 0 ? str(NO_READING) : str($r('app.string.live_card_hr_value'), this.hrDraft.toString()))
             .fontSize($r('sys.float.Body_M'))
             .fontWeight(FontWeight.Medium)
             .fontColor($r('sys.color.font_primary'))
@@ -186,7 +188,7 @@ export struct DemoLiveCard {
           .id('fw_demo_close_day')
           .onClick(() => {
             demoCloseDay();
-            this.showResult(demoResultLine(DEMO_DAY_CLOSED));
+            this.showResult(demoResultLine(str(DEMO_DAY_CLOSED)));
           })
         Button(DEMO_RESET)
           .buttonStyle(ButtonStyleMode.NORMAL)
@@ -195,7 +197,7 @@ export struct DemoLiveCard {
           .id('fw_demo_reset')
           .onClick(() => {
             demoReset();
-            this.showResult(demoResultLine(DEMO_RESET_DONE));
+            this.showResult(demoResultLine(str(DEMO_RESET_DONE)));
           })
       }
       .width('100%')

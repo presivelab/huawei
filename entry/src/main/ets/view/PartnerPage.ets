@@ -22,19 +22,17 @@ import {
   CHEAT_TITLE,
   CHECK_NOT_RUN,
   CHECKS_TITLE,
-  KEY_PREFIX,
   NO_CODE_ON_PHONE,
-  NO_REASON_IN_CODE,
   NOTHING_CHECKED,
   PARTNER_BAND,
   PARTNER_BAND_NOTE,
   PARTNER_TITLE,
-  REGISTRY_SUFFIX,
   tamperLabel,
   USE_CODE_LABEL,
   VERIFY_AGAIN_LABEL
 } from '../share/ShareTexts';
 import { EmptyState } from '../ui/kit/EmptyState';
+import { str } from '../ui/Strings';
 import {
   COLOR_FLAG_TEXT,
   COLOR_FLAG_TINT,
@@ -104,7 +102,7 @@ export struct PartnerPage {
       this.held = code.token;
       this.againLine = '';
       this.tamperLine = '';
-      this.run(code.token, ATTEMPT_FIRST, (): void => {
+      this.run(code.token, str(ATTEMPT_FIRST), (): void => {
       });
     }).catch(() => {
       this.busy = false;
@@ -113,7 +111,7 @@ export struct PartnerPage {
   }
 
   private verifyAgain(): void {
-    this.run(this.held, ATTEMPT_AGAIN, (result: VerifyResult): void => {
+    this.run(this.held, str(ATTEMPT_AGAIN), (result: VerifyResult): void => {
       this.againLine = verdictLine(result);
       this.againOk = result.ok;
     });
@@ -189,13 +187,14 @@ export struct PartnerPage {
               .id('fw_partner_claim')
           }
           if (this.latest.ok && this.latest.claim !== null) {
-            Text(claimBenefitLabel(this.latest.claim) + (this.latest.claim.eligible ? '' : ` · ${NO_REASON_IN_CODE}`))
+            Text(this.latest.claim.eligible ? claimBenefitLabel(this.latest.claim) :
+              str($r('app.string.partner_page_benefit_no_reason'), claimBenefitLabel(this.latest.claim)))
               .attributeModifier(BODY_SECONDARY)
               .textAlign(TextAlign.Center)
               .id('fw_partner_benefit')
           }
           if (this.latest.keySource.length > 0) {
-            Text(KEY_PREFIX + keySourceLabel(this.latest.keySource) + REGISTRY_SUFFIX)
+            Text(str($r('app.string.partner_page_key_registry'), keySourceLabel(this.latest.keySource)))
               .attributeModifier(CAPTION)
               .textAlign(TextAlign.Center)
           }

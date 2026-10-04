@@ -1,7 +1,7 @@
 // A dot (or a system symbol) and a readable status. The dot colour of a data-source status comes from
 // statusDotColor in view/Styles and its text from healthSourceLabel in common.
 export interface PillParams {
-  text: string;
+  text: ResourceStr;
   dot: ResourceColor;
   symbol?: Resource;    // a system symbol in place of the dot
   compact?: boolean;    // the small pill used inside a card

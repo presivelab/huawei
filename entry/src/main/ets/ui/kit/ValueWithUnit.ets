@@ -1,3 +1,5 @@
+import { textOf } from '../Strings';
+
 // Every number on screen: the value, then its unit smaller and quieter on the same baseline.
 // A second pair is for durations, "19 h 20 min".
 export const VALUE_SMALL: number = 0;
@@ -7,9 +9,9 @@ export const VALUE_TILE: number = 3;    // a metric tile: bold value, small unit
 
 export interface ValueUnit {
   value: string;
-  unit: string;
+  unit: ResourceStr;
   extraValue?: string;
-  extraUnit?: string;
+  extraUnit?: ResourceStr;
   level?: number;
 }
 
@@ -34,8 +36,9 @@ function valueWeight(level: number | undefined): FontWeight {
   return level === VALUE_TILE ? FontWeight.Bold : FontWeight.Medium;
 }
 
-function spaced(text: string | undefined): string {
-  return text === undefined || text.length === 0 ? '' : ` ${text}`;
+function spaced(value: ResourceStr | undefined): string {
+  const text: string = value === undefined ? '' : textOf(value);
+  return text.length === 0 ? '' : ` ${text}`;
 }
 
 @Builder

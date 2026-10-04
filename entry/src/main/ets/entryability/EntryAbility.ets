@@ -4,6 +4,7 @@ import { window } from "@kit.ArkUI";
 import { DeviceKey, ProofSigner } from "../platform/ProofSigner";
 import { routeFromWant } from "../nav/EntryRouter";
 import { attachReportStore } from "../report/ServiceLocator";
+import { initStrings } from "../ui/Strings";
 import { WatchLinkService } from "../watchlink/WatchLinkService";
 
 const DOMAIN = 0x0000;
@@ -12,6 +13,8 @@ const TAG = "FairWear";
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(DOMAIN, TAG, "%{public}s", "EntryAbility onCreate");
+    // String resources as text for code outside build().
+    initStrings(this.context);
     // Probe the keystore once; the key that passes signs for the whole session.
     ProofSigner.shared().ensureKey().then((key: DeviceKey) => {
       hilog.info(DOMAIN, TAG, "signing key: %{public}s kid=%{public}s (%{public}s)", key.source, key.kid, key.note);

@@ -1,7 +1,7 @@
 // Missing data is said, not drawn as zero: one system symbol and one sentence.
 export interface EmptyParams {
   symbol: Resource;
-  sentence: string;
+  sentence: ResourceStr;
   textId?: string;
 }
 

@@ -6,11 +6,11 @@ import {
   selectPersona
 } from '../report/ServiceLocator';
 import {
-  PERSONA_CHIP_SUFFIX,
   PERSONA_SHEET_TITLE,
   personaSheetNote,
   personaSummary
 } from '../report/ReportTexts';
+import { str } from '../ui/Strings';
 import { SYMBOL_CHECK, SYMBOL_EXPAND } from '../ui/kit/KitTokens';
 
 // The demo switcher: a chip with the persona on screen ("Ania · Demo") that opens a sheet with the six
@@ -51,8 +51,9 @@ export struct PersonaChip {
     .alignItems(VerticalAlign.Center)
     .id(`fw_persona_${ref.id}`)
     .accessibilityGroup(true)
-    .accessibilityText(`${ref.name}, ${personaSummary(reportService().report(ref.id))}` +
-      (ref.id === this.personaId ? ', selected' : ''))
+    .accessibilityText(ref.id === this.personaId ?
+      str($r('app.string.persona_chip_row_selected_spoken'), ref.name, personaSummary(reportService().report(ref.id))) :
+      str($r('app.string.persona_chip_row_spoken'), ref.name, personaSummary(reportService().report(ref.id))))
     .onClick(() => {
       selectPersona(ref.id);
       this.open = false;
@@ -88,7 +89,7 @@ export struct PersonaChip {
   build() {
     Button({ type: ButtonType.Capsule, stateEffect: true }) {
       Row({ space: 4 }) {
-        Text(`${this.personaName(this.personaId)}${PERSONA_CHIP_SUFFIX}`)
+        Text(str($r('app.string.persona_chip_label'), this.personaName(this.personaId)))
           .fontSize($r('sys.float.Body_M'))
           .fontWeight(FontWeight.Medium)
           .fontColor($r('sys.color.font_primary'))
@@ -103,7 +104,7 @@ export struct PersonaChip {
     .height(36)
     .backgroundColor($r('sys.color.comp_background_tertiary'))
     .id('fw_persona_chip')
-    .accessibilityText(`Demo persona ${this.personaName(this.personaId)}. Change persona`)
+    .accessibilityText(str($r('app.string.persona_chip_spoken'), this.personaName(this.personaId)))
     .onClick(() => {
       this.open = true;
     })

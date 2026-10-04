@@ -19,6 +19,26 @@
     {
       "name": "shortcut_source_label",
       "value": "Data source"
+    },
+    {
+      "name": "card_title",
+      "value": "FairWear"
+    },
+    {
+      "name": "card_coverage_label",
+      "value": "Coverage"
+    },
+    {
+      "name": "card_coverage_none",
+      "value": "—"
+    },
+    {
+      "name": "card_result_none",
+      "value": "—"
+    },
+    {
+      "name": "card_source_none",
+      "value": "HUAWEI Health · Not connected"
     }
   ]
 }

@@ -50,20 +50,20 @@ import {
   NO_SCORE_HEADLINE,
   NOT_MEASURED,
   NOT_MEASURED_NOTE,
-  PERIOD_SUFFIX,
   PREVIEW_LINE,
   reportSourceLine,
   SCORE_UNIT,
   SHARE_NEEDS_SCORE,
   tierHeadline,
   tileName,
-  UNLOCK_STEPS,
+  unlockSteps,
   UNLOCK_TITLE,
   WEAR_TITLE,
   WHY_LABEL,
   WHY_NO_SCORE_LABEL
 } from '../report/ReportTexts';
 import { CountBar } from '../ui/kit/CountBar';
+import { str } from '../ui/Strings';
 import { DayStrip, DayStripItem } from '../ui/kit/DayStrip';
 import { InfoChip } from '../ui/kit/InfoChip';
 import {
@@ -133,7 +133,7 @@ function weekItems(report: PersonaReport): DayStripItem[] {
     item.key = `${report.id}|${day.n}|${day.state}`;
     item.top = weekdayShort(date);
     item.bottom = dayOfMonth(date);
-    item.spoken = `${dayTitle(date)}, ${dayStateLabel(day.state)}`;
+    item.spoken = str($r('app.string.report_view_day_spoken'), dayTitle(date), dayStateLabel(day.state));
     if (day.state === DayState.SICK || day.state === DayState.UNKNOWN) {
       item.unobserved = DAY_MIN;
     } else {
@@ -153,12 +153,13 @@ function wearPasses(report: PersonaReport): boolean {
 function breaksLine(report: PersonaReport): string {
   const n = report.wear.suspicious;
   if (n === 0) {
-    return '0 suspicious breaks';
+    return str($r('app.string.report_view_breaks_none'));
   }
   if (report.wear.flagged) {
-    return `${n} suspicious breaks · flagged`;
+    return str($r('app.string.report_view_breaks_flagged'), n);
   }
-  return n === 1 ? '1 suspicious break · one break never flags' : `${n} suspicious breaks · not flagged`;
+  return n === 1 ? str($r('app.string.report_view_breaks_one')) :
+    str($r('app.string.report_view_breaks_not_flagged'), n);
 }
 
 function benefitSymbol(report: PersonaReport): Resource {
@@ -185,7 +186,7 @@ function tileValue(row: ComponentRow): string {
 }
 
 function tileUnit(row: ComponentRow): string {
-  return row.raw.indexOf(HOURS_MARK) > 0 ? 'h' : row.unit;
+  return row.raw.indexOf(HOURS_MARK) > 0 ? str($r('app.string.report_view_hours_unit')) : row.unit;
 }
 
 function tileExtraValue(row: ComponentRow): string {
@@ -263,12 +264,13 @@ export struct ReportView {
           textId: 'fw_report_source'
         })
       }
-      .accessibilityText(`${this.sourceLine()}. Opens settings`)
+      .accessibilityText(str($r('app.string.report_view_source_spoken'), this.sourceLine()))
       .onClick(() => {
         this.nav.pushPathByName(ROUTE_SETTINGS, null);
       })
 
-      Text(this.report.period.indexOf(SCORE_TO) >= 0 ? this.report.period : this.report.period + PERIOD_SUFFIX)
+      Text(this.report.period.indexOf(SCORE_TO) >= 0 ? this.report.period :
+        str($r('app.string.report_view_period_last_30'), this.report.period))
         .fontSize($r('sys.float.Body_M'))
         .fontColor($r('sys.color.font_secondary'))
         .margin({ left: 4 })
@@ -315,7 +317,7 @@ export struct ReportView {
         RingStat({
           value: this.report.hes,
           total: 100,
-          valueText: `${this.report.hes}`,
+          valueText: this.report.hes.toString(),
           unit: SCORE_UNIT,
           ringColor: tierColor(this.report.tier),
           spoken: scoreSpoken(this.report),
@@ -339,8 +341,8 @@ export struct ReportView {
           .alignItems(VerticalAlign.Center)
 
           Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(6), cross: LengthMetrics.vp(6) } }) {
-            InfoChip({ text: `Coverage ${this.report.coveragePct}%` })
-            InfoChip({ text: `Confidence ${this.report.confidence}` })
+            InfoChip({ text: str($r('app.string.report_view_coverage_chip'), this.report.coveragePct) })
+            InfoChip({ text: str($r('app.string.report_view_confidence_chip'), this.report.confidence) })
           }
           .width('100%')
         }
@@ -392,7 +394,7 @@ export struct ReportView {
         Text(WEAR_TITLE)
           .attributeModifier(HEADING)
           .layoutWeight(1)
-        Text(`${this.report.wear.compliantDays} of ${this.report.wear.totalDays} days`)
+        Text(str($r('app.string.report_view_wear_days'), this.report.wear.compliantDays, this.report.wear.totalDays))
           .fontSize($r('sys.float.Body_M'))
           .fontWeight(600)
           .fontColor(wearPasses(this.report) ? COLOR_OK_TEXT : $r('sys.color.font_secondary'))
@@ -408,7 +410,7 @@ export struct ReportView {
       MonthBar({ states: dayStates(this.report), spoken: wearSpoken(this.report) })
       DayStateLegend({
         states: legendStates(this.report),
-        note: `${DEFAULT_THRESHOLDS.minMonthlyPct}% needed`
+        note: str($r('app.string.report_view_wear_needed'), DEFAULT_THRESHOLDS.minMonthlyPct.toString())
       })
 
       Divider()
@@ -418,7 +420,7 @@ export struct ReportView {
 
       Row({ space: 8 }) {
         Column({ space: 4 }) {
-          Text(`Nights worn ${this.report.wear.nightsWorn} of ${this.report.wear.totalDays}`)
+          Text(str($r('app.string.report_view_nights_worn'), this.report.wear.nightsWorn, this.report.wear.totalDays))
             .attributeModifier(CAPTION)
           Row({ space: 6 }) {
             if (this.report.wear.suspicious > 0) {
@@ -499,8 +501,8 @@ export struct ReportView {
       RingStat({
         value: this.report.coveragePct,
         total: 100,
-        valueText: `${this.report.coveragePct}%`,
-        unit: 'evidence',
+        valueText: str($r('app.string.report_view_evidence_pct'), this.report.coveragePct),
+        unit: $r('app.string.report_view_evidence_unit'),
         ringColor: $r('sys.color.icon_secondary'),
         spoken: scoreSpoken(this.report),
         diameter: 104,
@@ -553,7 +555,7 @@ export struct ReportView {
         .color($r('sys.color.comp_divider'))
 
       Column({ space: 6 }) {
-        ForEach(UNLOCK_STEPS, (step: string) => {
+        ForEach(unlockSteps(), (step: string) => {
           Row({ space: 8 }) {
             SymbolGlyph(SYMBOL_FORWARD)
               .fontSize(14)

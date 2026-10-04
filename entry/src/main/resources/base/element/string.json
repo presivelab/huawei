@@ -15,6 +15,1430 @@
     {
       "name": "shortcut_tour_label",
       "value": "How Watch Link works"
+    },
+    {
+      "name": "addon_verification_label",
+      "value": "Verification details"
+    },
+    {
+      "name": "addon_verification_hint",
+      "value": "Watch key, sequence numbers, chain and sync log"
+    },
+    {
+      "name": "addon_tour_label",
+      "value": "How Watch Link works"
+    },
+    {
+      "name": "addon_brand",
+      "value": "HUAWEI Health"
+    },
+    {
+      "name": "addon_connect_label",
+      "value": "Connect HUAWEI Health"
+    },
+    {
+      "name": "addon_reconnect_label",
+      "value": "Reconnect"
+    },
+    {
+      "name": "addon_disconnect_label",
+      "value": "Disconnect HUAWEI Health"
+    },
+    {
+      "name": "addon_sentence",
+      "value": "FairWear is an add-on for HUAWEI Health users: with their permission it reads what HUAWEI Health already measures, scores it on the phone, and shares only a signed tier."
+    },
+    {
+      "name": "addon_reads_sentence",
+      "value": "FairWear reads steps, resting heart rate, sleep, activity minutes, VO₂max, HRV and workouts from the last 90 days; it does not read location, ECG, blood pressure, SpO₂, weight or contacts; the only thing that leaves this phone is a signed A/B/C tier, and only when you share it."
+    },
+    {
+      "name": "addon_value_sentence",
+      "value": "Your HUAWEI Health history becomes a signed A/B/C tier, scored on this phone."
+    },
+    {
+      "name": "addon_reads_title",
+      "value": "Reads"
+    },
+    {
+      "name": "addon_reads_short",
+      "value": "Steps, heart rate, sleep and activity from the last 90 days"
+    },
+    {
+      "name": "addon_never_reads_title",
+      "value": "Never reads"
+    },
+    {
+      "name": "addon_never_reads_short",
+      "value": "Location, ECG, blood pressure, SpO₂, weight, contacts"
+    },
+    {
+      "name": "addon_leaves_title",
+      "value": "Leaves the phone"
+    },
+    {
+      "name": "addon_leaves_short",
+      "value": "Only a signed tier, and only when you share it"
+    },
+    {
+      "name": "addon_details_label",
+      "value": "Details"
+    },
+    {
+      "name": "addon_privacy_settings_sentence",
+      "value": "You can also end the connection in HUAWEI Health privacy settings."
+    },
+    {
+      "name": "addon_refused_title",
+      "value": "HUAWEI Health was not connected"
+    },
+    {
+      "name": "addon_refused_body",
+      "value": "No health data was read. Without your permission FairWear cannot calculate your Health Evidence Score, coverage or tier, and there is nothing to share."
+    },
+    {
+      "name": "addon_health_sim_sentence",
+      "value": "Health Sim stands in for HUAWEI Health on this emulator."
+    },
+    {
+      "name": "addon_health_sim_asking",
+      "value": "Asking Health Sim for access…"
+    },
+    {
+      "name": "addon_health_sim_asking_body",
+      "value": "Health Sim shows its own consent screen. FairWear does not reproduce it and gets nothing until you allow it there."
+    },
+    {
+      "name": "addon_health_sim_ask_again",
+      "value": "Ask Health Sim again"
+    },
+    {
+      "name": "addon_health_sim_use_built_in",
+      "value": "Continue with built-in demo data"
+    },
+    {
+      "name": "addon_health_sim_reads_sentence",
+      "value": "Reads the simulated data Health Sim handed over after your consent. Health Sim stands in for HUAWEI Health on this emulator."
+    },
+    {
+      "name": "addon_disconnected_title",
+      "value": "HUAWEI Health disconnected"
+    },
+    {
+      "name": "addon_disconnected_body",
+      "value": "Health data held in memory was cleared and the tier is hidden. Connecting again asks for your consent again."
+    },
+    {
+      "name": "report_preview_line",
+      "value": "Score engine not connected — preview values"
+    },
+    {
+      "name": "report_score_unit",
+      "value": "HES"
+    },
+    {
+      "name": "report_why_label",
+      "value": "Why this tier"
+    },
+    {
+      "name": "report_evidence_label",
+      "value": "Evidence"
+    },
+    {
+      "name": "report_wear_title",
+      "value": "Wear this month"
+    },
+    {
+      "name": "report_evidence_title",
+      "value": "Your evidence"
+    },
+    {
+      "name": "report_evidence_note",
+      "value": "completed days · last 28"
+    },
+    {
+      "name": "report_today_title",
+      "value": "Today"
+    },
+    {
+      "name": "report_today_chip_live",
+      "value": "Live · not scored"
+    },
+    {
+      "name": "report_today_chip_preview",
+      "value": "Preview · not scored"
+    },
+    {
+      "name": "report_today_note",
+      "value": "Enters your score when the day closes. Your score uses completed days only."
+    },
+    {
+      "name": "report_disclaimer",
+      "value": "HES is deterministic rules, not a medical device. Weights and curves are prototype assumptions, not clinically tested."
+    },
+    {
+      "name": "report_no_score_headline",
+      "value": "No score yet"
+    },
+    {
+      "name": "report_no_score_body",
+      "value": "We need more completed days before we can score fairly. A low score is never shown instead."
+    },
+    {
+      "name": "report_unlock_title",
+      "value": "What unlocks your score"
+    },
+    {
+      "name": "report_share_needs_score",
+      "value": "Share is available once you have a score."
+    },
+    {
+      "name": "report_not_measured",
+      "value": "Not measured"
+    },
+    {
+      "name": "report_not_measured_note",
+      "value": "Doesn't lower your score"
+    },
+    {
+      "name": "persona_sheet_title",
+      "value": "Demo persona"
+    },
+    {
+      "name": "persona_sheet_note",
+      "value": "Fixed preview data, for the demo only"
+    },
+    {
+      "name": "tab_share_title",
+      "value": "Share"
+    },
+    {
+      "name": "tab_evidence_title",
+      "value": "Evidence"
+    },
+    {
+      "name": "tab_report_title",
+      "value": "Report"
+    },
+    {
+      "name": "report_next_step_sentence",
+      "value": "This screen arrives in the next step."
+    },
+    {
+      "name": "evidence_segment_calendar",
+      "value": "Calendar"
+    },
+    {
+      "name": "evidence_segment_watch",
+      "value": "Watch days"
+    },
+    {
+      "name": "evidence_calendar_title",
+      "value": "This month"
+    },
+    {
+      "name": "evidence_days_label",
+      "value": "Days compliant"
+    },
+    {
+      "name": "evidence_nights_label",
+      "value": "Nights worn"
+    },
+    {
+      "name": "evidence_breaks_label",
+      "value": "Suspicious breaks"
+    },
+    {
+      "name": "evidence_flag_chip",
+      "value": "Flagged"
+    },
+    {
+      "name": "evidence_flag_line",
+      "value": "Selective non-wear: flagged → no benefit this month"
+    },
+    {
+      "name": "evidence_calendar_hint",
+      "value": "Tap a day to see what the watch recorded."
+    },
+    {
+      "name": "evidence_appeal_label",
+      "value": "Appeal this day"
+    },
+    {
+      "name": "evidence_appeal_sent",
+      "value": "Appeal sent"
+    },
+    {
+      "name": "evidence_appeal_note",
+      "value": "An appeal does not change this day or your score. In this demo it stays on this phone."
+    },
+    {
+      "name": "evidence_day_worn",
+      "value": "worn"
+    },
+    {
+      "name": "evidence_day_charging",
+      "value": "charging"
+    },
+    {
+      "name": "evidence_day_night",
+      "value": "night"
+    },
+    {
+      "name": "evidence_day_night_yes",
+      "value": "Worn"
+    },
+    {
+      "name": "evidence_day_night_no",
+      "value": "Not worn"
+    },
+    {
+      "name": "evidence_day_not_observed",
+      "value": "—"
+    },
+    {
+      "name": "why_no_score_label",
+      "value": "Why no score yet"
+    },
+    {
+      "name": "why_strongest",
+      "value": "Strongest"
+    },
+    {
+      "name": "why_improve",
+      "value": "To improve"
+    },
+    {
+      "name": "why_missing",
+      "value": "Missing data"
+    },
+    {
+      "name": "why_missing_note",
+      "value": "Missing data never lowers your score. It only lowers coverage."
+    },
+    {
+      "name": "why_measured",
+      "value": "Measured so far"
+    },
+    {
+      "name": "why_needed",
+      "value": "Needed for a score"
+    },
+    {
+      "name": "why_not_measured",
+      "value": "Not measured"
+    },
+    {
+      "name": "why_how_title",
+      "value": "How it's calculated"
+    },
+    {
+      "name": "why_assumptions",
+      "value": "Weights, curves and minimum counts are prototype product assumptions, not clinically tested."
+    },
+    {
+      "name": "live_title",
+      "value": "Live"
+    },
+    {
+      "name": "live_chip",
+      "value": "Demo values"
+    },
+    {
+      "name": "live_note",
+      "value": "Shown, not scored. Close the day turns today's steps into a completed day; the heart rate is never stored."
+    },
+    {
+      "name": "live_no_reading",
+      "value": "—"
+    },
+    {
+      "name": "demo_controls_title",
+      "value": "Demo controls"
+    },
+    {
+      "name": "demo_controls_hr_label",
+      "value": "Heart rate"
+    },
+    {
+      "name": "demo_controls_steps_label",
+      "value": "Steps today"
+    },
+    {
+      "name": "demo_controls_close_day",
+      "value": "Close the day"
+    },
+    {
+      "name": "demo_controls_reset",
+      "value": "Reset demo"
+    },
+    {
+      "name": "demo_controls_note",
+      "value": "Close the day adds today as a completed day and recalculates the score. Reset returns this persona to its starting month."
+    },
+    {
+      "name": "demo_controls_day_closed",
+      "value": "Day closed"
+    },
+    {
+      "name": "demo_controls_reset_done",
+      "value": "Demo reset"
+    },
+    {
+      "name": "persona_sheet_note_engine",
+      "value": "Scripted demo personas, scored by the same rules"
+    },
+    {
+      "name": "share_intro",
+      "value": "Show this code to your partner"
+    },
+    {
+      "name": "share_intro_no_score",
+      "value": "There is no code to show yet"
+    },
+    {
+      "name": "share_partner_sees_title",
+      "value": "What the partner sees"
+    },
+    {
+      "name": "share_technical_label",
+      "value": "Technical details"
+    },
+    {
+      "name": "share_tech_key_id",
+      "value": "Key ID"
+    },
+    {
+      "name": "share_tech_nonce",
+      "value": "One-time number"
+    },
+    {
+      "name": "share_tech_issued",
+      "value": "Signed at"
+    },
+    {
+      "name": "share_not_in_code",
+      "value": "Not in this code: your score, coverage, flags, sick days or any readings. The partner can use it once."
+    },
+    {
+      "name": "share_try_again_label",
+      "value": "Try again"
+    },
+    {
+      "name": "share_ledger_link",
+      "value": "What left this phone"
+    },
+    {
+      "name": "ledger_title",
+      "value": "What left this phone"
+    },
+    {
+      "name": "ledger_note",
+      "value": "Every code this phone has shown, newest first, with its exact text. The app has no network permission: a code leaves the phone only when someone scans it."
+    },
+    {
+      "name": "ledger_empty",
+      "value": "No code has been shown yet."
+    },
+    {
+      "name": "share_tier_from_preview",
+      "value": "Tier from preview data"
+    },
+    {
+      "name": "share_code_used",
+      "value": "Used once · no longer valid"
+    },
+    {
+      "name": "share_new_code_label",
+      "value": "Make a new code"
+    },
+    {
+      "name": "share_signing",
+      "value": "Signing the code…"
+    },
+    {
+      "name": "share_no_code_sentence",
+      "value": "No code yet. Without a score nothing is signed and nothing leaves this phone."
+    },
+    {
+      "name": "share_open_partner_label",
+      "value": "Open partner view (demo)"
+    },
+    {
+      "name": "share_qr_spoken",
+      "value": "Code for your partner"
+    },
+    {
+      "name": "partner_title",
+      "value": "Partner view · demo"
+    },
+    {
+      "name": "partner_band",
+      "value": "PARTNER · demo"
+    },
+    {
+      "name": "partner_band_note",
+      "value": "This screen plays the partner. The emulator has no camera, so the code is handed over inside the app."
+    },
+    {
+      "name": "partner_use_code_label",
+      "value": "Use the code from this phone"
+    },
+    {
+      "name": "partner_no_code_on_phone",
+      "value": "No code has been shown on this phone yet. Open Share first."
+    },
+    {
+      "name": "partner_nothing_checked",
+      "value": "No code checked yet."
+    },
+    {
+      "name": "partner_checks_title",
+      "value": "Checks, in order"
+    },
+    {
+      "name": "partner_cheat_title",
+      "value": "Try to cheat"
+    },
+    {
+      "name": "partner_verify_again_label",
+      "value": "Verify the same code again"
+    },
+    {
+      "name": "partner_cheat_needs_code",
+      "value": "Use the code from this phone first."
+    },
+    {
+      "name": "partner_check_not_run",
+      "value": "Not run"
+    },
+    {
+      "name": "partner_attempt_first",
+      "value": "The code from this phone"
+    },
+    {
+      "name": "partner_attempt_again",
+      "value": "The same code, a second time"
+    },
+    {
+      "name": "kit_metric_off",
+      "value": "Off · missing evidence"
+    },
+    {
+      "name": "kit_metric_empty",
+      "value": "No records yet"
+    },
+    {
+      "name": "addon_scope_steps",
+      "value": "Steps"
+    },
+    {
+      "name": "addon_scope_resting_heart_rate",
+      "value": "Resting heart rate"
+    },
+    {
+      "name": "addon_scope_sleep",
+      "value": "Sleep"
+    },
+    {
+      "name": "addon_scope_activity_minutes",
+      "value": "Activity minutes"
+    },
+    {
+      "name": "addon_scope_vo2max",
+      "value": "VO₂max"
+    },
+    {
+      "name": "addon_scope_hrv",
+      "value": "HRV"
+    },
+    {
+      "name": "addon_scope_workouts",
+      "value": "Workouts"
+    },
+    {
+      "name": "addon_source_last_sync",
+      "value": "%s · last sync %s"
+    },
+    {
+      "name": "addon_status_connected",
+      "value": "Reads from HUAWEI Health."
+    },
+    {
+      "name": "addon_status_demo",
+      "value": "Demo mode: nothing is read from HUAWEI Health in this build."
+    },
+    {
+      "name": "addon_status_unavailable",
+      "value": "HUAWEI Health is unavailable in this build."
+    },
+    {
+      "name": "addon_status_not_connected",
+      "value": "Not connected: FairWear has no permission to read from HUAWEI Health."
+    },
+    {
+      "name": "ledger_bytes_line",
+      "value": "%d bytes"
+    },
+    {
+      "name": "partner_tamper_label",
+      "value": "Change tier to %s and verify"
+    },
+    {
+      "name": "partner_attempt_tampered",
+      "value": "The same code with the tier changed to %s"
+    },
+    {
+      "name": "report_unlock_step_night",
+      "value": "Wear the watch at night"
+    },
+    {
+      "name": "report_unlock_step_heart_rate",
+      "value": "Turn on continuous heart rate monitoring in HUAWEI Health"
+    },
+    {
+      "name": "report_unlock_step_trusleep",
+      "value": "Turn on TruSleep in HUAWEI Health"
+    },
+    {
+      "name": "report_source_preview",
+      "value": "%s · preview"
+    },
+    {
+      "name": "report_tile_steps",
+      "value": "Steps"
+    },
+    {
+      "name": "report_tile_active_minutes",
+      "value": "Active minutes"
+    },
+    {
+      "name": "report_tile_resting_hr",
+      "value": "Resting HR"
+    },
+    {
+      "name": "report_tile_sleep",
+      "value": "Sleep"
+    },
+    {
+      "name": "report_tile_sleep_regularity",
+      "value": "Sleep regularity"
+    },
+    {
+      "name": "report_tile_vo2max",
+      "value": "VO₂max"
+    },
+    {
+      "name": "report_tile_hrv",
+      "value": "HRV"
+    },
+    {
+      "name": "report_tile_recovery",
+      "value": "Recovery (HRR1)"
+    },
+    {
+      "name": "report_count_unit_nights",
+      "value": "nights"
+    },
+    {
+      "name": "report_count_unit_days",
+      "value": "days"
+    },
+    {
+      "name": "report_tier_headline_a",
+      "value": "Strong overall profile"
+    },
+    {
+      "name": "report_tier_headline_b",
+      "value": "Solid overall profile"
+    },
+    {
+      "name": "report_tier_headline_c",
+      "value": "Tier C this month"
+    },
+    {
+      "name": "persona_summary_no_score",
+      "value": "No score yet · coverage %d%%"
+    },
+    {
+      "name": "persona_summary_score",
+      "value": "Tier %s · HES %d · %s"
+    },
+    {
+      "name": "evidence_day_note_compliant",
+      "value": "This day counts towards your month."
+    },
+    {
+      "name": "evidence_day_note_short",
+      "value": "The watch was worn too little for this day to count."
+    },
+    {
+      "name": "evidence_day_note_suspicious",
+      "value": "A break on this day counts as suspicious."
+    },
+    {
+      "name": "evidence_day_note_sick",
+      "value": "A sick day. It is left out of the month and never sent to your partner."
+    },
+    {
+      "name": "evidence_day_note_no_watch",
+      "value": "No watch yet: there is no record from the watch for this day."
+    },
+    {
+      "name": "why_how_line_curve",
+      "value": "Each measure is scored from 0 to 100 on a fixed curve, from completed days only."
+    },
+    {
+      "name": "why_how_line_average",
+      "value": "Your score is the weighted average of the measures that have enough data. A missing measure is left out; it is never counted as zero."
+    },
+    {
+      "name": "why_how_line_tiers",
+      "value": "Tier A starts at %d, tier B at %d."
+    },
+    {
+      "name": "why_how_line_coverage",
+      "value": "Coverage is the share of the full set of measures that has enough data."
+    },
+    {
+      "name": "why_how_line_core",
+      "value": "Without one of the core measures there is no score at all, never a low one."
+    },
+    {
+      "name": "why_headline_points",
+      "value": "HES %d · %s"
+    },
+    {
+      "name": "why_headline",
+      "value": "HES %d"
+    },
+    {
+      "name": "report_points_one",
+      "value": "1 point to %s"
+    },
+    {
+      "name": "report_points_many",
+      "value": "%d points to %s"
+    },
+    {
+      "name": "why_subline",
+      "value": "Coverage %d%% · Confidence %s · %s"
+    },
+    {
+      "name": "why_row_detail",
+      "value": "%s %s · weight %s"
+    },
+    {
+      "name": "report_count_night_one",
+      "value": "%d night"
+    },
+    {
+      "name": "report_count_nights_many",
+      "value": "%d nights"
+    },
+    {
+      "name": "report_count_day_one",
+      "value": "%d day"
+    },
+    {
+      "name": "report_count_days_many",
+      "value": "%d days"
+    },
+    {
+      "name": "kit_count_of",
+      "value": "%d of %d %s"
+    },
+    {
+      "name": "kit_count_spoken",
+      "value": "%s, %d of %d %s"
+    },
+    {
+      "name": "kit_count_spoken_enough",
+      "value": "%s, %d of %d %s, enough"
+    },
+    {
+      "name": "kit_tier_spoken",
+      "value": "Tier %s"
+    },
+    {
+      "name": "kit_metric_spoken_off",
+      "value": "%s, Off · missing evidence"
+    },
+    {
+      "name": "kit_metric_spoken_empty",
+      "value": "%s, %s"
+    },
+    {
+      "name": "kit_metric_spoken_value",
+      "value": "%s, %s %s"
+    },
+    {
+      "name": "kit_ring_spoken",
+      "value": "%s %s"
+    },
+    {
+      "name": "app_title",
+      "value": "FairWear"
+    },
+    {
+      "name": "app_menu_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "welcome_scope_separator",
+      "value": " · "
+    },
+    {
+      "name": "watchlink_spoken_separator",
+      "value": ", "
+    },
+    {
+      "name": "consent_platform_demo_badge",
+      "value": "Demo"
+    },
+    {
+      "name": "consent_platform_placeholder_title",
+      "value": "Here HUAWEI Health shows its own authorization screen."
+    },
+    {
+      "name": "consent_platform_placeholder_body",
+      "value": "FairWear does not reproduce that screen. The two buttons below stand in for the answer the user gives there."
+    },
+    {
+      "name": "consent_platform_unavailable",
+      "value": "HUAWEI Health is unavailable in this build: access to health data through Health Service Kit has to be granted to the app by Huawei, and FairWear does not have it yet."
+    },
+    {
+      "name": "consent_platform_step_label",
+      "value": "Step 1 of 2 · HUAWEI Health authorization"
+    },
+    {
+      "name": "consent_platform_scopes_title",
+      "value": "Read access FairWear asks for"
+    },
+    {
+      "name": "consent_platform_scopes_caption",
+      "value": "Last 90 days, read only."
+    },
+    {
+      "name": "consent_platform_scope_bullet",
+      "value": "•  %s"
+    },
+    {
+      "name": "consent_platform_not_requested",
+      "value": "Not requested: location, ECG, blood pressure, SpO₂, weight, contacts."
+    },
+    {
+      "name": "consent_platform_simulate_consent",
+      "value": "Simulate consent"
+    },
+    {
+      "name": "consent_platform_simulate_refusal",
+      "value": "Simulate refusal"
+    },
+    {
+      "name": "consent_platform_title",
+      "value": "Connect HUAWEI Health"
+    },
+    {
+      "name": "consent_data_step_label",
+      "value": "Step 2 of 2 · FairWear consent (GDPR Article 9)"
+    },
+    {
+      "name": "consent_data_intro",
+      "value": "Health data is a special category of personal data. FairWear needs your explicit consent to process it. Choose what FairWear may use:"
+    },
+    {
+      "name": "consent_data_switch_off_note",
+      "value": "A data type you switch off is treated as missing evidence: it lowers coverage and is never counted as zero."
+    },
+    {
+      "name": "consent_data_agree_statement",
+      "value": "I consent to FairWear processing the selected health data on this phone to calculate my Health Evidence Score and tier."
+    },
+    {
+      "name": "consent_data_agree",
+      "value": "Agree and continue"
+    },
+    {
+      "name": "consent_data_cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "consent_data_withdraw",
+      "value": "You can withdraw this consent at any time by disconnecting HUAWEI Health in FairWear."
+    },
+    {
+      "name": "consent_data_title",
+      "value": "Health data consent"
+    },
+    {
+      "name": "settings_reads_title",
+      "value": "What FairWear reads"
+    },
+    {
+      "name": "settings_title",
+      "value": "Settings"
+    },
+    {
+      "name": "source_card_title",
+      "value": "Data source"
+    },
+    {
+      "name": "source_types_allowed",
+      "value": "Data types allowed: %d of 7"
+    },
+    {
+      "name": "report_view_breaks_none",
+      "value": "0 suspicious breaks"
+    },
+    {
+      "name": "report_view_breaks_flagged",
+      "value": "%d suspicious breaks · flagged"
+    },
+    {
+      "name": "report_view_breaks_one",
+      "value": "1 suspicious break · one break never flags"
+    },
+    {
+      "name": "report_view_breaks_not_flagged",
+      "value": "%d suspicious breaks · not flagged"
+    },
+    {
+      "name": "report_view_hours_unit",
+      "value": "h"
+    },
+    {
+      "name": "report_view_source_spoken",
+      "value": "%s. Opens settings"
+    },
+    {
+      "name": "report_view_period_last_30",
+      "value": "%s · last 30 days"
+    },
+    {
+      "name": "report_view_coverage_chip",
+      "value": "Coverage %d%%"
+    },
+    {
+      "name": "report_view_confidence_chip",
+      "value": "Confidence %s"
+    },
+    {
+      "name": "report_view_wear_days",
+      "value": "%d of %d days"
+    },
+    {
+      "name": "report_view_wear_needed",
+      "value": "%s%% needed"
+    },
+    {
+      "name": "report_view_nights_worn",
+      "value": "Nights worn %d of %d"
+    },
+    {
+      "name": "report_view_evidence_pct",
+      "value": "%d%%"
+    },
+    {
+      "name": "report_view_evidence_unit",
+      "value": "evidence"
+    },
+    {
+      "name": "report_view_day_spoken",
+      "value": "%s, %s"
+    },
+    {
+      "name": "evidence_view_break_line",
+      "value": "Off the wrist %s · %s"
+    },
+    {
+      "name": "evidence_view_break_suspicious",
+      "value": "Suspicious"
+    },
+    {
+      "name": "evidence_view_break_not_suspicious",
+      "value": "Not suspicious"
+    },
+    {
+      "name": "evidence_view_break_not_judged",
+      "value": "Not judged"
+    },
+    {
+      "name": "evidence_view_count_of_total",
+      "value": "%d of %d"
+    },
+    {
+      "name": "evidence_view_stat_spoken",
+      "value": "%s, %s"
+    },
+    {
+      "name": "evidence_view_fact_spoken",
+      "value": "%s %s"
+    },
+    {
+      "name": "evidence_view_day_reason",
+      "value": "%s."
+    },
+    {
+      "name": "evidence_view_day_state_appealed_spoken",
+      "value": "%s, appeal sent"
+    },
+    {
+      "name": "why_page_no_score_coverage",
+      "value": "Coverage %d%% · %s"
+    },
+    {
+      "name": "why_page_row_score_spoken",
+      "value": "%s, score %d of 100, %s"
+    },
+    {
+      "name": "why_page_raw_unit",
+      "value": "%s %s"
+    },
+    {
+      "name": "why_page_plain_row_spoken",
+      "value": "%s, %s"
+    },
+    {
+      "name": "why_page_count_enough",
+      "value": "%s · Enough for a score"
+    },
+    {
+      "name": "why_page_measured_row_spoken",
+      "value": "%s, %s"
+    },
+    {
+      "name": "why_page_measured_row_raw_spoken",
+      "value": "%s, %s, %s %s"
+    },
+    {
+      "name": "why_page_how_expanded_spoken",
+      "value": "How it's calculated, expanded"
+    },
+    {
+      "name": "why_page_how_collapsed_spoken",
+      "value": "How it's calculated, collapsed"
+    },
+    {
+      "name": "live_card_hr_unit",
+      "value": "bpm now"
+    },
+    {
+      "name": "live_card_steps_unit",
+      "value": "steps today"
+    },
+    {
+      "name": "live_card_hr_no_reading_spoken",
+      "value": "Heart rate now, no reading"
+    },
+    {
+      "name": "live_card_hr_spoken",
+      "value": "Heart rate now, %s beats per minute"
+    },
+    {
+      "name": "live_card_steps_no_reading_spoken",
+      "value": "Steps today, no reading"
+    },
+    {
+      "name": "live_card_steps_spoken",
+      "value": "%s steps today"
+    },
+    {
+      "name": "live_card_hr_value",
+      "value": "%s bpm"
+    },
+    {
+      "name": "demo_action_result_scored",
+      "value": "%s · HES %d · Tier %s"
+    },
+    {
+      "name": "demo_action_result_unscored",
+      "value": "%s · no score yet · evidence %d%%"
+    },
+    {
+      "name": "persona_chip_label",
+      "value": "%s · Demo"
+    },
+    {
+      "name": "persona_chip_row_spoken",
+      "value": "%s, %s"
+    },
+    {
+      "name": "persona_chip_row_selected_spoken",
+      "value": "%s, %s, selected"
+    },
+    {
+      "name": "persona_chip_spoken",
+      "value": "Demo persona %s. Change persona"
+    },
+    {
+      "name": "tour_no_day_sentence",
+      "value": "No day from the watch yet. Pair the watch, close a day on it and sync; this page then shows that day."
+    },
+    {
+      "name": "tour_show_code",
+      "value": "Show the code"
+    },
+    {
+      "name": "tour_hide_code",
+      "value": "Hide the code"
+    },
+    {
+      "name": "tour_proved_by",
+      "value": "Proved by these logic tests:"
+    },
+    {
+      "name": "tour_checks_title",
+      "value": "Test the checks on this phone"
+    },
+    {
+      "name": "tour_checks_sentence",
+      "value": "Each button sends a changed or repeated day through the same checks this phone uses for real days. It works on a copy, so nothing you received is changed."
+    },
+    {
+      "name": "tour_real_title",
+      "value": "Real and simulated in this build"
+    },
+    {
+      "name": "tour_proved_by_item",
+      "value": "· %s"
+    },
+    {
+      "name": "tour_day_wear_source",
+      "value": "%s · wear source: %s"
+    },
+    {
+      "name": "tour_not_observed_summary",
+      "value": "Not observed on %s: %s. Shown as not observed, never as off wrist."
+    },
+    {
+      "name": "tour_transport_now",
+      "value": "Transport now: %s"
+    },
+    {
+      "name": "tour_day_passed_checks",
+      "value": "%s passed every check."
+    },
+    {
+      "name": "tour_missing_one",
+      "value": "1 day is missing and shown as missing."
+    },
+    {
+      "name": "tour_missing_many",
+      "value": "%d days are missing and shown as missing."
+    },
+    {
+      "name": "tour_no_missing",
+      "value": "No day is missing."
+    },
+    {
+      "name": "tour_step_title",
+      "value": "%d · %s"
+    },
+    {
+      "name": "tour_checking",
+      "value": "Checking…"
+    },
+    {
+      "name": "tour_watch_link_title",
+      "value": "Watch link"
+    },
+    {
+      "name": "tour_leaves_phone_title",
+      "value": "What leaves this phone"
+    },
+    {
+      "name": "ledger_page_time_destination",
+      "value": "%s · %s"
+    },
+    {
+      "name": "partner_page_benefit_no_reason",
+      "value": "%s · The code does not say why."
+    },
+    {
+      "name": "partner_page_key_registry",
+      "value": "Key: %s (from the partner's key registry)"
+    },
+    {
+      "name": "share_page_period",
+      "value": "Period %s"
+    },
+    {
+      "name": "share_page_sign_failed",
+      "value": "The code could not be signed: %s"
+    },
+    {
+      "name": "share_page_separator",
+      "value": "·"
+    },
+    {
+      "name": "watchlink_linked",
+      "value": "Linked"
+    },
+    {
+      "name": "watchlink_not_linked",
+      "value": "Not linked"
+    },
+    {
+      "name": "watchlink_pair_waiting",
+      "value": "Waiting for you"
+    },
+    {
+      "name": "watchlink_verified",
+      "value": "Verified"
+    },
+    {
+      "name": "watchlink_missing",
+      "value": "Missing"
+    },
+    {
+      "name": "watchlink_not_linked_sentence",
+      "value": "No watch linked. On the watch, open FairWear and choose Pair phone."
+    },
+    {
+      "name": "watchlink_linked_no_days_sentence",
+      "value": "Watch linked. Its first day appears after the watch closes it and syncs."
+    },
+    {
+      "name": "watchlink_no_days_sentence",
+      "value": "No day received yet."
+    },
+    {
+      "name": "watchlink_explained",
+      "value": "The watch signs one summary per day. This phone checks every signature, so a day cannot be edited or removed without it showing."
+    },
+    {
+      "name": "watchlink_nothing_observed",
+      "value": "The watch recorded nothing on this day."
+    },
+    {
+      "name": "watchlink_missing_explained",
+      "value": "The watch closed this day, but it never reached this phone. It is shown as missing, not as zero."
+    },
+    {
+      "name": "watchlink_unit_h",
+      "value": "h"
+    },
+    {
+      "name": "watchlink_unit_min",
+      "value": "min"
+    },
+    {
+      "name": "watchlink_unit_day",
+      "value": "day"
+    },
+    {
+      "name": "watchlink_unit_days",
+      "value": "days"
+    },
+    {
+      "name": "watchlink_unit_steps",
+      "value": "steps"
+    },
+    {
+      "name": "watchlink_spoken_part",
+      "value": "%s %s"
+    },
+    {
+      "name": "watchlink_spoken_day",
+      "value": "%s: %s"
+    },
+    {
+      "name": "watchlink_last_synced",
+      "value": "Last synced: %s"
+    },
+    {
+      "name": "watchlink_card_title",
+      "value": "Watch link"
+    },
+    {
+      "name": "watchlink_pair_prompt",
+      "value": "Pair watch %s?"
+    },
+    {
+      "name": "watchlink_pair_confirm_hint",
+      "value": "Confirm only if the watch shows the same code."
+    },
+    {
+      "name": "watchlink_confirm",
+      "value": "Confirm"
+    },
+    {
+      "name": "watchlink_not_now",
+      "value": "Not now"
+    },
+    {
+      "name": "watchlink_sync_now",
+      "value": "Sync now"
+    },
+    {
+      "name": "watchlink_forget_armed",
+      "value": "Tap again to forget"
+    },
+    {
+      "name": "watchlink_forget",
+      "value": "Forget watch"
+    },
+    {
+      "name": "watchlink_forget_hint",
+      "value": "Then reset the watch data on the watch and pair again."
+    },
+    {
+      "name": "watchlink_days_title",
+      "value": "Days from the watch"
+    },
+    {
+      "name": "verification_intro",
+      "value": "The technical data behind the Watch link cards: the watch key, sequence numbers, the chain of signed days and the sync log."
+    },
+    {
+      "name": "verification_none",
+      "value": "None yet"
+    },
+    {
+      "name": "verification_days_one",
+      "value": "1 day"
+    },
+    {
+      "name": "verification_days_many",
+      "value": "%d days"
+    },
+    {
+      "name": "verification_break_from_day_before",
+      "value": "Break from the day before %s–%s · heart-rate slots in the 24 h before: %d"
+    },
+    {
+      "name": "verification_break",
+      "value": "Break %s–%s · heart-rate slots in the 24 h before: %d"
+    },
+    {
+      "name": "verification_packet_head",
+      "value": "#%d · %s"
+    },
+    {
+      "name": "verification_packet_clock",
+      "value": "Clock %s · wear source %s"
+    },
+    {
+      "name": "verification_packet_slots",
+      "value": "Heart-rate slots: %d · steps: %d"
+    },
+    {
+      "name": "verification_packet_night",
+      "value": "Night 00:00–06:00: worn %s · charging %s"
+    },
+    {
+      "name": "verification_packet_not_received",
+      "value": "#%d · not received"
+    },
+    {
+      "name": "verification_key_title",
+      "value": "Watch key"
+    },
+    {
+      "name": "verification_key_id",
+      "value": "Key ID"
+    },
+    {
+      "name": "verification_no_watch_paired",
+      "value": "No watch paired"
+    },
+    {
+      "name": "verification_pairing_request",
+      "value": "Pairing request"
+    },
+    {
+      "name": "verification_transport",
+      "value": "Transport"
+    },
+    {
+      "name": "verification_wear_engine",
+      "value": "Wear Engine"
+    },
+    {
+      "name": "verification_last_error",
+      "value": "Last error"
+    },
+    {
+      "name": "verification_chain_title",
+      "value": "Chain"
+    },
+    {
+      "name": "verification_last_seq",
+      "value": "Last sequence number"
+    },
+    {
+      "name": "verification_seq_number",
+      "value": "#%d"
+    },
+    {
+      "name": "verification_last_day",
+      "value": "Last day"
+    },
+    {
+      "name": "verification_state",
+      "value": "State"
+    },
+    {
+      "name": "verification_missing",
+      "value": "Missing"
+    },
+    {
+      "name": "verification_packets_title",
+      "value": "Day packets"
+    },
+    {
+      "name": "verification_no_packets",
+      "value": "No day packet received yet."
+    },
+    {
+      "name": "verification_log_title",
+      "value": "Sync log"
+    },
+    {
+      "name": "verification_log_empty",
+      "value": "Nothing has been synced yet."
+    },
+    {
+      "name": "verification_title",
+      "value": "Verification details"
+    },
+    {
+      "name": "report_count_unit_workouts",
+      "value": "workouts"
+    },
+    {
+      "name": "report_count_unit_estimates",
+      "value": "estimates"
+    },
+    {
+      "name": "ledger_visit_label",
+      "value": "Visit proof"
+    },
+    {
+      "name": "consent_data_wear_note",
+      "value": "The wear check always uses when the watch was on the wrist and, around each break, the resting heart rate and steps of the 24 h before it. It decides eligibility, not the score."
+    },
+    {
+      "name": "day_dial_now",
+      "value": "Now"
+    },
+    {
+      "name": "report_count_workout_one",
+      "value": "%d workout"
+    },
+    {
+      "name": "report_count_workouts_many",
+      "value": "%d workouts"
+    },
+    {
+      "name": "report_count_estimate_one",
+      "value": "%d estimate"
+    },
+    {
+      "name": "report_count_estimates_many",
+      "value": "%d estimates"
     }
   ]
 }

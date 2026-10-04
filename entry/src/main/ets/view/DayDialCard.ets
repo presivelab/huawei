@@ -241,7 +241,7 @@ export struct DayDialCard {
             .width(8)
             .height(8)
             .fill($r('sys.color.font_primary'))
-          Text('Now')
+          Text($r('app.string.day_dial_now'))
             .fontSize($r('sys.float.Body_S'))
             .fontColor($r('sys.color.font_secondary'))
         }

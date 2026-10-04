@@ -16,8 +16,7 @@ import {
   NO_SCORE_BODY,
   NO_SCORE_HEADLINE,
   WHY_ASSUMPTIONS,
-  WHY_ENOUGH,
-  WHY_HOW_LINES,
+  whyHowLines,
   WHY_HOW_TITLE,
   WHY_IMPROVE,
   WHY_LABEL,
@@ -40,6 +39,7 @@ import {
   reportService,
   selectedProfileReport
 } from '../report/ServiceLocator';
+import { str } from '../ui/Strings';
 import { CountBar } from '../ui/kit/CountBar';
 import {
   COLOR_OK_TEXT,
@@ -133,7 +133,7 @@ export struct WhyPage {
         .fontWeight(FontWeight.Bold)
         .fontColor($r('sys.color.font_primary'))
         .id('fw_why_no_score')
-      Text(`Coverage ${this.report.coveragePct}% · ${this.report.benefitReason}`)
+      Text(str($r('app.string.why_page_no_score_coverage'), this.report.coveragePct, this.report.benefitReason))
         .fontSize($r('sys.float.Body_M'))
         .fontColor($r('sys.color.font_secondary'))
       Text(NO_SCORE_BODY)
@@ -156,7 +156,7 @@ export struct WhyPage {
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .layoutWeight(1)
-        Text(`${row.score}`)
+        Text(row.score.toString())
           .fontSize($r('sys.float.Body_L'))
           .fontWeight(FontWeight.Bold)
           .fontColor($r('sys.color.font_primary'))
@@ -176,7 +176,7 @@ export struct WhyPage {
     .width('100%')
     .alignItems(HorizontalAlign.Start)
     .accessibilityGroup(true)
-    .accessibilityText(`${row.label}, score ${row.score} of 100, ${whyRowDetail(row)}`)
+    .accessibilityText(str($r('app.string.why_page_row_score_spoken'), row.label, row.score, whyRowDetail(row)))
   }
 
   @Builder
@@ -243,7 +243,7 @@ export struct WhyPage {
     .constraintSize({ minHeight: 28 })
     .alignItems(VerticalAlign.Center)
     .accessibilityGroup(true)
-    .accessibilityText(`${row.label}, ${note}`)
+    .accessibilityText(str($r('app.string.why_page_plain_row_spoken'), row.label, note))
   }
 
   @Builder
@@ -253,7 +253,7 @@ export struct WhyPage {
         Text(WHY_MISSING)
           .attributeModifier(HEADING)
         ForEach(this.missingRows(), (row: ComponentRow) => {
-          this.plainRow(row, WHY_NOT_MEASURED)
+          this.plainRow(row, str(WHY_NOT_MEASURED))
         }, (row: ComponentRow) => `${this.report.id}|missing|${row.id}`)
         Text(WHY_MISSING_NOTE)
           .attributeModifier(CAPTION)
@@ -276,14 +276,14 @@ export struct WhyPage {
           .fontColor($r('sys.color.font_primary'))
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
-        Text(row.minCount > 0 ? `${countLine(row)} · ${WHY_ENOUGH}` : countLine(row))
+        Text(row.minCount > 0 ? str($r('app.string.why_page_count_enough'), countLine(row)) : countLine(row))
           .attributeModifier(CAPTION)
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
 
       if (row.raw.length > 0) {
-        Text(`${row.raw} ${row.unit}`)
+        Text(str($r('app.string.why_page_raw_unit'), row.raw, row.unit))
           .fontSize($r('sys.float.Body_M'))
           .fontWeight(FontWeight.Medium)
           .fontColor($r('sys.color.font_primary'))
@@ -298,7 +298,9 @@ export struct WhyPage {
     .width('100%')
     .alignItems(VerticalAlign.Center)
     .accessibilityGroup(true)
-    .accessibilityText(`${row.label}, ${countLine(row)}` + (row.raw.length > 0 ? `, ${row.raw} ${row.unit}` : ''))
+    .accessibilityText(row.raw.length > 0 ?
+      str($r('app.string.why_page_measured_row_raw_spoken'), row.label, countLine(row), row.raw, row.unit) :
+      str($r('app.string.why_page_measured_row_spoken'), row.label, countLine(row)))
   }
 
   @Builder
@@ -351,13 +353,14 @@ export struct WhyPage {
       .alignItems(VerticalAlign.Center)
       .id('fw_why_how')
       .accessibilityGroup(true)
-      .accessibilityText(`${WHY_HOW_TITLE}, ${this.howOpen ? 'expanded' : 'collapsed'}`)
+      .accessibilityText(this.howOpen ? $r('app.string.why_page_how_expanded_spoken') :
+        $r('app.string.why_page_how_collapsed_spoken'))
       .onClick(() => {
         this.howOpen = !this.howOpen;
       })
 
       if (this.howOpen) {
-        ForEach(WHY_HOW_LINES, (line: string) => {
+        ForEach(whyHowLines(), (line: string) => {
           Row({ space: 8 }) {
             SymbolGlyph(SYMBOL_INFO)
               .fontSize(14)
@@ -397,8 +400,8 @@ export struct WhyPage {
               .attributeModifier(CAPTION)
               .padding({ left: 4, right: 4 })
               .id('fw_why_profile')
-            this.scoredSection(WHY_STRONGEST, false, 'fw_why_strongest')
-            this.scoredSection(WHY_IMPROVE, true, 'fw_why_improve')
+            this.scoredSection(str(WHY_STRONGEST), false, 'fw_why_strongest')
+            this.scoredSection(str(WHY_IMPROVE), true, 'fw_why_improve')
             this.whatIfCard()
             this.missingSection()
           } else {

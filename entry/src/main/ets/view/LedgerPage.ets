@@ -13,6 +13,7 @@ import { KEY_SHARE_REVISION, ShareService } from '../share/ShareService';
 import { LEDGER_EMPTY, LEDGER_NOTE, LEDGER_TITLE, ledgerBytesLine, ledgerVisitLine } from '../share/ShareTexts';
 import { EmptyState } from '../ui/kit/EmptyState';
 import { SYMBOL_INFO } from '../ui/kit/KitTokens';
+import { str } from '../ui/Strings';
 import { BODY, BODY_SECONDARY, CAPTION, CARD_LARGE } from './Styles';
 
 // "What left this phone" (route ROUTE_LEDGER), opened from the Share tab. Every code the phone has shown,
@@ -60,7 +61,7 @@ export struct LedgerPage {
           } else {
             ForEach(this.entries, (e: LedgerEntry) => {
               Column({ space: 6 }) {
-                Text(`${logTimeText(e.t)} · ${e.destination}`)
+                Text(str($r('app.string.ledger_page_time_destination'), logTimeText(e.t), e.destination))
                   .attributeModifier(CAPTION)
                 Text(e.kind === LEDGER_KIND_VISIT ? this.visitText(e.payload) : this.claimText(e.payload))
                   .attributeModifier(BODY)

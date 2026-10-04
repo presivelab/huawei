@@ -9,7 +9,7 @@ export interface MonthBarParams {
 
 export interface DayStateLegendParams {
   states: string[];     // the DayState values to name, in the order shown
-  note?: string;        // a closing remark without a colour, "85% needed"
+  note?: ResourceStr;   // a closing remark without a colour, "85% needed"
 }
 
 // A month as one bar: a segment per day in the colour of the day's state.
