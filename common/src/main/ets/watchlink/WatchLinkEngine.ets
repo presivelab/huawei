@@ -190,6 +190,12 @@ export class WatchLinkEngine {
   pause(): void {
     this.recorder.pause();
     this.saveClock(this.realClock.nowMs());
+    // The readings from before the pause say nothing about the time after it: until the first new sensor
+    // event the state is unknown (U), never off the wrist. The scripted feed keeps its own state.
+    if (!this.feedOn) {
+      this.machine = new WearStateMachine(this.recClock.isDemoSpeed() ? FRESHNESS_DEMO_CLOCK_MS :
+        FRESHNESS_REAL_CLOCK_MS);
+    }
   }
 
   isDemoClock(): boolean {

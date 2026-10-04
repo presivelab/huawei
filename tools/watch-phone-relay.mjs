@@ -117,7 +117,8 @@ function findHdc() {
   return "";
 }
 
-const hdc = findHdc();
+// --dry-run only prints the commands, so it works without hdc installed.
+const hdc = flags.dryRun ? "hdc" : findHdc();
 
 // Runs one hdc command, logs it and its result. With --dry-run only prints it.
 function run(args, { quiet = false } = {}) {
@@ -386,6 +387,8 @@ function pushToPhone(phoneTarget, state) {
     if (state.pushed["pair.json"]?.hash !== hash) {
       if (send(phoneTarget, pairLocal, `${FILES}/inbox`, "pair.json")) {
         state.pushed["pair.json"] = { hash, at: now };
+        // A new pairing gets a new answer, even when its ACK text is the same as last time.
+        delete state.acked["0.json"];
         pushed++;
       }
     }
@@ -417,6 +420,11 @@ function pushToPhone(phoneTarget, state) {
       tamperedOne = true;
     }
     if (send(phoneTarget, local, `${FILES}/inbox`, name)) {
+      if (before?.hash !== hash) {
+        // A packet the phone has not seen gets its ACK delivered, even when the ACK text repeats an older
+        // run (rehearsal, then the real demo).
+        delete state.acked[name];
+      }
       state.pushed[name] = { hash, at: now };
       pushed++;
     }
