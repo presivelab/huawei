@@ -13,6 +13,14 @@
     { "name": "fw_wear_unobserved", "value": "#B4BAC6" },
     { "name": "fw_tier_a", "value": "#12936A" },
     { "name": "fw_tier_b", "value": "#B98300" },
-    { "name": "fw_tier_c", "value": "#A8623A" }
+    { "name": "fw_tier_c", "value": "#A8623A" },
+    { "name": "fw_tier_a_tint", "value": "#2412936A" },
+    { "name": "fw_tier_b_tint", "value": "#24B98300" },
+    { "name": "fw_tier_c_tint", "value": "#24A8623A" },
+    { "name": "fw_flag_tint", "value": "#24CB5A3C" },
+    { "name": "fw_tier_a_text", "value": "#0C7553" },
+    { "name": "fw_tier_b_text", "value": "#8A6200" },
+    { "name": "fw_tier_c_text", "value": "#8A4B25" },
+    { "name": "fw_flag_text", "value": "#9A3A22" }
   ]
 }

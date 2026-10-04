@@ -3,6 +3,7 @@
 export const VALUE_SMALL: number = 0;
 export const VALUE_MEDIUM: number = 1;
 export const VALUE_LARGE: number = 2;
+export const VALUE_TILE: number = 3;    // a metric tile: bold value, small unit
 
 export interface ValueUnit {
   value: string;
@@ -13,7 +14,7 @@ export interface ValueUnit {
 }
 
 function valueSize(level: number | undefined): Resource {
-  if (level === VALUE_LARGE) {
+  if (level === VALUE_LARGE || level === VALUE_TILE) {
     return $r('sys.float.Title_M');
   }
   return level === VALUE_MEDIUM ? $r('sys.float.Subtitle_L') : $r('sys.float.Body_M');
@@ -23,7 +24,14 @@ function unitSize(level: number | undefined): Resource {
   if (level === VALUE_LARGE) {
     return $r('sys.float.Body_L');
   }
+  if (level === VALUE_TILE) {
+    return $r('sys.float.Body_S');
+  }
   return level === VALUE_MEDIUM ? $r('sys.float.Body_M') : $r('sys.float.Body_S');
+}
+
+function valueWeight(level: number | undefined): FontWeight {
+  return level === VALUE_TILE ? FontWeight.Bold : FontWeight.Medium;
 }
 
 function spaced(text: string | undefined): string {
@@ -35,14 +43,14 @@ export function ValueWithUnit(p: ValueUnit) {
   Text() {
     Span(p.value)
       .fontSize(valueSize(p.level))
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(valueWeight(p.level))
       .fontColor($r('sys.color.font_primary'))
     Span(spaced(p.unit))
       .fontSize(unitSize(p.level))
       .fontColor($r('sys.color.font_secondary'))
     Span(spaced(p.extraValue))
       .fontSize(valueSize(p.level))
-      .fontWeight(FontWeight.Medium)
+      .fontWeight(valueWeight(p.level))
       .fontColor($r('sys.color.font_primary'))
     Span(spaced(p.extraUnit))
       .fontSize(unitSize(p.level))

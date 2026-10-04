@@ -16,6 +16,9 @@ export class DayStripItem {
   off: number = 0;
   unobserved: number = 0;
   missing: boolean = false;
+  // When set, the worn share is drawn in this colour instead of the "worn" colour: a day shown by its
+  // state (compliant, short, suspicious break) rather than by its four wear states.
+  tint: ResourceColor | undefined = undefined;
 }
 
 export interface DayStripParams {
@@ -44,7 +47,7 @@ function dayRing(item: DayStripItem) {
       type: DataPanelType.Circle
     })
       .closeEffect(true)
-      .valueColors([COLOR_WORN, COLOR_CHARGING, COLOR_OFF, COLOR_UNOBSERVED])
+      .valueColors([item.tint ?? COLOR_WORN, COLOR_CHARGING, COLOR_OFF, COLOR_UNOBSERVED])
       .trackBackgroundColor($r('sys.color.comp_background_tertiary'))
       .strokeWidth(RING_STROKE)
       .width(RING)
