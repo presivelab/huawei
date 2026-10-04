@@ -249,3 +249,70 @@ export {
   VerifyResult
 } from './src/main/ets/claim/PartnerVerifier';
 export { DeviceRandom } from './src/main/ets/platform/DeviceRandom';
+// HES-Lite v1.0: the scoring engine, rebuilt from the specification. Pure logic. See docs/HES.md.
+export {
+  copyHesDay,
+  emptyHesDay,
+  HesComponentDefinition,
+  HesComponentId,
+  HesComponentResult,
+  HesConfidence,
+  HesDay,
+  HesPoint,
+  HesResult,
+  HesStatus,
+  HesWhy,
+  HES_MISSING
+} from './src/main/ets/hes/HesTypes';
+export { piecewiseScore } from './src/main/ets/hes/HesPiecewise';
+export {
+  hesDefinition,
+  HES_COMPONENTS,
+  HES_CONFIDENCE_HIGH_MIN,
+  HES_CONFIDENCE_MEDIUM_MIN,
+  HES_HRR_WINDOW_DAYS,
+  HES_TIER_A_MIN,
+  HES_TIER_B_MIN,
+  HES_VO2MAX_WINDOW_DAYS,
+  HES_WINDOW_DAYS
+} from './src/main/ets/hes/HesCurves';
+export {
+  hesMean,
+  hesMedian,
+  hesRound,
+  hesSampleSd,
+  sleepRelativeMinutes,
+  sleepTimingSd
+} from './src/main/ets/hes/HesMath';
+export {
+  isSufficient as hesIsSufficient,
+  isValidFor as hesIsValidFor,
+  quality as hesQuality,
+  validDays as hesValidDays
+} from './src/main/ets/hes/HesSufficiency';
+export {
+  componentScore as hesComponentScore,
+  equivalentMvpa,
+  evaluateComponent as hesEvaluateComponent,
+  evaluateComponents as hesEvaluateComponents
+} from './src/main/ets/hes/HesComponents';
+export {
+  calculateObservedHes,
+  coverage as hesCoverage,
+  isCoreComplete as hesIsCoreComplete,
+  observedHes
+} from './src/main/ets/hes/HesComposite';
+export {
+  calculateConfidence as hesCalculateConfidence,
+  confidenceFromIndex as hesConfidenceFromIndex,
+  confidenceIndex as hesConfidenceIndex,
+  weightedQuality as hesWeightedQuality
+} from './src/main/ets/hes/HesConfidence';
+export {
+  pointsToNextTier as hesPointsToNextTier,
+  tierFromHes,
+  tierLabel as hesTierLabel
+} from './src/main/ets/hes/HesTier';
+export { whyThisTier } from './src/main/ets/hes/HesWhy';
+export { composeHes, computeHes } from './src/main/ets/hes/HesEngine';
+export { HesDaySource, HesSession } from './src/main/ets/hes/HesSession';
