@@ -75,7 +75,8 @@ struct ControlButton {
       .height(this.compact ? 32 : 40)
       .fontSize($r('app.float.button_font_size'))
       // A long label ("Get today from Health Sim") shrinks instead of being cut off.
-      .labelStyle({ maxLines: 1, minFontSize: 9, maxFontSize: $r('app.float.button_font_size') })
+      .labelStyle({ maxLines: 1, minFontSize: 8, maxFontSize: $r('app.float.button_font_size') })
+      .padding({ left: 6, right: 6 })
       .fontColor(this.labelColor)
       .backgroundColor($r('sys.color.comp_background_secondary'))
       .onClick(() => {
