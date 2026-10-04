@@ -12,6 +12,7 @@ export class FwTarget {
   static readonly DASHBOARD: string = 'dashboard';
   static readonly SHARE: string = 'share';
   static readonly SOURCE: string = 'source';
+  static readonly TOUR: string = 'tour';
 }
 
 /** A home-screen card delivers its parameters as one JSON string under this key of the want. */
@@ -64,6 +65,9 @@ export function resolveFwTarget(value: Object | null | undefined): string {
   }
   if (name === FwTarget.SOURCE) {
     return FwTarget.SOURCE;
+  }
+  if (name === FwTarget.TOUR) {
+    return FwTarget.TOUR;
   }
   return FwTarget.DASHBOARD;
 }

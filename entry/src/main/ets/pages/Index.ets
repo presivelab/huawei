@@ -5,6 +5,7 @@ import {
   ROUTE_DATA_CONSENT,
   ROUTE_PLATFORM_CONSENT,
   ROUTE_SETTINGS,
+  ROUTE_TOUR,
   ROUTE_VERIFICATION
 } from '../addon/AddonTexts';
 import { syncCard } from '../nav/CardSync';
@@ -14,6 +15,7 @@ import { DataConsentPage } from '../view/DataConsentPage';
 import { PlatformConsentPage } from '../view/PlatformConsentPage';
 import { SettingsPage } from '../view/SettingsPage';
 import { VerificationDetailsPage } from '../view/VerificationDetailsPage';
+import { WatchLinkTourPage } from '../view/WatchLinkTourPage';
 import { WelcomeView } from '../view/WelcomeView';
 
 // The single start page of FairWear on the phone. Every screen of the add-on is reached from here.
@@ -53,6 +55,8 @@ struct Index {
       SettingsPage()
     } else if (name === ROUTE_VERIFICATION) {
       VerificationDetailsPage()
+    } else if (name === ROUTE_TOUR) {
+      WatchLinkTourPage()
     }
   }
 

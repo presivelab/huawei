@@ -167,6 +167,47 @@ export {
   WatchDayFacts
 } from './src/main/ets/watchlink/PhoneLinkEngine';
 export { PAIR_ACK_SEQ } from './src/main/ets/watchlink/DayPacketCodec';
+// Watch Link tour: read-only checks on a copy of the chain, and the tour's content (steps, code, criteria).
+export {
+  flippedSlot,
+  NOTE_COUNTED_ONCE,
+  NOTE_FILLS_GAP,
+  NOTE_NOT_TAKEN,
+  PROBE_LEDGER_UNREADABLE,
+  PROBE_NEEDS_DAY,
+  PROBE_NEEDS_TWO,
+  ProbeAction,
+  ProbeKind,
+  ProbeResult,
+  ProbeStep,
+  probeTitle,
+  ReceivedPacketInfo,
+  STORED_UNCHANGED,
+  utf8Length
+} from './src/main/ets/watchlink/LinkProbe';
+export {
+  CODE_ELLIPSIS,
+  demoClockText,
+  displayCode,
+  elapsedText,
+  LEAVES_PHONE,
+  notObservedMinutes,
+  packetLine,
+  probeLine,
+  probeStepLabel,
+  REAL_ROWS,
+  ReviewRow,
+  SlotRun,
+  slotRuns,
+  slotState,
+  slotStateLabel,
+  TOUR_INTRO,
+  TOUR_STEPS,
+  TOUR_TITLE,
+  TourStep,
+  VERIFY_ORDER,
+  wearSourceText
+} from './src/main/ets/present/TourContent';
 // How watch days are worded on the phone. Pure functions; no verdict.
 export {
   breakText,

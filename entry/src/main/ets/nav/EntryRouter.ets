@@ -1,6 +1,6 @@
 import { Want } from '@kit.AbilityKit';
 import { CARD_PARAMS_KEY, FwTarget, FW_TARGET_PARAM, resolveFwTargetFromWant } from 'common';
-import { ROUTE_SETTINGS } from '../addon/AddonTexts';
+import { ROUTE_SETTINGS, ROUTE_TOUR } from '../addon/AddonTexts';
 
 /*
  * The one entry into FairWear. A card tap, an icon shortcut and a host app all start EntryAbility with
@@ -30,6 +30,8 @@ export function openTarget(nav: NavPathStack, target: string): void {
   nav.clear();
   if (target === FwTarget.SOURCE) {
     nav.pushPathByName(ROUTE_SETTINGS, null);
+  } else if (target === FwTarget.TOUR) {
+    nav.pushPathByName(ROUTE_TOUR, null);
   }
   // FwTarget.SHARE: the share screen is not part of this build yet, so the start page opens.
 }

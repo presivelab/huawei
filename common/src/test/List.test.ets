@@ -7,6 +7,7 @@ import healthStatusLabelTest from './HealthStatusLabel.test';
 import demoFeedTest from './DemoFeed.test';
 import claimHardeningTest from './ClaimHardening.test';
 import watchDayPresentTest from './WatchDayPresent.test';
+import tourContentTest from './TourContent.test';
 
 export default function testsuite() {
   claimTest();
@@ -18,4 +19,5 @@ export default function testsuite() {
   demoFeedTest();
   claimHardeningTest();
   watchDayPresentTest();
+  tourContentTest();
 }
