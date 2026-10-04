@@ -1,6 +1,15 @@
 FairWear test results
 =====================
 
+2026-10-04 02:22 CEST  branch feature/ui-kit  (review of the UI kit block; demo-feed day end to end)
+----------------------------------------------------
+Re-run by the reviewing session: common 141/141, watch 6/6; wording check 0 hits, enum-in-UI check 0 hits;
+lint 0 errors (entry 9 warnings, watch 2, common 0).
+Relay (node tools/watch-phone-relay.mjs once) with both emulators running: the watch day recorded with the
+demo feed went to the phone as packet #5 and came back ACCEPTED. The phone shows it as Thu 8 Oct, Verified,
+worn 16 h 5 min, charging 5 h 25 min, off wrist 2 h 25 min, 12,785 steps, labelled as demo feed
+(docs/screenshots/design/after-watchlink-days-feed-light.jpeg).
+
 2026-10-04 02:19 CEDT  branch feature/ui-kit  (block K5.2 and the pre-gate part of K5.3: tokens, phone UI kit, Watch link cards)
 ----------------------------------------------------
 Base: feature/ui-foundation af58db4.
