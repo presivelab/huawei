@@ -19,7 +19,7 @@ export interface Thresholds {
 }
 export interface LedgerEntry {      // K14 — everything that left the device
   t: number;
-  kind: string;                     // 'CLAIM' | 'VISIT'
+  kind: string;                     // 'CLAIM' | 'VISIT' | 'NOTE'
   destination: string;
   payload: string;                  // exact content sent
   bytes: number;

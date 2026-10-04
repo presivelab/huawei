@@ -22,6 +22,7 @@ import healthSimPayloadTest from './HealthSimPayload.test';
 import consentScopesTest from './ConsentScopes.test';
 import dayDialTest from './DayDial.test';
 import visitsTest from './Visits.test';
+import monthNoteTest from './MonthNote.test';
 
 export default function testsuite() {
   claimTest();
@@ -48,4 +49,5 @@ export default function testsuite() {
   consentScopesTest();
   dayDialTest();
   visitsTest();
+  monthNoteTest();
 }

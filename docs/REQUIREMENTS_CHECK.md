@@ -80,8 +80,10 @@ file after enabling signing; keep the signed build configuration local.
 
 ## AI features (B11)
 
-The code has no AI feature: no network call, no model call, no `INTERNET` permission. The tier comes from
-deterministic rules and curves.
+One optional AI feature: the month note (`common/src/main/ets/report/MonthNote.ets`,
+`entry/src/main/ets/view/MonthNoteCard.ets`), a few sentences written by Gemini on the FairWear server from the
+on-screen summary; `entry` declares `INTERNET` for it. Disclosure: `AI_WORKFLOW.md`, "AI feature disclosure". The
+tier, eligibility and discount come from deterministic rules and curves, never from the model.
 
 Until 2026-10-04 two files described an AI feature that does not exist. By the owner's decision the lines
 were removed, not the feature built:

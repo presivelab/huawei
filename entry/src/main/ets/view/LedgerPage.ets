@@ -1,5 +1,6 @@
 import {
   claimLine,
+  LEDGER_KIND_NOTE,
   LEDGER_KIND_VISIT,
   LedgerEntry,
   logTimeText,
@@ -10,7 +11,14 @@ import {
   visitTokenClaim
 } from 'common';
 import { KEY_SHARE_REVISION, ShareService } from '../share/ShareService';
-import { LEDGER_EMPTY, LEDGER_NOTE, LEDGER_TITLE, ledgerBytesLine, ledgerVisitLine } from '../share/ShareTexts';
+import {
+  LEDGER_EMPTY,
+  LEDGER_NOTE,
+  LEDGER_NOTE_LABEL,
+  LEDGER_TITLE,
+  ledgerBytesLine,
+  ledgerVisitLine
+} from '../share/ShareTexts';
 import { EmptyState } from '../ui/kit/EmptyState';
 import { SYMBOL_INFO } from '../ui/kit/KitTokens';
 import { BODY, BODY_SECONDARY, CAPTION, CARD_LARGE } from './Styles';
@@ -45,6 +53,13 @@ export struct LedgerPage {
     return ledgerVisitLine(claim === null ? '' : visitDateText(claim.visitDate));
   }
 
+  private entryText(e: LedgerEntry): string {
+    if (e.kind === LEDGER_KIND_NOTE) {
+      return LEDGER_NOTE_LABEL;
+    }
+    return e.kind === LEDGER_KIND_VISIT ? this.visitText(e.payload) : this.claimText(e.payload);
+  }
+
   build() {
     NavDestination() {
       Scroll() {
@@ -62,7 +77,7 @@ export struct LedgerPage {
               Column({ space: 6 }) {
                 Text(`${logTimeText(e.t)} · ${e.destination}`)
                   .attributeModifier(CAPTION)
-                Text(e.kind === LEDGER_KIND_VISIT ? this.visitText(e.payload) : this.claimText(e.payload))
+                Text(this.entryText(e))
                   .attributeModifier(BODY)
                 Text(e.payload)
                   .fontSize($r('sys.float.Body_S'))

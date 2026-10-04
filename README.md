@@ -242,8 +242,9 @@ with the compiler bundled in DevEco Studio; it does not replace the ArkTS compil
 
 ## Security & privacy
 
-- **Phone.** The phone app declares no permissions and has no network code: health history and the score
-  never leave the phone. The only output meant for a partner is the signed tier claim. The code is a bearer
+- **Phone.** Health history never leaves the phone. The phone's only network call is the optional month note:
+  on a tap it sends the summary shown on screen (scores only, no name, no daily readings) to the FairWear server,
+  and records it in "What left this phone" first. The only output meant for a partner is the signed tier claim. The code is a bearer
   token: whoever holds an unused code can present it once, and the single-use nonce and the expiry limit that. Its
   key id (`kid`) is 8 hex characters, 32 bits, and only selects the key from the partner's registry; the
   signature and the registry decide, not the id. The Watch Link code

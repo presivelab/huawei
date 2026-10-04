@@ -519,6 +519,16 @@ export {
   LEDGER_DESTINATION_VISIT,
   visitLedgerEntry
 } from './src/main/ets/claim/ShareFlow';
+// The month note: the summary sent to the FairWear server, its answer and its ledger line.
+export {
+  LEDGER_DESTINATION_NOTE,
+  LEDGER_KIND_NOTE,
+  MONTH_NOTE_MAX_CHARS,
+  MONTH_NOTE_URL,
+  monthNoteLedgerEntry,
+  monthNoteRequest,
+  monthNoteText
+} from './src/main/ets/report/MonthNote';
 // The days of the wear month in detail: worn time, breaks and the reason of each day as text.
 export { DayBreak, DayDetail, dayDetailOf, engineDayDetails } from './src/main/ets/report/EngineReports';
 // Visits and day dial

@@ -117,7 +117,7 @@ Health Sim data and the consent move it. Shown, never scored.
 
 | Module  | Permission                         | Reason shown to the user                                                                          |
 | ------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `entry` | none                               | The add-on screens need no permission in this build; the HUAWEI Health adapter is a stub.         |
+| `entry` | `ohos.permission.INTERNET`         | Only for the optional month note: the on-screen summary goes to the FairWear server on a tap.     |
 | `watch` | `ohos.permission.READ_HEALTH_DATA` | "FairWear shows your live heart rate on the watch and uses it to tell whether the watch is worn." |
 | `watch` | `ohos.permission.ACTIVITY_MOTION`  | "FairWear shows the steps counted today on the watch and adds them to the day summary it records." |
 

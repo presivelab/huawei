@@ -11,6 +11,7 @@ import {
   LEDGER_KIND_VISIT,
   LedgerEntry,
   mintClaimToken,
+  monthNoteLedgerEntry,
   NONCE_TTL_MS,
   PartnerVerifier,
   PersonaReport,
@@ -176,6 +177,13 @@ export class ShareService {
       }
     }
     this.ledger.push(visitLedgerEntry(token, this.clock.nowMs()));
+    this.saveLedger();
+    this.bump();
+  }
+
+  /** The ledger line of a month-note summary. Called before the summary is sent. */
+  recordNoteSummary(body: string): void {
+    this.ledger.push(monthNoteLedgerEntry(body, this.clock.nowMs()));
     this.saveLedger();
     this.bump();
   }

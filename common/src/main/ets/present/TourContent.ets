@@ -191,8 +191,8 @@ export const VERIFY_ORDER: string[] = [
 ];
 
 export const LEAVES_PHONE: string =
-  'Only the signed tier claim leaves this phone. The phone app declares no permissions, so it has no network ' +
-    'access; the days from the watch stay here.';
+  'Only the signed tier claim leaves this phone, plus the score summary of a month note you ask for; the days ' +
+    'from the watch stay here.';
 
 export class ReviewRow {
   left: string;
