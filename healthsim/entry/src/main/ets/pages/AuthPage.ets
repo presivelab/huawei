@@ -1,254 +1,207 @@
-/**
- * Consent screen shown to the user when another app (FairWear) asks for data.
- * The user picks data types; only those are encoded into the result payload.
- */
-import { common, Want } from '@kit.AbilityKit';
-import { hilog } from '@kit.PerformanceAnalysisKit';
-import { HsCodec, HsWantKeys } from '../healthsim/HsCodec';
-import { HsPersonas } from '../healthsim/HsPersonas';
+import { common } from '@kit.AbilityKit';
+import { ALL_HEALTH_SCOPES, HealthScope } from '../fw/health/HealthConnection';
 import {
-  HS_RESULT_DENIED,
-  HS_RESULT_ERROR,
-  HS_RESULT_GRANTED,
-  HsDataset,
-  HsDataType,
-  HsPayload
-} from '../healthsim/HsTypes';
-import { SimBanner } from '../components/Common';
-import { AuthRequest } from '../model/AuthRequest';
-import { AccessEntry, generateFor, ScenarioState, ScenarioStore } from '../model/ScenarioStore';
+  encodeHealthSimPayload,
+  HEALTH_SIM_PARAM,
+  healthSimPayloadFromPersonas,
+  withScopes
+} from '../fw/health/HealthSimPayload';
+import { scopeLabel, scopeOf } from '../data/SimData';
+import {
+  AUTH_ALLOW,
+  AUTH_DENY,
+  AUTH_FAILED,
+  AUTH_LIST_TITLE,
+  AUTH_NOTE,
+  AUTH_STANDS_IN,
+  AUTH_TITLE
+} from '../data/SimTexts';
+import { CARD, SimBanner } from '../ui/SimBanner';
 
-const DOMAIN: number = 0x0000;
-const TAG: string = 'HealthSimAuth';
+// AppStorage: the data type names the calling app asked for (Want parameter `fwScopes`).
+export const KEY_AUTH_SCOPES: string = 'hsAuthScopes';
 
+const RESULT_ALLOWED: number = 0;
+const RESULT_DENIED: number = 1;
+
+// One requested data type and whether the person lets FairWear read it.
+interface ScopeChoice {
+  scope: HealthScope;
+  label: string;
+  allowed: boolean;
+}
+
+// The scopes of a request, in the order Health Sim lists them. Names it does not know are left out; a
+// request without a list asks for every type.
+function requested(names: string[]): HealthScope[] {
+  const out: HealthScope[] = [];
+  for (let i = 0; i < ALL_HEALTH_SCOPES.length; i++) {
+    for (let n = 0; n < names.length; n++) {
+      if (scopeOf(names[n]) === ALL_HEALTH_SCOPES[i]) {
+        out.push(ALL_HEALTH_SCOPES[i]);
+        break;
+      }
+    }
+  }
+  return out.length > 0 ? out : ALL_HEALTH_SCOPES.slice();
+}
+
+// The consent screen FairWear opens for a result. "Allow" hands over the simulated history of the six
+// people with the switched-off types blanked; "Don't allow" hands over nothing.
 @Entry
 @Component
 struct AuthPage {
-  @StorageLink('healthsim.authRequest') @Watch('onRequestChange') request: AuthRequest = new AuthRequest();
-  @State checks: boolean[] = [];
-  @State busy: boolean = false;
-  @State showNoneSelected: boolean = false;
-  @State personaName: string = '';
-  @State datasetId: string = '';
-  private store: ScenarioStore | null = null;
+  @StorageProp(KEY_AUTH_SCOPES) @Watch('onRequest') names: string[] = [];
+  @State choices: ScopeChoice[] = [];
+  @State failed: boolean = false;
 
   aboutToAppear(): void {
-    const ctx: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    this.store = new ScenarioStore(ctx);
-    this.onRequestChange();
+    this.onRequest();
   }
 
-  onBackPress(): boolean {
-    this.finish(false);
-    return true;
+  // A new request: every requested type starts switched on.
+  onRequest(): void {
+    const scopes = requested(this.names);
+    const next: ScopeChoice[] = [];
+    for (let i = 0; i < scopes.length; i++) {
+      next.push({ scope: scopes[i], label: scopeLabel(scopes[i]), allowed: true });
+    }
+    this.choices = next;
+    this.failed = false;
   }
 
-  onRequestChange(): void {
-    this.checks = this.request.types.map((t: string): boolean => true);
-    this.busy = false;
-    this.showNoneSelected = false;
-    const s: ScenarioState = this.scenarioForRequest();
-    this.personaName = HsPersonas.byId(s.personaId).name;
-    this.datasetId = HsCodec.datasetId(generateFor(s));
+  private setAllowed(scope: HealthScope, allowed: boolean): void {
+    const next: ScopeChoice[] = [];
+    for (let i = 0; i < this.choices.length; i++) {
+      const c = this.choices[i];
+      next.push({ scope: c.scope, label: c.label, allowed: c.scope === scope ? allowed : c.allowed });
+    }
+    this.choices = next;
   }
 
-  private scenarioForRequest(): ScenarioState {
-    const s: ScenarioState = this.store !== null ? this.store.load() : new ScenarioState();
-    s.days = this.request.days;
-    return s;
-  }
-
-  private selectedTypes(): string[] {
-    const out: string[] = [];
-    for (let i = 0; i < this.request.types.length; i++) {
-      if (i < this.checks.length && this.checks[i]) {
-        out.push(this.request.types[i]);
+  private allowedScopes(): HealthScope[] {
+    const out: HealthScope[] = [];
+    for (let i = 0; i < this.choices.length; i++) {
+      if (this.choices[i].allowed) {
+        out.push(this.choices[i].scope);
       }
     }
     return out;
   }
 
-  private setCheck(index: number, on: boolean): void {
-    const next: boolean[] = this.checks.slice(0);
-    next[index] = on;
-    this.checks = next;
-    this.showNoneSelected = false;
-  }
-
-  private finish(granted: boolean): void {
-    if (this.busy) {
-      return;
+  private answer(allow: boolean): void {
+    const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+    const parameters: Record<string, Object> = {};
+    if (allow) {
+      parameters[HEALTH_SIM_PARAM] =
+        encodeHealthSimPayload(withScopes(healthSimPayloadFromPersonas(), this.allowedScopes()));
     }
-    const types: string[] = this.selectedTypes();
-    if (granted && types.length === 0) {
-      this.showNoneSelected = true;
-      return;
+    try {
+      context.terminateSelfWithResult({
+        resultCode: allow ? RESULT_ALLOWED : RESULT_DENIED,
+        want: { parameters: parameters }
+      }).catch(() => {
+        this.failed = true;
+      });
+    } catch (e) {
+      this.failed = true;
     }
-    this.busy = true;
-    const params: Record<string, Object> = {};
-    let resultCode: number = HS_RESULT_DENIED;
-    params[HsWantKeys.STATUS] = 'denied';
-    let id: string = '';
-    if (granted) {
-      try {
-        const s: ScenarioState = this.scenarioForRequest();
-        const ds: HsDataset = generateFor(s);
-        const payload: HsPayload = HsCodec.encode(ds, types, s.syncDelay);
-        id = payload.datasetId;
-        params[HsWantKeys.PAYLOAD] = HsCodec.toJson(payload);
-        params[HsWantKeys.STATUS] = 'granted';
-        resultCode = HS_RESULT_GRANTED;
-      } catch (e) {
-        params[HsWantKeys.STATUS] = 'error';
-        resultCode = HS_RESULT_ERROR;
-        hilog.error(DOMAIN, TAG, 'Encoding failed: %{public}s', JSON.stringify(e));
-      }
-    }
-    if (this.store !== null) {
-      const entry: AccessEntry = new AccessEntry();
-      entry.requester = this.request.requester;
-      entry.timeMs = Date.now();
-      entry.typeCount = granted ? types.length : 0;
-      entry.granted = resultCode === HS_RESULT_GRANTED;
-      entry.datasetId = id;
-      this.store.appendLog(entry);
-    }
-    const want: Want = { parameters: params };
-    const result: common.AbilityResult = { resultCode: resultCode, want: want };
-    const ctx: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext;
-    ctx.terminateSelfWithResult(result).catch((err: Error) => {
-      hilog.error(DOMAIN, TAG, 'terminateSelfWithResult failed: %{public}s', JSON.stringify(err));
-      this.busy = false;
-    });
-  }
-
-  private typeLabel(t: string): Resource {
-    if (t === HsDataType.STEPS) {
-      return $r('app.string.type_steps');
-    }
-    if (t === HsDataType.HEART_RATE) {
-      return $r('app.string.type_hr');
-    }
-    if (t === HsDataType.RESTING_HR) {
-      return $r('app.string.type_rhr');
-    }
-    if (t === HsDataType.SLEEP_FRAGMENT) {
-      return $r('app.string.type_sleep');
-    }
-    if (t === HsDataType.SPO2) {
-      return $r('app.string.type_spo2');
-    }
-    if (t === HsDataType.SKIN_TEMP) {
-      return $r('app.string.type_skin');
-    }
-    if (t === HsDataType.STRESS) {
-      return $r('app.string.type_stress');
-    }
-    return $r('app.string.type_vo2');
-  }
-
-  private isChecked(index: number): boolean {
-    return index < this.checks.length ? this.checks[index] : false;
   }
 
   build() {
     Column() {
       SimBanner()
-      Scroll() {
-        Column({ space: 16 }) {
-          Text('HS')
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.on_accent'))
-            .textAlign(TextAlign.Center)
-            .width(56)
-            .height(56)
-            .borderRadius(16)
-            .backgroundColor($r('app.color.accent'))
-            .margin({ top: 24 })
-          Text($r('app.string.auth_title', this.request.requester))
-            .fontSize(22)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.ink'))
-            .textAlign(TextAlign.Center)
-          Text($r('app.string.auth_sub', this.personaName, String(this.request.days)))
-            .fontSize(13)
-            .fontColor($r('app.color.muted'))
-            .textAlign(TextAlign.Center)
-          if (this.request.callerBundle.length > 0) {
-            Text(this.request.callerBundle)
-              .fontSize(11)
-              .fontFamily('monospace')
-              .fontColor($r('app.color.muted'))
-          }
 
-          Column() {
-            ForEach(this.request.types, (t: string, index: number) => {
-              Row() {
-                Text(this.typeLabel(t))
-                  .fontSize(15)
-                  .fontColor($r('app.color.ink'))
+      Scroll() {
+        Column({ space: 14 }) {
+          Text(AUTH_TITLE)
+            .fontSize(26)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('sys.color.font_primary'))
+            .id('hs_auth_title')
+          Text(AUTH_STANDS_IN)
+            .fontSize($r('sys.float.Body_M'))
+            .fontColor($r('sys.color.font_secondary'))
+
+          Column({ space: 2 }) {
+            Text(AUTH_LIST_TITLE)
+              .fontSize($r('sys.float.Subtitle_M'))
+              .fontWeight(600)
+              .fontColor($r('sys.color.font_primary'))
+              .padding({ bottom: 6 })
+            ForEach(this.choices, (choice: ScopeChoice) => {
+              Row({ space: 12 }) {
+                Text(choice.label)
+                  .fontSize($r('sys.float.Body_L'))
+                  .fontColor($r('sys.color.font_primary'))
                   .layoutWeight(1)
-                Toggle({ type: ToggleType.Checkbox, isOn: this.isChecked(index) })
-                  .selectedColor($r('app.color.accent'))
+                Toggle({ type: ToggleType.Switch, isOn: choice.allowed })
+                  .id(`hs_scope_${choice.scope}`)
+                  .accessibilityText(choice.label)
                   .onChange((isOn: boolean) => {
-                    this.setCheck(index, isOn);
+                    this.setAllowed(choice.scope, isOn);
                   })
               }
               .width('100%')
-              .height(48)
-            }, (t: string) => t + '-' + this.request.receivedAt)
+              .constraintSize({ minHeight: 48 })
+              .alignItems(VerticalAlign.Center)
+            }, (choice: ScopeChoice) => `${choice.scope}`)
           }
-          .width('100%')
-          .padding({ left: 16, right: 12 })
-          .borderRadius(16)
-          .backgroundColor($r('app.color.surface'))
+          .attributeModifier(CARD)
 
-          Text($r('app.string.auth_note'))
-            .fontSize(12)
-            .lineHeight(18)
-            .fontColor($r('app.color.muted'))
-          Text($r('app.string.data_id', this.datasetId))
-            .fontSize(12)
-            .fontFamily('monospace')
-            .fontColor($r('app.color.accent'))
-          if (this.showNoneSelected) {
-            Text($r('app.string.auth_none'))
-              .fontSize(12)
-              .fontColor($r('app.color.sick_text'))
+          Text(AUTH_NOTE)
+            .fontSize($r('sys.float.Body_S'))
+            .fontColor($r('sys.color.font_secondary'))
+            .padding({ left: 4, right: 4 })
+
+          if (this.failed) {
+            Text(AUTH_FAILED)
+              .fontSize($r('sys.float.Body_M'))
+              .fontColor($r('sys.color.warning'))
+              .padding({ left: 4, right: 4 })
           }
         }
-        .width('100%')
-        .padding({ left: 20, right: 20, bottom: 16 })
+        .padding({
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 16
+        })
+        .alignItems(HorizontalAlign.Start)
       }
       .layoutWeight(1)
+      .width('100%')
+      .align(Alignment.Top)
       .scrollBar(BarState.Off)
 
       Row({ space: 12 }) {
-        Button($r('app.string.auth_deny'))
+        Button(AUTH_DENY)
+          .buttonStyle(ButtonStyleMode.NORMAL)
           .layoutWeight(1)
-          .height(44)
-          .fontColor($r('app.color.ink'))
-          .backgroundColor($r('app.color.empty'))
-          .enabled(!this.busy)
+          .height(48)
+          .id('hs_auth_deny')
           .onClick(() => {
-            this.finish(false);
+            this.answer(false);
           })
-        Button($r('app.string.auth_allow'))
+        Button(AUTH_ALLOW)
+          .buttonStyle(ButtonStyleMode.EMPHASIZED)
           .layoutWeight(1)
-          .height(44)
-          .fontColor($r('app.color.on_accent'))
-          .backgroundColor($r('app.color.accent'))
-          .enabled(!this.busy)
+          .height(48)
+          .id('hs_auth_allow')
           .onClick(() => {
-            this.finish(true);
+            this.answer(true);
           })
       }
       .width('100%')
-      .padding({ left: 20, right: 20, top: 8, bottom: 20 })
+      .padding({
+        left: 16,
+        right: 16,
+        top: 8,
+        bottom: 24
+      })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor($r('app.color.page'))
+    .backgroundColor($r('sys.color.background_secondary'))
   }
 }

@@ -738,3 +738,33 @@ Looked at in dark mode as pictures: Marek's day sheet, Kasia's "Why this tier", 
 controls. No defect found; nothing was changed.
 Not run in this walk: the appeal tap, the sliders, Close the day and Reset demo (checked before G2 on
 7213345, see the section above); a screen reader; the large system font.
+
+==== Agent 2: Health Sim, phone module (branch feature/healthsim-phone), 2026-10-04 ====
+Base: feature/engine-reports 2985efc + healthsim/ from feature/health-sim-audit, then feature/healthsim-base
+  merged in (add/add conflicts in six Health Sim files: my versions kept; the old generator files the base
+  brings back were removed again).
+Removed: the old generator and its client (healthsim/entry/src/main/ets/healthsim/*), the old views, the
+  scenario store, the Chinese strings and healthsim/tools/logic-tests. No "Wei" and no Hs* type is left.
+tools/run-logic-tests.sh common   380/380passed; watch 6/6passed; HealthSimCopies.test.ets (Node only) 2/2passed
+Health Sim: ohpm install, assembleHap (entry): BUILD SUCCESSFUL, no ArkTS warning in the new files.
+tools/check-wording.sh            0 hits (it does not scan healthsim/; the texts were written to the same rules)
+Phone emulator (127.0.0.1:5557), unsigned debug HAP of com.fairwear.healthsim:
+  Start: banner "SIMULATED DATA · stands in for HUAWEI Health", title "Health Sim", six people.
+  Today: Ania Sat 3 Oct 7,954 steps, 58 bpm, sleep 8 h 2 min, 31 activity minutes, watch worn 22 h 47 min;
+    Marek 10,851 steps, 65 bpm, 8 h 40 min, 8 min; Ola 4,740 steps, 73 bpm, 7 h 10 min, 8 min, 22 h 49 min.
+  History: 30 rows, newest first; Ola shows "—" for sleep on the nights without a record (2 Oct, 1 Oct,
+    19 Sep ...); the list changes when another person is chosen while the tab is open.
+  Apps > "Open FairWear": the system asks "Allow Health Sim to open FairWear?"; after Allow FairWear is in
+    front on the Report tab (Ania, "Strong overall profile").
+  Consent, opened with `aa start -a AuthAbility` (no fwScopes, so all seven types are listed, all on):
+    "FairWear asks for access", the stands-in sentence, seven switches, "Don't allow" closes the screen.
+  The real round trip was run by agent 4 against this HAP (06:14-06:17): Allow gives result code 0 and a
+    payload of 29,643 characters that FairWear decodes; "Don't allow" gives result code 1.
+  Dark mode: History for Ola (system Settings > Display & brightness, switched back to light).
+  Screenshots in docs/screenshots/final/: a2-healthsim-today-light, a2-healthsim-consent-light,
+    a2-healthsim-history-dark.
+Changed after the first look: the banner used the system warning colour, which is red on this device; it is
+  now the text colour as background (neutral). The person picker wraps so all six people are visible.
+Not run: a switch turned off and then Allow from this session (agent 4 checked a type off on FairWear's own
+  consent, not on this screen); the FairWear-not-installed sentence (FairWear is never uninstalled here);
+  the healthsim://authorize link; a screen reader; the large system font.
