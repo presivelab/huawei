@@ -1,4 +1,4 @@
-import { SymbolGlyphModifier } from '@kit.ArkUI';
+import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI';
 import { common, Want } from '@kit.AbilityKit';
 import {
   HISTORY_DAYS,
@@ -103,25 +103,20 @@ struct Index {
         .fontSize($r('sys.float.Body_S'))
         .fontColor($r('sys.color.font_secondary'))
         .padding({ left: 16 })
-      Scroll() {
-        Row({ space: 8 }) {
-          ForEach(simPeople(), (person: SimPerson) => {
-            Button(person.name)
-              .buttonStyle(person.id === this.personId ? ButtonStyleMode.EMPHASIZED : ButtonStyleMode.NORMAL)
-              .height(40)
-              .id(`hs_person_${person.id}`)
-              .accessibilityText(person.name + (person.id === this.personId ? ', selected' : ''))
-              .onClick(() => {
-                this.pick(person.id);
-              })
-          }, (person: SimPerson) => `${person.id}|${person.id === this.personId}`)
-        }
-        .padding({ left: 16, right: 16 })
+      Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
+        ForEach(simPeople(), (person: SimPerson) => {
+          Button(person.name)
+            .buttonStyle(person.id === this.personId ? ButtonStyleMode.EMPHASIZED : ButtonStyleMode.NORMAL)
+            .height(40)
+            .id(`hs_person_${person.id}`)
+            .accessibilityText(person.name + (person.id === this.personId ? ', selected' : ''))
+            .onClick(() => {
+              this.pick(person.id);
+            })
+        }, (person: SimPerson) => `${person.id}|${person.id === this.personId}`)
       }
-      .scrollable(ScrollDirection.Horizontal)
-      .scrollBar(BarState.Off)
       .width('100%')
-      .align(Alignment.Start)
+      .padding({ left: 16, right: 16 })
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)
